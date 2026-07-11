@@ -1,28 +1,30 @@
 const ONLINE_MEETING_URL = "";
+const RSVP_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycbyvs0LurNvxURz_e15WG-ky2d1EFydHfJtbLYkbb1XTk_7Ol1RndFNAQTbcvFQKGwFbKw/exec";
 const VALID_INVITE_MODES = ["wedding", "full", "online"];
 
 const INVITE_CONFIG = {
   wedding: {
     heroText: ["婚禮｜14:00"],
-    sections: ["hero", "ceremony-info", "ceremony-notes", "gallery", "share", "messages", "faq"],
-    navigation: ["ceremony-info", "gallery", "share", "messages", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-notes", "gallery", "share", "faq"],
+    navigation: ["rsvp", "ceremony-info", "gallery", "share", "faq"],
     hiddenSections: ["wedding-info", "venue", "parking", "seating"],
     content: ["ceremony-venue"],
     ceremonyEntryLabel: "開放入場"
   },
   full: {
     heroText: ["婚禮｜14:00", "婚宴｜18:00"],
-    sections: ["hero", "ceremony-info", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "messages", "faq"],
-    navigation: ["ceremony-info", "wedding-info", "venue", "parking", "seating", "gallery", "share", "messages"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    navigation: ["rsvp", "ceremony-info", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     hiddenSections: [],
     content: ["ceremony-venue", "banquet-faq"],
     ceremonyEntryLabel: "開放入場"
   },
   online: {
     heroText: ["婚禮｜14:00"],
-    sections: ["hero", "ceremony-info", "gallery", "messages"],
-    navigation: ["ceremony-info", "gallery", "messages"],
-    hiddenSections: ["ceremony-notes", "wedding-info", "venue", "parking", "seating", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery", "faq"],
+    navigation: ["rsvp", "ceremony-info", "gallery", "faq"],
+    hiddenSections: ["ceremony-notes", "wedding-info", "venue", "parking", "seating", "share"],
     content: ["online-attendance"],
     ceremonyEntryLabel: "線上開放進入"
   }
@@ -126,6 +128,257 @@ if (ONLINE_MEETING_URL.trim()) {
   onlineMeetingButton.classList.add('is-unavailable');
   onlineMeetingButton.textContent = '線上參加連結將於婚禮前提供';
 }
+
+const RSVP_STORAGE_KEY = "wedding-rsvp-submitted";
+const RSVP_MODE_CONFIG = {
+  wedding: {
+    title: "婚禮出席回覆",
+    questions: ["ceremony"],
+    required: ["ceremony"]
+  },
+  full: {
+    title: "婚禮與婚宴出席回覆",
+    questions: ["ceremony", "banquet"],
+    required: ["ceremony", "banquet"]
+  },
+  online: {
+    title: "線上參加回覆",
+    questions: ["online"],
+    required: ["online"]
+  }
+};
+
+const rsvpToggle = document.querySelector('#rsvp-toggle');
+const rsvpPanel = document.querySelector('#rsvp-panel');
+const rsvpForm = document.querySelector('#rsvp-form');
+const rsvpFormTitle = document.querySelector('#rsvp-form-title');
+const rsvpName = document.querySelector('#rsvp-name');
+const rsvpCounts = document.querySelector('#rsvp-counts');
+const rsvpPeople = document.querySelector('#rsvp-people');
+const rsvpVegetarian = document.querySelector('#rsvp-vegetarian');
+const rsvpSubmit = document.querySelector('#rsvp-submit');
+const rsvpSubmitLabel = rsvpSubmit.querySelector('.rsvp-submit-label');
+const rsvpSubmitError = document.querySelector('#rsvp-submit-error');
+const rsvpSuccess = document.querySelector('#rsvp-success');
+const rsvpSuccessTitle = document.querySelector('#rsvp-success-title');
+const rsvpEdit = document.querySelector('#rsvp-edit');
+let rsvpPeopleCount = 1;
+let rsvpVegetarianCount = 0;
+let rsvpSubmitting = false;
+
+function setRsvpExpanded(expanded, scrollToPanel = false) {
+  rsvpToggle.setAttribute('aria-expanded', String(expanded));
+  rsvpToggle.querySelector('span').textContent = expanded ? '收起回覆表單' : '立即回覆';
+  rsvpPanel.classList.toggle('is-expanded', expanded);
+  rsvpPanel.setAttribute('aria-hidden', String(!expanded));
+
+  if (expanded && scrollToPanel) {
+    window.setTimeout(() => {
+      rsvpPanel.scrollIntoView({
+        behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    }, reducedMotionQuery.matches ? 0 : 180);
+  }
+}
+
+function selectedRsvpValue(name) {
+  return rsvpForm.querySelector(`input[name="${name}"]:checked`)?.value || '';
+}
+
+function updateRsvpCounters() {
+  rsvpPeople.textContent = String(rsvpPeopleCount);
+  rsvpVegetarian.textContent = String(rsvpVegetarianCount);
+
+  rsvpForm.querySelectorAll('[data-counter]').forEach((button) => {
+    const counter = button.dataset.counter;
+    const action = button.dataset.action;
+    if (counter === 'people') {
+      button.disabled = action === 'decrease' ? rsvpPeopleCount <= 1 : rsvpPeopleCount >= 10;
+    } else {
+      button.disabled = action === 'decrease' ? rsvpVegetarianCount <= 0 : rsvpVegetarianCount >= rsvpPeopleCount;
+    }
+  });
+}
+
+function updateRsvpAttendanceCounts() {
+  const config = RSVP_MODE_CONFIG[inviteMode];
+  if (!config || inviteMode === 'online') {
+    rsvpCounts.hidden = true;
+    rsvpPeopleCount = 0;
+    rsvpVegetarianCount = 0;
+    updateRsvpCounters();
+    return;
+  }
+
+  const willOrMayAttend = config.questions.some((question) => {
+    const value = selectedRsvpValue(question);
+    return value === '可以參加' || value === '尚未確定';
+  });
+
+  rsvpCounts.hidden = !willOrMayAttend;
+  if (willOrMayAttend) {
+    if (rsvpPeopleCount < 1) {
+      rsvpPeopleCount = 1;
+      rsvpVegetarianCount = 0;
+    }
+  } else {
+    rsvpPeopleCount = 0;
+    rsvpVegetarianCount = 0;
+  }
+  updateRsvpCounters();
+}
+
+function setRsvpSubmitting(submitting) {
+  rsvpSubmitting = submitting;
+  rsvpSubmit.disabled = submitting;
+  rsvpSubmit.classList.toggle('loading', submitting);
+  rsvpSubmitLabel.textContent = submitting ? '正在送出…' : '送出回覆';
+  rsvpForm.setAttribute('aria-busy', String(submitting));
+}
+
+function showRsvpSuccess(previouslySubmitted = false) {
+  rsvpSuccessTitle.textContent = previouslySubmitted ? '您已完成出席回覆' : '謝謝您的回覆';
+  rsvpForm.hidden = true;
+  rsvpForm.classList.remove('is-submitted');
+  rsvpSuccess.hidden = false;
+  setRsvpExpanded(true);
+}
+
+function readStoredRsvp() {
+  try {
+    return JSON.parse(window.localStorage.getItem(RSVP_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function storeRsvp(name) {
+  try {
+    window.localStorage.setItem(RSVP_STORAGE_KEY, JSON.stringify({
+      invite: inviteMode,
+      name,
+      timestamp: new Date().toISOString()
+    }));
+  } catch {
+    // RSVP submission still succeeds when storage is unavailable.
+  }
+}
+
+function validateRsvpForm() {
+  const config = RSVP_MODE_CONFIG[inviteMode];
+  let firstInvalid = null;
+  document.querySelector('#rsvp-name-error').textContent = '';
+  rsvpName.removeAttribute('aria-invalid');
+  rsvpForm.querySelectorAll('[data-rsvp-error]').forEach((error) => { error.textContent = ''; });
+
+  if (!rsvpName.value.trim()) {
+    document.querySelector('#rsvp-name-error').textContent = '請輸入您的姓名。';
+    rsvpName.setAttribute('aria-invalid', 'true');
+    firstInvalid = rsvpName;
+  }
+
+  config.required.forEach((question) => {
+    if (selectedRsvpValue(question)) return;
+    const error = rsvpForm.querySelector(`[data-rsvp-error="${question}"]`);
+    error.textContent = '請選擇您的出席狀況。';
+    if (!firstInvalid) firstInvalid = rsvpForm.querySelector(`input[name="${question}"]`);
+  });
+
+  if (firstInvalid) {
+    firstInvalid.closest('.rsvp-field, .rsvp-question').scrollIntoView({
+      behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
+      block: 'center'
+    });
+    window.setTimeout(() => firstInvalid.focus({ preventScroll: true }), reducedMotionQuery.matches ? 0 : 300);
+    return false;
+  }
+  return true;
+}
+
+if (VALID_INVITE_MODES.includes(inviteMode)) {
+  const modeConfig = RSVP_MODE_CONFIG[inviteMode];
+  rsvpFormTitle.textContent = modeConfig.title;
+  document.querySelectorAll('[data-rsvp-question]').forEach((question) => {
+    question.hidden = !modeConfig.questions.includes(question.dataset.rsvpQuestion);
+  });
+  updateRsvpAttendanceCounts();
+
+  const storedRsvp = readStoredRsvp();
+  if (storedRsvp?.invite === inviteMode) {
+    rsvpName.value = storedRsvp.name || '';
+    showRsvpSuccess(true);
+  }
+}
+
+rsvpToggle.addEventListener('click', () => {
+  const expanded = rsvpToggle.getAttribute('aria-expanded') === 'true';
+  setRsvpExpanded(!expanded, !expanded);
+});
+
+rsvpForm.querySelectorAll('input[type="radio"]').forEach((radio) => {
+  radio.addEventListener('change', () => {
+    const error = rsvpForm.querySelector(`[data-rsvp-error="${radio.name}"]`);
+    if (error) error.textContent = '';
+    updateRsvpAttendanceCounts();
+  });
+});
+
+rsvpForm.querySelectorAll('[data-counter]').forEach((button) => {
+  button.addEventListener('click', () => {
+    if (button.dataset.counter === 'people') {
+      rsvpPeopleCount += button.dataset.action === 'increase' ? 1 : -1;
+      rsvpPeopleCount = Math.min(10, Math.max(1, rsvpPeopleCount));
+      rsvpVegetarianCount = Math.min(rsvpVegetarianCount, rsvpPeopleCount);
+    } else {
+      rsvpVegetarianCount += button.dataset.action === 'increase' ? 1 : -1;
+      rsvpVegetarianCount = Math.min(rsvpPeopleCount, Math.max(0, rsvpVegetarianCount));
+    }
+    updateRsvpCounters();
+  });
+});
+
+rsvpForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (rsvpSubmitting || !validateRsvpForm()) return;
+
+  rsvpSubmitError.textContent = '';
+  setRsvpSubmitting(true);
+  const formData = new FormData();
+  formData.append('invite', inviteMode);
+  formData.append('name', rsvpName.value.trim());
+  formData.append('phone', document.querySelector('#rsvp-phone').value.trim());
+  formData.append('ceremony', inviteMode === 'online' ? '' : selectedRsvpValue('ceremony'));
+  formData.append('banquet', inviteMode === 'full' ? selectedRsvpValue('banquet') : '');
+  formData.append('online', inviteMode === 'online' ? selectedRsvpValue('online') : '');
+  formData.append('people', String(inviteMode === 'online' ? 0 : rsvpPeopleCount));
+  formData.append('vegetarian', String(inviteMode === 'online' ? 0 : rsvpVegetarianCount));
+  formData.append('note', document.querySelector('#rsvp-note').value.trim());
+  formData.append('message', document.querySelector('#rsvp-message').value.trim());
+
+  try {
+    await fetch(RSVP_ENDPOINT, {
+      method: 'POST',
+      body: formData,
+      mode: 'no-cors'
+    });
+    storeRsvp(rsvpName.value.trim());
+    rsvpForm.classList.add('is-submitted');
+    window.setTimeout(() => showRsvpSuccess(false), reducedMotionQuery.matches ? 0 : 350);
+  } catch {
+    rsvpSubmitError.textContent = '目前無法送出，請稍後再試。';
+  } finally {
+    setRsvpSubmitting(false);
+  }
+});
+
+rsvpEdit.addEventListener('click', () => {
+  rsvpSuccess.hidden = true;
+  rsvpForm.hidden = false;
+  rsvpForm.classList.remove('is-submitted');
+  setRsvpExpanded(true, true);
+  rsvpName.focus({ preventScroll: true });
+});
 
 function setMenu(open) {
   menuButton.setAttribute('aria-expanded', String(open));

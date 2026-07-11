@@ -63,6 +63,7 @@
         <span></span><span></span>
       </button>
       <div class="nav-links" id="nav-links">
+        <a href="#rsvp" data-invite="nav:rsvp">出席回覆</a>
         <a href="#ceremony-info" data-invite="nav:ceremony-info">婚禮資訊</a>
         <a href="#wedding-info" data-invite="nav:wedding-info">婚宴資訊</a>
         <a href="#venue" data-invite="nav:venue">交通</a>
@@ -70,7 +71,6 @@
         <a href="#seating" data-invite="nav:seating">座位查詢</a>
         <a href="#gallery" data-invite="nav:gallery">婚紗相簿</a>
         <a href="#share" data-invite="nav:share">照片分享</a>
-        <a href="#messages" data-invite="nav:messages">祝福</a>
         <a href="#faq" data-invite="nav:faq">常見問題</a>
       </div>
     </nav>
@@ -90,10 +90,130 @@
         <div class="hero-schedule" id="hero-schedule" aria-label="邀請行程"></div>
         <p class="hero-invitation">誠摯邀請您</p>
       </div>
-      <a class="scroll-cue" href="#ceremony-info">
+      <a class="scroll-cue" href="#invitation-note">
         <span>往下滑</span>
         <i aria-hidden="true"></i>
       </a>
+    </section>
+
+    <section class="page-section invitation-note-section" id="invitation-note" data-invite="section:invitation-note">
+      <div class="shell invitation-note-wrap reveal">
+        <p class="invitation-note-kicker">DEAR FAMILY &amp; FRIENDS</p>
+        <h2>給親愛的家人與朋友</h2>
+        <span class="invitation-note-line" aria-hidden="true"></span>
+        <div class="invitation-note-copy">
+          <p>謝謝您願意在百忙之中，<br>與我們一起迎接人生的重要時刻。</p>
+          <p>一路走來，<br>因為有家人與朋友的陪伴和支持，<br>我們才能一步一步走到今天。</p>
+          <p>這一天，<br>我們最期待的不是盛大的婚禮，<br>而是能與最重要的人，<br>一起分享這份喜悅。</p>
+          <p>期待在 2026 年 12 月 26 日，<br>與您相見。</p>
+        </div>
+        <p class="invitation-note-signature">子靖 <span>＆</span> 勤萱</p>
+      </div>
+    </section>
+
+    <section class="page-section rsvp-section" id="rsvp" data-invite="section:rsvp">
+      <div class="shell rsvp-shell">
+        <article class="glass-card rsvp-card reveal">
+          <header class="rsvp-heading">
+            <p>RSVP</p>
+            <h2>出席回覆</h2>
+            <p>我們誠摯期待您的蒞臨。<br>為了讓我們能更完善地安排，<br>請花約 30 秒完成出席回覆。</p>
+          </header>
+
+          <button class="button rsvp-toggle" id="rsvp-toggle" type="button" aria-expanded="false" aria-controls="rsvp-panel"><span>立即回覆</span></button>
+          <p class="rsvp-duration">您的出席，是我們收到最珍貴的禮物。</p>
+
+          <div class="rsvp-panel" id="rsvp-panel" aria-hidden="true">
+            <form class="rsvp-form" id="rsvp-form" novalidate>
+              <h3 id="rsvp-form-title">出席回覆</h3>
+
+              <div class="rsvp-form-grid">
+                <div class="rsvp-field">
+                  <label for="rsvp-name">姓名 <span aria-hidden="true">*</span></label>
+                  <input id="rsvp-name" name="name" type="text" placeholder="請輸入您的姓名" autocomplete="name" aria-describedby="rsvp-name-error" required>
+                  <p class="rsvp-error" id="rsvp-name-error" aria-live="polite"></p>
+                </div>
+                <div class="rsvp-field">
+                  <label for="rsvp-phone">聯絡電話</label>
+                  <input id="rsvp-phone" name="phone" type="tel" placeholder="方便聯絡的電話" autocomplete="tel">
+                </div>
+              </div>
+
+              <fieldset class="rsvp-question" data-rsvp-question="ceremony">
+                <legend>是否參加婚禮？</legend>
+                <div class="rsvp-options">
+                  <label><input type="radio" name="ceremony" value="可以參加"><span>可以參加</span></label>
+                  <label><input type="radio" name="ceremony" value="無法參加"><span>無法參加</span></label>
+                  <label><input type="radio" name="ceremony" value="尚未確定"><span>尚未確定</span></label>
+                </div>
+                <p class="rsvp-error" data-rsvp-error="ceremony" aria-live="polite"></p>
+              </fieldset>
+
+              <fieldset class="rsvp-question" data-rsvp-question="banquet">
+                <legend>是否參加婚宴？</legend>
+                <div class="rsvp-options">
+                  <label><input type="radio" name="banquet" value="可以參加"><span>可以參加</span></label>
+                  <label><input type="radio" name="banquet" value="無法參加"><span>無法參加</span></label>
+                  <label><input type="radio" name="banquet" value="尚未確定"><span>尚未確定</span></label>
+                </div>
+                <p class="rsvp-error" data-rsvp-error="banquet" aria-live="polite"></p>
+              </fieldset>
+
+              <fieldset class="rsvp-question" data-rsvp-question="online">
+                <legend>是否預計線上參加婚禮？</legend>
+                <div class="rsvp-options">
+                  <label><input type="radio" name="online" value="會參加"><span>會參加</span></label>
+                  <label><input type="radio" name="online" value="無法參加"><span>無法參加</span></label>
+                  <label><input type="radio" name="online" value="尚未確定"><span>尚未確定</span></label>
+                </div>
+                <p class="rsvp-error" data-rsvp-error="online" aria-live="polite"></p>
+              </fieldset>
+
+              <div class="rsvp-counts" id="rsvp-counts" hidden>
+                <div class="rsvp-counter">
+                  <div><span>出席人數</span><small>最多 10 位</small></div>
+                  <div class="counter-control" aria-label="出席人數">
+                    <button type="button" data-counter="people" data-action="decrease" aria-label="減少出席人數">−</button>
+                    <output id="rsvp-people" aria-live="polite">1</output>
+                    <button type="button" data-counter="people" data-action="increase" aria-label="增加出席人數">＋</button>
+                  </div>
+                </div>
+                <div class="rsvp-counter">
+                  <div><span>素食人數</span><small>不超過出席人數</small></div>
+                  <div class="counter-control" aria-label="素食人數">
+                    <button type="button" data-counter="vegetarian" data-action="decrease" aria-label="減少素食人數">−</button>
+                    <output id="rsvp-vegetarian" aria-live="polite">0</output>
+                    <button type="button" data-counter="vegetarian" data-action="increase" aria-label="增加素食人數">＋</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rsvp-field rsvp-wide">
+                <label for="rsvp-note">備註</label>
+                <textarea id="rsvp-note" name="note" rows="3" placeholder="其他需要我們留意的事項"></textarea>
+              </div>
+              <div class="rsvp-field rsvp-wide">
+                <label for="rsvp-message">留下一句想對我們說的話</label>
+                <p class="rsvp-field-description" id="rsvp-message-description">婚禮後，我們會將大家留下的祝福整理成紀念影片。<br>謝謝您送給我們最珍貴的一句話。</p>
+                <textarea id="rsvp-message" name="message" rows="4" placeholder="想對我們說的話" aria-describedby="rsvp-message-description"></textarea>
+              </div>
+
+              <p class="rsvp-submit-error" id="rsvp-submit-error" aria-live="polite"></p>
+              <button class="button rsvp-submit" id="rsvp-submit" type="submit">
+                <span class="loading-spinner" aria-hidden="true"></span>
+                <span class="rsvp-submit-label">送出回覆</span>
+              </button>
+            </form>
+
+            <div class="rsvp-success" id="rsvp-success" role="status" hidden>
+              <div class="rsvp-success-mark" aria-hidden="true"><span></span></div>
+              <h3 id="rsvp-success-title">謝謝您的回覆</h3>
+              <p>我們已收到您的出席資訊。<br>期待與您一起分享這個重要的日子。</p>
+              <button class="button rsvp-edit" id="rsvp-edit" type="button">修改回覆</button>
+            </div>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section class="page-section ceremony-section" id="ceremony-info" data-invite="section:ceremony-info">
@@ -400,20 +520,6 @@
 
           <a class="button share-button" href="https://photos.app.goo.gl/3YU9RTzuazG54w1M7" target="_blank" rel="noopener noreferrer">開啟共同相簿</a>
           <p class="share-note">上傳照片時需要登入 Google 帳號。<br>進入相簿後，請點選「新增相片」或「加入相簿」即可分享。</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="page-section messages-section" id="messages" data-invite="section:messages">
-      <div class="shell messages-shell">
-        <article class="glass-card messages-card reveal">
-          <div class="message-ornament" aria-hidden="true"><span></span><i></i><span></span></div>
-          <header class="messages-heading">
-            <p>A MESSAGE FOR US</p>
-            <h2>留下一句祝福</h2>
-            <p class="messages-intro">歡迎寫下想對我們說的話。<br>您的祝福將由我們珍藏，<br>並可能收錄在婚禮紀念影片中。</p>
-          </header>
-          <a class="button messages-button" href="https://docs.google.com/forms/d/e/1FAIpQLScCk5YFzDj1qpfiAMWVTekNYV9rOgv4UbR5N_9h_2cYrpi1Dg/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer">寫下祝福</a>
         </article>
       </div>
     </section>
