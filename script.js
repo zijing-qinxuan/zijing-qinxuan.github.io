@@ -6,25 +6,25 @@ const VALID_INVITE_MODES = ["wedding", "full", "online"];
 const INVITE_CONFIG = {
   wedding: {
     heroText: ["婚禮｜14:00"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-notes", "gallery", "share", "faq"],
-    navigation: ["rsvp", "ceremony-info", "gallery", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
+    navigation: ["rsvp", "ceremony-info", "ceremony-parking", "gallery", "share", "faq"],
     hiddenSections: ["wedding-info", "venue", "parking", "seating"],
     content: ["ceremony-venue"],
     ceremonyEntryLabel: "開放入場"
   },
   full: {
     heroText: ["婚禮｜14:00", "婚宴｜18:00"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
-    navigation: ["rsvp", "ceremony-info", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    navigation: ["rsvp", "ceremony-info", "ceremony-parking", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     hiddenSections: [],
     content: ["ceremony-venue", "banquet-faq"],
     ceremonyEntryLabel: "開放入場"
   },
   online: {
     heroText: ["婚禮｜14:00"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery", "faq"],
-    navigation: ["rsvp", "ceremony-info", "gallery", "faq"],
-    hiddenSections: ["ceremony-notes", "wedding-info", "venue", "parking", "seating", "share"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery"],
+    navigation: ["rsvp", "ceremony-info", "gallery"],
+    hiddenSections: ["ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "share", "faq"],
     content: ["online-attendance"],
     ceremonyEntryLabel: "線上開放進入"
   }
@@ -472,7 +472,7 @@ const unifiedRevealTargets = document.querySelectorAll([
 
 unifiedRevealTargets.forEach((item) => item.classList.add('reveal'));
 
-document.querySelectorAll('.wedding-facts, .ceremony-note-grid, .parking-grid, .share-steps').forEach((group) => {
+document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-note-grid, .parking-grid, .share-steps').forEach((group) => {
   [...group.children].forEach((item, index) => {
     item.style.setProperty('--reveal-delay', `${Math.min(index * 90, 180)}ms`);
   });
