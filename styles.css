@@ -19,7 +19,7 @@
   --font-note: clamp(12px, 1.1vw, 13px);
   --font-button: clamp(14px, 1.2vw, 15px);
   --font-title: "Noto Serif TC", serif;
-  --font-body: "Taipei Sans TC Beta", "Noto Sans TC", sans-serif;
+  --font-body: "Taipei Sans TC", "Taipei Sans TC Beta", "Noto Sans TC", sans-serif;
   --font-en: "Inter", sans-serif;
 
   --ivory: var(--color-background);

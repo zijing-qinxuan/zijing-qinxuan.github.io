@@ -568,10 +568,19 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') setMenu(false);
 });
 
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 820) setMenu(false);
-  requestScrollUpdate();
-});
+let resizeTicking = false;
+
+function requestResizeUpdate() {
+  if (resizeTicking) return;
+  resizeTicking = true;
+  window.requestAnimationFrame(() => {
+    if (window.innerWidth > 820) setMenu(false);
+    requestScrollUpdate();
+    resizeTicking = false;
+  });
+}
+
+window.addEventListener('resize', requestResizeUpdate, { passive: true });
 
 function updateHeader() {
   const heroBottom = hero.offsetTop + hero.offsetHeight - header.offsetHeight;
@@ -754,9 +763,19 @@ const lightboxCounter = lightbox.querySelector('.lightbox-counter');
 const lightboxClose = lightbox.querySelector('.lightbox-close');
 const lightboxPrev = lightbox.querySelector('.lightbox-prev');
 const lightboxNext = lightbox.querySelector('.lightbox-next');
-const gallerySources = galleryButtons
-  .sort((a, b) => Number(a.dataset.galleryIndex) - Number(b.dataset.galleryIndex))
-  .map((button) => button.querySelector('img').getAttribute('src'));
+const galleryImages = [
+  { src: 'assets/gallery/01.jpg', width: 1620, height: 1080 },
+  { src: 'assets/gallery/02.jpg', width: 1620, height: 1078 },
+  { src: 'assets/gallery/03.jpg', width: 1414, height: 1804 },
+  { src: 'assets/gallery/04.jpg', width: 1618, height: 1076 },
+  { src: 'assets/gallery/05.jpg', width: 1414, height: 1806 },
+  { src: 'assets/gallery/06.jpg', width: 1620, height: 1080 },
+  { src: 'assets/gallery/07.jpg', width: 1410, height: 1802 },
+  { src: 'assets/gallery/08.jpg', width: 1412, height: 1800 },
+  { src: 'assets/gallery/09.jpg', width: 1408, height: 1806 },
+  { src: 'assets/gallery/10.jpg', width: 1620, height: 1080 },
+  { src: 'assets/gallery/11.jpg', width: 1622, height: 1080 }
+];
 let currentGalleryIndex = 0;
 let lastGalleryTrigger;
 let touchStartX = 0;
@@ -773,10 +792,13 @@ document.querySelectorAll('.gallery-media img').forEach((image) => {
 });
 
 function showGalleryImage(index) {
-  currentGalleryIndex = (index + gallerySources.length) % gallerySources.length;
-  lightboxImage.src = gallerySources[currentGalleryIndex];
+  currentGalleryIndex = (index + galleryImages.length) % galleryImages.length;
+  const image = galleryImages[currentGalleryIndex];
+  lightboxImage.width = image.width;
+  lightboxImage.height = image.height;
+  lightboxImage.src = image.src;
   lightboxImage.alt = `子靖與勤萱婚紗照 ${currentGalleryIndex + 1}`;
-  lightboxCounter.textContent = `${String(currentGalleryIndex + 1).padStart(2, '0')} / ${gallerySources.length}`;
+  lightboxCounter.textContent = `${String(currentGalleryIndex + 1).padStart(2, '0')} / ${galleryImages.length}`;
 }
 
 function openLightbox(index, trigger) {
