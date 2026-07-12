@@ -6,7 +6,7 @@ const VALID_INVITE_MODES = ["wedding", "full", "online"];
 const INVITE_CONFIG = {
   wedding: {
     heroText: ["婚禮｜14:00"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "gallery", "share", "faq"],
     hiddenSections: ["wedding-info", "venue", "parking", "seating"],
     content: ["ceremony-venue"],
@@ -14,7 +14,7 @@ const INVITE_CONFIG = {
   },
   full: {
     heroText: ["婚禮｜14:00", "婚宴｜18:00"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     hiddenSections: [],
     content: ["ceremony-venue", "banquet-faq"],
@@ -24,7 +24,7 @@ const INVITE_CONFIG = {
     heroText: ["婚禮｜14:00"],
     sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery"],
     navigation: ["rsvp", "ceremony-info", "gallery"],
-    hiddenSections: ["ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "share", "faq"],
+    hiddenSections: ["gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "share", "faq"],
     content: ["online-attendance"],
     ceremonyEntryLabel: "線上開放進入"
   }
@@ -153,6 +153,10 @@ const rsvpPanel = document.querySelector('#rsvp-panel');
 const rsvpForm = document.querySelector('#rsvp-form');
 const rsvpFormTitle = document.querySelector('#rsvp-form-title');
 const rsvpName = document.querySelector('#rsvp-name');
+const rsvpPhone = document.querySelector('#rsvp-phone');
+const rsvpInviteValue = document.querySelector('#rsvp-invite-value');
+const rsvpPeopleValue = document.querySelector('#rsvp-people-value');
+const rsvpVegetarianValue = document.querySelector('#rsvp-vegetarian-value');
 const rsvpCounts = document.querySelector('#rsvp-counts');
 const rsvpPeople = document.querySelector('#rsvp-people');
 const rsvpVegetarian = document.querySelector('#rsvp-vegetarian');
@@ -167,6 +171,10 @@ const rsvpEdit = document.querySelector('#rsvp-edit');
 let rsvpPeopleCount = 1;
 let rsvpVegetarianCount = 0;
 let rsvpSubmitting = false;
+let rsvpPollingTimer = null;
+let rsvpStatusTimeout = null;
+let pendingRsvpSubmission = null;
+const activeRsvpJsonpRequests = new Map();
 
 function setRsvpExpanded(expanded, scrollToPanel = false) {
   rsvpToggle.setAttribute('aria-expanded', String(expanded));
@@ -235,16 +243,26 @@ function setRsvpSubmitting(submitting) {
   rsvpSubmitting = submitting;
   rsvpSubmit.disabled = submitting;
   rsvpSubmit.classList.toggle('loading', submitting);
-  rsvpSubmitLabel.textContent = submitting ? '正在送出…' : '送出回覆';
+  rsvpSubmitLabel.textContent = submitting ? '正在送出⋯' : '送出回覆';
   rsvpForm.setAttribute('aria-busy', String(submitting));
 }
 
-function showRsvpSuccess(previouslySubmitted = false, ceremonyAttendance = '') {
-  rsvpSuccessTitle.textContent = previouslySubmitted ? '您已完成出席回覆' : '謝謝您的回覆';
+function showRsvpSuccess(previouslySubmitted = false, ceremonyAttendance = '', action = 'created') {
+  const wasUpdated = !previouslySubmitted && action === 'updated';
+  rsvpSuccessTitle.textContent = previouslySubmitted
+    ? '您已完成出席回覆'
+    : (wasUpdated ? '回覆已更新' : '謝謝您的回覆');
   const isOnlineCeremony = !previouslySubmitted && ceremonyAttendance === '線上參加';
-  rsvpSuccessMessage.innerHTML = isOnlineCeremony
-    ? '我們已為您登記線上參加婚禮。<br>正式連結將於婚禮前透過原邀請訊息提供，<br>請於婚禮前再次查看 LINE 訊息。'
-    : '我們已收到您的出席資訊。<br>期待與您一起分享這個重要的日子。';
+  let successMessage = previouslySubmitted
+    ? '我們已收到您的出席資訊。<br>期待與您一起分享這個重要的日子。'
+    : (wasUpdated
+      ? '我們已更新您的出席資訊，<br>最新提交的內容將取代先前的回覆。'
+      : '您的出席回覆已成功送出。<br>期待與您一起分享這個重要的日子。');
+
+  if (isOnlineCeremony) {
+    successMessage += '<br><br>我們已為您登記線上參加婚禮。<br>正式連結將於婚禮前透過原邀請訊息提供，<br>請於婚禮前再次查看 LINE 訊息。';
+  }
+  rsvpSuccessMessage.innerHTML = successMessage;
 
   const hasOnlineMeetingLink = isOnlineCeremony && Boolean(ONLINE_MEETING_URL.trim());
   rsvpOnlineLink.hidden = !hasOnlineMeetingLink;
@@ -283,13 +301,29 @@ function validateRsvpForm() {
   const config = RSVP_MODE_CONFIG[inviteMode];
   let firstInvalid = null;
   document.querySelector('#rsvp-name-error').textContent = '';
+  document.querySelector('#rsvp-phone-error').textContent = '';
+  document.querySelector('#rsvp-vegetarian-error').textContent = '';
   rsvpName.removeAttribute('aria-invalid');
+  rsvpPhone.removeAttribute('aria-invalid');
   rsvpForm.querySelectorAll('[data-rsvp-error]').forEach((error) => { error.textContent = ''; });
 
   if (!rsvpName.value.trim()) {
     document.querySelector('#rsvp-name-error').textContent = '請輸入您的姓名。';
     rsvpName.setAttribute('aria-invalid', 'true');
     firstInvalid = rsvpName;
+  }
+
+  const phoneValue = rsvpPhone.value.trim();
+  const normalizedPhone = phoneValue.replace(/[\s-]+/g, '');
+  const phoneDigitCount = (normalizedPhone.match(/\d/g) || []).length;
+  if (!phoneValue) {
+    document.querySelector('#rsvp-phone-error').textContent = '請輸入您的聯絡電話。';
+    rsvpPhone.setAttribute('aria-invalid', 'true');
+    if (!firstInvalid) firstInvalid = rsvpPhone;
+  } else if (phoneDigitCount < 8) {
+    document.querySelector('#rsvp-phone-error').textContent = '請輸入至少 8 位數字的聯絡電話。';
+    rsvpPhone.setAttribute('aria-invalid', 'true');
+    if (!firstInvalid) firstInvalid = rsvpPhone;
   }
 
   config.required.forEach((question) => {
@@ -299,8 +333,14 @@ function validateRsvpForm() {
     if (!firstInvalid) firstInvalid = rsvpForm.querySelector(`input[name="${question}"]`);
   });
 
+  if (!rsvpCounts.hidden && rsvpVegetarianCount > rsvpPeopleCount) {
+    document.querySelector('#rsvp-vegetarian-error').textContent = '素食人數不得超過出席人數。';
+    if (!firstInvalid) firstInvalid = rsvpForm.querySelector('[data-counter="vegetarian"]');
+  }
+
   if (firstInvalid) {
-    firstInvalid.closest('.rsvp-field, .rsvp-question').scrollIntoView({
+    const errorSection = firstInvalid.closest('.rsvp-field, .rsvp-question, .rsvp-counts') || firstInvalid;
+    errorSection.scrollIntoView({
       behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
       block: 'center'
     });
@@ -308,6 +348,112 @@ function validateRsvpForm() {
     return false;
   }
   return true;
+}
+
+function setEmptyRsvpFieldFallback(name) {
+  const fallback = document.querySelector(`#rsvp-${name}-empty`);
+  fallback.disabled = Boolean(selectedRsvpValue(name));
+}
+
+function prepareRsvpSubmissionFields() {
+  rsvpInviteValue.value = inviteMode;
+  rsvpPeopleValue.value = String(inviteMode === 'online' ? 0 : rsvpPeopleCount);
+  rsvpVegetarianValue.value = String(inviteMode === 'online' ? 0 : rsvpVegetarianCount);
+  rsvpName.value = rsvpName.value.trim();
+  rsvpPhone.value = rsvpPhone.value.trim().replace(/[\s-]+/g, '');
+  document.querySelector('#rsvp-note').value = document.querySelector('#rsvp-note').value.trim();
+  document.querySelector('#rsvp-message').value = document.querySelector('#rsvp-message').value.trim();
+  ['ceremony', 'banquet', 'online'].forEach(setEmptyRsvpFieldFallback);
+}
+
+function createRsvpSubmissionId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function cleanupRsvpJsonpRequest(callbackName) {
+  const request = activeRsvpJsonpRequests.get(callbackName);
+  if (!request) return;
+  window.clearTimeout(request.cleanupTimer);
+  request.script.remove();
+  delete window[callbackName];
+  activeRsvpJsonpRequests.delete(callbackName);
+}
+
+function stopRsvpStatusPolling() {
+  if (rsvpPollingTimer !== null) {
+    window.clearInterval(rsvpPollingTimer);
+    rsvpPollingTimer = null;
+  }
+  if (rsvpStatusTimeout !== null) {
+    window.clearTimeout(rsvpStatusTimeout);
+    rsvpStatusTimeout = null;
+  }
+  [...activeRsvpJsonpRequests.keys()].forEach(cleanupRsvpJsonpRequest);
+}
+
+function finishRsvpWithError(message) {
+  stopRsvpStatusPolling();
+  setRsvpSubmitting(false);
+  pendingRsvpSubmission = null;
+  rsvpSubmitError.textContent = message;
+}
+
+function handleRsvpStatusResult(result) {
+  if (!rsvpSubmitting || !pendingRsvpSubmission || !result || typeof result !== 'object') return;
+  if (result.ready !== true) return;
+
+  if (typeof result.success !== 'boolean') return;
+  if (!result.success) {
+    finishRsvpWithError(typeof result.message === 'string' && result.message.trim()
+      ? result.message.trim()
+      : '目前無法送出，請稍後再試。');
+    return;
+  }
+
+  const completedSubmission = pendingRsvpSubmission;
+  stopRsvpStatusPolling();
+  setRsvpSubmitting(false);
+  pendingRsvpSubmission = null;
+  const resultAction = result.action === 'updated' ? 'updated' : 'created';
+  storeRsvp(completedSubmission.name);
+  rsvpForm.classList.add('is-submitted');
+  window.setTimeout(() => {
+    showRsvpSuccess(false, completedSubmission.ceremonyAttendance, resultAction);
+  }, reducedMotionQuery.matches ? 0 : 350);
+}
+
+function pollRsvpSubmissionStatus(submissionId) {
+  if (!rsvpSubmitting || pendingRsvpSubmission?.submissionId !== submissionId) return;
+
+  const callbackName = `weddingRsvpStatus_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const statusUrl = new URL(RSVP_ENDPOINT);
+  statusUrl.searchParams.set('action', 'status');
+  statusUrl.searchParams.set('id', submissionId);
+  statusUrl.searchParams.set('callback', callbackName);
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = statusUrl.toString();
+  window[callbackName] = (result) => {
+    cleanupRsvpJsonpRequest(callbackName);
+    handleRsvpStatusResult(result);
+  };
+  script.onerror = () => cleanupRsvpJsonpRequest(callbackName);
+
+  const cleanupTimer = window.setTimeout(() => cleanupRsvpJsonpRequest(callbackName), 5000);
+  activeRsvpJsonpRequests.set(callbackName, { script, cleanupTimer });
+  document.head.append(script);
+}
+
+function startRsvpStatusPolling(submissionId) {
+  stopRsvpStatusPolling();
+  rsvpPollingTimer = window.setInterval(() => pollRsvpSubmissionStatus(submissionId), 1000);
+  rsvpStatusTimeout = window.setTimeout(() => {
+    finishRsvpWithError('目前無法確認回覆是否成功送達。\n請稍後查看或重新整理後再試一次。');
+  }, 20000);
 }
 
 if (VALID_INVITE_MODES.includes(inviteMode)) {
@@ -348,43 +494,37 @@ rsvpForm.querySelectorAll('[data-counter]').forEach((button) => {
       rsvpVegetarianCount += button.dataset.action === 'increase' ? 1 : -1;
       rsvpVegetarianCount = Math.min(rsvpPeopleCount, Math.max(0, rsvpVegetarianCount));
     }
+    document.querySelector('#rsvp-vegetarian-error').textContent = '';
     updateRsvpCounters();
   });
 });
 
-rsvpForm.addEventListener('submit', async (event) => {
+rsvpForm.addEventListener('submit', (event) => {
   event.preventDefault();
   if (rsvpSubmitting || !validateRsvpForm()) return;
 
   rsvpSubmitError.textContent = '';
-  setRsvpSubmitting(true);
   const ceremonyAttendance = inviteMode === 'online' ? '' : selectedRsvpValue('ceremony');
-  const formData = new FormData();
-  formData.append('invite', inviteMode);
-  formData.append('name', rsvpName.value.trim());
-  formData.append('phone', document.querySelector('#rsvp-phone').value.trim());
-  formData.append('ceremony', ceremonyAttendance);
-  formData.append('banquet', inviteMode === 'full' ? selectedRsvpValue('banquet') : '');
-  formData.append('online', inviteMode === 'online' ? selectedRsvpValue('online') : '');
-  formData.append('people', String(inviteMode === 'online' ? 0 : rsvpPeopleCount));
-  formData.append('vegetarian', String(inviteMode === 'online' ? 0 : rsvpVegetarianCount));
-  formData.append('note', document.querySelector('#rsvp-note').value.trim());
-  formData.append('message', document.querySelector('#rsvp-message').value.trim());
+  const submissionId = createRsvpSubmissionId();
+  pendingRsvpSubmission = {
+    name: rsvpName.value.trim(),
+    ceremonyAttendance,
+    submissionId
+  };
+  prepareRsvpSubmissionFields();
+  const formData = new FormData(rsvpForm);
+  formData.set('submissionId', submissionId);
+  setRsvpSubmitting(true);
+  startRsvpStatusPolling(submissionId);
 
-  try {
-    await fetch(RSVP_ENDPOINT, {
-      method: 'POST',
-      body: formData,
-      mode: 'no-cors'
-    });
-    storeRsvp(rsvpName.value.trim());
-    rsvpForm.classList.add('is-submitted');
-    window.setTimeout(() => showRsvpSuccess(false, ceremonyAttendance), reducedMotionQuery.matches ? 0 : 350);
-  } catch {
-    rsvpSubmitError.textContent = '目前無法送出，請稍後再試。';
-  } finally {
-    setRsvpSubmitting(false);
-  }
+  fetch(RSVP_ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formData
+  }).catch(() => {
+    if (pendingRsvpSubmission?.submissionId !== submissionId) return;
+    finishRsvpWithError('目前無法送出，請稍後再試。');
+  });
 });
 
 rsvpEdit.addEventListener('click', () => {

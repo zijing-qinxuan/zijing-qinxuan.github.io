@@ -126,6 +126,9 @@
 
           <div class="rsvp-panel" id="rsvp-panel" aria-hidden="true">
             <form class="rsvp-form" id="rsvp-form" novalidate>
+              <input id="rsvp-invite-value" name="invite" type="hidden">
+              <input id="rsvp-people-value" name="people" type="hidden" value="0">
+              <input id="rsvp-vegetarian-value" name="vegetarian" type="hidden" value="0">
               <h3 id="rsvp-form-title">出席回覆</h3>
 
               <div class="rsvp-form-grid">
@@ -135,8 +138,10 @@
                   <p class="rsvp-error" id="rsvp-name-error" aria-live="polite"></p>
                 </div>
                 <div class="rsvp-field">
-                  <label for="rsvp-phone">聯絡電話</label>
-                  <input id="rsvp-phone" name="phone" type="tel" placeholder="方便聯絡的電話" autocomplete="tel">
+                  <label for="rsvp-phone">聯絡電話 <span aria-hidden="true">*</span></label>
+                  <input id="rsvp-phone" name="phone" type="tel" inputmode="tel" placeholder="方便聯絡的電話" autocomplete="tel" aria-describedby="rsvp-phone-help rsvp-phone-error" required>
+                  <p class="rsvp-field-description" id="rsvp-phone-help">僅供新人確認與更新您的出席回覆使用。</p>
+                  <p class="rsvp-error" id="rsvp-phone-error" aria-live="polite"></p>
                 </div>
               </div>
 
@@ -149,6 +154,7 @@
                 </div>
                 <p class="rsvp-error" data-rsvp-error="ceremony" aria-live="polite"></p>
               </fieldset>
+              <input id="rsvp-ceremony-empty" name="ceremony" type="hidden" value="" disabled>
 
               <fieldset class="rsvp-question" data-rsvp-question="banquet">
                 <legend>是否參加婚宴？</legend>
@@ -159,6 +165,7 @@
                 </div>
                 <p class="rsvp-error" data-rsvp-error="banquet" aria-live="polite"></p>
               </fieldset>
+              <input id="rsvp-banquet-empty" name="banquet" type="hidden" value="" disabled>
 
               <fieldset class="rsvp-question" data-rsvp-question="online">
                 <legend>是否預計線上參加婚禮？</legend>
@@ -169,6 +176,7 @@
                 </div>
                 <p class="rsvp-error" data-rsvp-error="online" aria-live="polite"></p>
               </fieldset>
+              <input id="rsvp-online-empty" name="online" type="hidden" value="" disabled>
 
               <div class="rsvp-counts" id="rsvp-counts" hidden>
                 <div class="rsvp-counter">
@@ -187,6 +195,7 @@
                     <button type="button" data-counter="vegetarian" data-action="increase" aria-label="增加素食人數">＋</button>
                   </div>
                 </div>
+                <p class="rsvp-error rsvp-counts-error" id="rsvp-vegetarian-error" aria-live="polite"></p>
               </div>
 
               <div class="rsvp-field rsvp-wide">
@@ -210,6 +219,7 @@
               <div class="rsvp-success-mark" aria-hidden="true"><span></span></div>
               <h3 id="rsvp-success-title">謝謝您的回覆</h3>
               <p id="rsvp-success-message">我們已收到您的出席資訊。<br>期待與您一起分享這個重要的日子。</p>
+              <p class="rsvp-update-note">使用相同的姓名與聯絡電話再次送出，<br>系統會更新您原本的回覆。</p>
               <div class="rsvp-success-actions">
                 <a class="button rsvp-online-link" id="rsvp-online-link" target="_blank" rel="noopener noreferrer" hidden>進入線上婚禮</a>
                 <button class="button rsvp-edit" id="rsvp-edit" type="button">修改回覆</button>
@@ -217,6 +227,20 @@
             </div>
           </div>
         </article>
+      </div>
+    </section>
+
+    <section class="page-section gift-note-section" id="gift-note" data-invite="section:gift-note">
+      <div class="shell gift-note-wrap reveal">
+        <div class="gift-note-panel">
+          <p class="gift-note-kicker">A LITTLE NOTE</p>
+          <h2>一點小心意</h2>
+          <span class="gift-note-line" aria-hidden="true"></span>
+          <div class="gift-note-copy">
+            <p>您願意來到現場，<br>與我們一起見證這個重要的時刻，<br>就是我們最珍貴的禮物。</p>
+            <p>本次婚禮不收禮金，<br>請帶著輕鬆的心情前來，<br>和我們一起分享這份喜悅。</p>
+          </div>
+        </div>
       </div>
     </section>
 
