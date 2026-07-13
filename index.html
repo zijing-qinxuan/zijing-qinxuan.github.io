@@ -68,14 +68,19 @@
       <div class="nav-links" id="nav-links">
         <a href="#rsvp" data-invite="nav:rsvp">出席回覆</a>
         <a href="#ceremony-info" data-invite="nav:ceremony-info">婚禮資訊</a>
-        <a href="#ceremony-parking" data-invite="nav:ceremony-parking">婚禮停車</a>
         <a href="#wedding-info" data-invite="nav:wedding-info">婚宴資訊</a>
-        <a href="#venue" data-invite="nav:venue">交通</a>
-        <a href="#parking" data-invite="nav:parking">婚宴停車</a>
         <a href="#seating" data-invite="nav:seating">座位查詢</a>
         <a href="#gallery" data-invite="nav:gallery">婚紗相簿</a>
-        <a href="#share" data-invite="nav:share">照片分享</a>
-        <a href="#faq" data-invite="nav:faq">常見問題</a>
+        <div class="nav-more" id="nav-more">
+          <button class="nav-more-toggle" id="nav-more-toggle" type="button" aria-expanded="false" aria-controls="nav-more-menu" aria-haspopup="true">更多</button>
+          <div class="nav-more-menu" id="nav-more-menu">
+            <a href="#ceremony-parking" data-invite="nav:ceremony-parking">婚禮停車</a>
+            <a href="#venue" data-invite="nav:venue">交通</a>
+            <a href="#parking" data-invite="nav:parking">婚宴停車</a>
+            <a href="#share" data-invite="nav:share">照片分享</a>
+            <a href="#faq" data-invite="nav:faq">常見問題</a>
+          </div>
+        </div>
       </div>
     </nav>
   </header>
@@ -121,7 +126,8 @@
           <header class="rsvp-heading">
             <p>RSVP</p>
             <h2 id="rsvp-title">出席回覆</h2>
-            <p>我們誠摯期待您的蒞臨。<br>為了讓我們能更完善地安排，<br>請花約 30 秒完成出席回覆。</p>
+            <p class="rsvp-intro">我們誠摯期待您的蒞臨。<br>為了讓我們能更完善地安排，<br>請花約 30 秒完成出席回覆。</p>
+            <p class="rsvp-deadline-note">請於 <span data-rsvp-deadline></span>前完成回覆。<br>回覆後仍可使用相同姓名與聯絡電話更新資料。</p>
           </header>
 
           <button class="button rsvp-toggle" id="rsvp-toggle" type="button" aria-expanded="false" aria-controls="rsvp-panel"><span>立即回覆</span></button>
@@ -223,6 +229,7 @@
               <h3 id="rsvp-success-title" tabindex="-1">謝謝您的回覆</h3>
               <p id="rsvp-success-message">我們已收到您的出席資訊。<br>期待與您一起分享這個重要的日子。</p>
               <p class="rsvp-update-note">使用相同的姓名與聯絡電話再次送出，<br>系統會更新您原本的回覆。</p>
+              <p class="rsvp-contact-note">若想再次確認或需要協助，<br>請透過原邀請的 LINE 訊息聯絡我們。</p>
               <div class="rsvp-success-actions">
                 <a class="button rsvp-online-link" id="rsvp-online-link" target="_blank" rel="noopener noreferrer" hidden>進入線上婚禮</a>
                 <button class="button rsvp-edit" id="rsvp-edit" type="button">修改回覆</button>
@@ -469,28 +476,39 @@
           <h2 id="parking-title">停車資訊</h2>
           <span>會館備有地下與戶外停車空間。</span>
         </header>
-        <div class="parking-grid">
-          <article class="glass-card parking-card reveal">
-            <div class="parking-image image-shell">
+        <div class="banquet-parking-grid">
+          <article class="glass-card banquet-parking-card reveal">
+            <div class="banquet-parking-media image-shell">
               <img src="assets/parking-indoor.jpg" alt="晶宴會館地下停車場入口" width="1536" height="1487" loading="lazy" decoding="async">
             </div>
-            <div class="parking-copy">
-              <p class="label">INDOOR PARKING</p>
-              <span class="parking-badge">推薦</span>
-              <h3>地下停車場</h3>
-              <p>建議優先停放地下停車場，可直接搭乘電梯前往 2 樓星辰劇場。<br><br>婚宴期間服務人員會到桌邊協助辦理停車消磁，無需自行處理。</p>
-              <a class="text-link" href="https://maps.app.goo.gl/syt4XhgH2ppqW18v9" target="_blank" rel="noopener noreferrer" aria-label="查看晶宴會館地下停車場位置">開啟導航 <span aria-hidden="true">↗</span></a>
+            <div class="banquet-parking-body">
+              <div class="banquet-parking-header">
+                <p class="banquet-parking-eyebrow">INDOOR PARKING</p>
+                <div class="banquet-parking-badge">推薦</div>
+                <h3 class="banquet-parking-title">地下停車場</h3>
+              </div>
+              <div class="banquet-parking-description">
+                <p>建議優先停放地下停車場，可直接搭乘電梯前往 2 樓星辰劇場。</p>
+                <p>婚宴期間服務人員會到桌邊協助辦理停車消磁，無需自行處理。</p>
+              </div>
+              <a class="banquet-parking-link text-link" href="https://maps.app.goo.gl/syt4XhgH2ppqW18v9" target="_blank" rel="noopener noreferrer" aria-label="查看晶宴會館地下停車場位置">開啟導航 <span aria-hidden="true">↗</span></a>
             </div>
           </article>
-          <article class="glass-card parking-card reveal delay">
-            <div class="parking-image image-shell">
+          <article class="glass-card banquet-parking-card reveal delay">
+            <div class="banquet-parking-media image-shell">
               <img src="assets/parking-outdoor.jpg" alt="晶宴會館戶外平面停車場" width="1536" height="1479" loading="lazy" decoding="async">
             </div>
-            <div class="parking-copy">
-              <p class="label">OUTDOOR PARKING</p>
-              <h3>戶外平面停車場</h3>
-              <p>車位較多，步行約 2～3 分鐘即可抵達會館。<br><br>離場前請至櫃檯報車號，由工作人員協助辦理停車消磁。</p>
-              <a class="text-link" href="https://maps.app.goo.gl/YsNmcXz2q3yABRh56" target="_blank" rel="noopener noreferrer" aria-label="查看晶宴會館戶外平面停車場位置">開啟導航 <span aria-hidden="true">↗</span></a>
+            <div class="banquet-parking-body">
+              <div class="banquet-parking-header">
+                <p class="banquet-parking-eyebrow">OUTDOOR PARKING</p>
+                <div class="banquet-parking-badge banquet-parking-badge--placeholder" aria-hidden="true">推薦</div>
+                <h3 class="banquet-parking-title">戶外平面停車場</h3>
+              </div>
+              <div class="banquet-parking-description">
+                <p>車位較多，步行約 2～3 分鐘即可抵達會館。</p>
+                <p>離場前請至櫃檯報車號，由工作人員協助辦理停車消磁。</p>
+              </div>
+              <a class="banquet-parking-link text-link" href="https://maps.app.goo.gl/YsNmcXz2q3yABRh56" target="_blank" rel="noopener noreferrer" aria-label="查看晶宴會館戶外平面停車場位置">開啟導航 <span aria-hidden="true">↗</span></a>
             </div>
           </article>
         </div>
@@ -630,6 +648,14 @@
           <details>
             <summary aria-expanded="false" aria-controls="faq-answer-2"><span class="faq-question" role="heading" aria-level="3">婚禮場地位於哪裡？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
             <p id="faq-answer-2">婚禮位於耶和華見證人王國聚會所－竹東會眾，會場在 2 樓。</p>
+          </details>
+          <details>
+            <summary aria-expanded="false" aria-controls="faq-answer-5"><span class="faq-question" role="heading" aria-level="3">這次婚禮會收禮金嗎？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
+            <p id="faq-answer-5">您願意與我們一起見證這個重要的時刻，<br>就是我們最珍貴的禮物。<br>本次婚禮不收禮金，<br>請帶著輕鬆的心情前來。</p>
+          </details>
+          <details>
+            <summary aria-expanded="false" aria-controls="faq-answer-6"><span class="faq-question" role="heading" aria-level="3">需要在什麼時候前完成出席回覆？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
+            <p id="faq-answer-6">請於 <span data-rsvp-deadline></span>前完成回覆。<br>若出席狀況有變，<br>可使用相同姓名與聯絡電話再次提交，<br>系統會更新原本的回覆。</p>
           </details>
           <details data-invite="content:banquet-faq">
             <summary aria-expanded="false" aria-controls="faq-answer-3"><span class="faq-question" role="heading" aria-level="3">婚宴幾點開始？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>

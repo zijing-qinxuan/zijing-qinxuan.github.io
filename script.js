@@ -1,4 +1,5 @@
 const ONLINE_MEETING_URL = "";
+const RSVP_DEADLINE_TEXT = "2026 年 12 月 20 日";
 const RSVP_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbyvs0LurNvxURz_e15WG-ky2d1EFydHfJtbLYkbb1XTk_7Ol1RndFNAQTbcvFQKGwFbKw/exec";
 const VALID_INVITE_MODES = ["wedding", "full", "online"];
@@ -35,6 +36,9 @@ const heroMedia = document.querySelector('.hero-media');
 const heroImage = document.querySelector('.hero-image');
 const menuButton = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('#nav-links');
+const navMore = document.querySelector('#nav-more');
+const navMoreToggle = document.querySelector('#nav-more-toggle');
+const navMoreMenu = document.querySelector('#nav-more-menu');
 const inviteMode = new URLSearchParams(window.location.search).get('invite');
 const heroSchedule = document.querySelector('#hero-schedule');
 const weddingCountdown = document.querySelector('#wedding-countdown');
@@ -45,6 +49,10 @@ const landingHelpButton = document.querySelector('#landing-help-button');
 const landingDialog = document.querySelector('#landing-dialog');
 const dialogCloseButton = document.querySelector('#dialog-close-button');
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+document.querySelectorAll('[data-rsvp-deadline]').forEach((element) => {
+  element.textContent = RSVP_DEADLINE_TEXT;
+});
 
 if (VALID_INVITE_MODES.includes(inviteMode)) {
   const config = INVITE_CONFIG[inviteMode];
@@ -70,6 +78,7 @@ if (VALID_INVITE_MODES.includes(inviteMode)) {
     line.textContent = text;
     heroSchedule.append(line);
   });
+  navMore.hidden = ![...navMoreMenu.querySelectorAll('a')].some((link) => !link.hidden);
 } else {
   document.body.classList.add('invite-missing');
 }
@@ -577,12 +586,49 @@ function setMenu(open) {
   document.body.classList.toggle('menu-open', open);
 }
 
+function setMoreMenu(open, restoreFocus = false) {
+  if (navMore.hidden) return;
+  navMoreToggle.setAttribute('aria-expanded', String(open));
+  navMore.classList.toggle('open', open);
+  if (!open && restoreFocus) navMoreToggle.focus({ preventScroll: true });
+}
+
 menuButton.addEventListener('click', () => {
   setMenu(menuButton.getAttribute('aria-expanded') !== 'true');
 });
 
 navLinks.querySelectorAll('a').forEach((link) => {
-  link.addEventListener('click', () => setMenu(false));
+  link.addEventListener('click', () => {
+    setMoreMenu(false);
+    setMenu(false);
+  });
+});
+
+navMoreToggle.addEventListener('click', () => {
+  setMoreMenu(navMoreToggle.getAttribute('aria-expanded') !== 'true');
+});
+
+navMore.addEventListener('mouseenter', () => {
+  if (window.innerWidth > 820) setMoreMenu(true);
+});
+
+navMore.addEventListener('mouseleave', () => {
+  if (window.innerWidth > 820 && !navMore.contains(document.activeElement)) setMoreMenu(false);
+});
+
+navMore.addEventListener('focusout', () => {
+  window.setTimeout(() => {
+    if (!navMore.contains(document.activeElement)) setMoreMenu(false);
+  });
+});
+
+document.addEventListener('pointerdown', (event) => {
+  if (!navMore.contains(event.target)) setMoreMenu(false);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || navMoreToggle.getAttribute('aria-expanded') !== 'true') return;
+  setMoreMenu(false, true);
 });
 
 document.addEventListener('keydown', (event) => {
@@ -598,6 +644,7 @@ function requestResizeUpdate() {
   resizeTicking = true;
   window.requestAnimationFrame(() => {
     if (window.innerWidth > 820) setMenu(false);
+    else setMoreMenu(false);
     requestScrollUpdate();
     resizeTicking = false;
   });
@@ -657,7 +704,7 @@ const unifiedRevealTargets = document.querySelectorAll([
 
 unifiedRevealTargets.forEach((item) => item.classList.add('reveal'));
 
-document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-note-grid, .arrival-guides, .parking-grid, .share-steps, .story-sequence').forEach((group) => {
+document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-note-grid, .arrival-guides, .banquet-parking-grid, .share-steps, .story-sequence').forEach((group) => {
   [...group.children].forEach((item, index) => {
     item.style.setProperty('--reveal-delay', `${Math.min(index * 70, 350)}ms`);
   });
