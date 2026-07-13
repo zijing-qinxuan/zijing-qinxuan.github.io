@@ -32,6 +32,7 @@ const INVITE_CONFIG = {
 const header = document.querySelector('#site-header');
 const hero = document.querySelector('#home');
 const heroMedia = document.querySelector('.hero-media');
+const heroImage = document.querySelector('.hero-image');
 const menuButton = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('#nav-links');
 const inviteMode = new URLSearchParams(window.location.search).get('invite');
@@ -650,18 +651,24 @@ const unifiedRevealTargets = document.querySelectorAll([
   '.page-section .glass-card',
   '.page-section .share-step',
   '.story-gallery .story-title',
-  '.story-gallery .gallery-media'
+  '.story-gallery .gallery-media',
+  'footer'
 ].join(','));
 
 unifiedRevealTargets.forEach((item) => item.classList.add('reveal'));
 
-document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-note-grid, .parking-grid, .share-steps').forEach((group) => {
+document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-note-grid, .arrival-guides, .parking-grid, .share-steps, .story-sequence').forEach((group) => {
   [...group.children].forEach((item, index) => {
-    item.style.setProperty('--reveal-delay', `${Math.min(index * 90, 180)}ms`);
+    item.style.setProperty('--reveal-delay', `${Math.min(index * 70, 350)}ms`);
   });
 });
 
-const revealItems = document.querySelectorAll('.reveal:not(.is-visible)');
+document.querySelectorAll('.story-gallery .gallery-media').forEach((item, index) => {
+  item.style.setProperty('--reveal-delay', `${Math.min(index * 60, 360)}ms`);
+});
+
+const revealItems = [...document.querySelectorAll('.reveal:not(.is-visible)')]
+  .filter((item) => !item.hidden && !item.closest('[hidden]') && item.getClientRects().length > 0);
 
 if ('IntersectionObserver' in window) {
   const revealObserver = new IntersectionObserver((entries, currentObserver) => {
@@ -670,7 +677,7 @@ if ('IntersectionObserver' in window) {
       entry.target.classList.add('is-visible');
       currentObserver.unobserve(entry.target);
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -24px' });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
 
   revealItems.forEach((item) => revealObserver.observe(item));
 } else {
@@ -828,6 +835,13 @@ function showGalleryImage(index) {
   lightboxImage.src = image.src;
   lightboxImage.alt = '子靖與勤萱婚紗照';
   lightboxCounter.textContent = `${String(currentGalleryIndex + 1).padStart(2, '0')} / ${galleryImages.length}`;
+  if (!lightbox.hidden && !reducedMotionQuery.matches) {
+    lightboxImage.classList.remove('switching');
+    void lightboxImage.offsetWidth;
+    lightboxImage.classList.add('switching');
+  } else {
+    lightboxImage.classList.remove('switching');
+  }
 }
 
 function openLightbox(index, trigger) {
@@ -863,7 +877,7 @@ function finishClosingLightbox() {
 function closeLightbox() {
   if (lightbox.hidden || lightbox.classList.contains('closing')) return;
   lightbox.classList.add('closing');
-  lightboxCloseTimer = window.setTimeout(finishClosingLightbox, reducedMotionQuery.matches ? 0 : 250);
+  lightboxCloseTimer = window.setTimeout(finishClosingLightbox, reducedMotionQuery.matches ? 0 : 380);
 }
 
 galleryButtons.forEach((button) => {
@@ -920,3 +934,19 @@ lightbox.addEventListener('touchend', (event) => {
   if (Math.abs(distance) < 50) return;
   showGalleryImage(currentGalleryIndex + (distance < 0 ? 1 : -1));
 }, { passive: true });
+
+if (!reducedMotionQuery.matches) {
+  document.documentElement.classList.add('motion-enabled');
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => document.documentElement.classList.add('is-ready'));
+  });
+} else {
+  document.documentElement.classList.add('is-ready');
+}
+
+heroImage.addEventListener('animationend', () => heroImage.classList.add('motion-complete'), { once: true });
+reducedMotionQuery.addEventListener?.('change', (event) => {
+  document.documentElement.classList.toggle('motion-enabled', !event.matches);
+  document.documentElement.classList.add('is-ready');
+  if (event.matches) heroImage.classList.add('motion-complete');
+});
