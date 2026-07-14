@@ -1,5 +1,7 @@
 const ONLINE_MEETING_URL = "";
 const RSVP_DEADLINE_TEXT = "2026 年 12 月 20 日";
+const SEAT_LOOKUP_OPEN_AT = "2026-12-19T00:00:00+08:00";
+const SEAT_LOOKUP_DEV_PREVIEW_KEY = "wedding-seat-lookup-preview";
 const RSVP_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbyvs0LurNvxURz_e15WG-ky2d1EFydHfJtbLYkbb1XTk_7Ol1RndFNAQTbcvFQKGwFbKw/exec";
 const VALID_INVITE_MODES = ["wedding", "full", "online"];
@@ -49,6 +51,61 @@ const landingHelpButton = document.querySelector('#landing-help-button');
 const landingDialog = document.querySelector('#landing-dialog');
 const dialogCloseButton = document.querySelector('#dialog-close-button');
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const seatLookupUnavailable = document.querySelector('#seat-lookup-unavailable');
+const seatingDescription = document.querySelector('#seating-description');
+const seatLookupOpenContent = [...document.querySelectorAll('[data-seat-lookup-open]')];
+
+function isLocalDevelopmentHost() {
+  return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
+}
+
+function getSeatLookupOpenTimestamp() {
+  return new Date(SEAT_LOOKUP_OPEN_AT).getTime();
+}
+
+function getSeatLookupEvaluationTime() {
+  const actualTime = Date.now();
+  if (!isLocalDevelopmentHost()) return actualTime;
+
+  try {
+    const previewState = window.sessionStorage.getItem(SEAT_LOOKUP_DEV_PREVIEW_KEY);
+    if (previewState === 'before') return getSeatLookupOpenTimestamp() - 60000;
+    if (previewState === 'open') return getSeatLookupOpenTimestamp();
+  } catch {
+    return actualTime;
+  }
+
+  return actualTime;
+}
+
+function isSeatLookupOpen(now = Date.now()) {
+  return now >= getSeatLookupOpenTimestamp();
+}
+
+function formatSeatLookupOpenDate() {
+  const dateParts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric'
+  }).formatToParts(new Date(SEAT_LOOKUP_OPEN_AT));
+  const dateValues = Object.fromEntries(dateParts.map(({ type, value }) => [type, value]));
+  return `${dateValues.year} 年 ${dateValues.month} 月 ${dateValues.day} 日`;
+}
+
+document.querySelectorAll('[data-seat-lookup-open-date]').forEach((element) => {
+  element.textContent = formatSeatLookupOpenDate();
+});
+
+function initializeSeatLookupAvailability() {
+  if (inviteMode !== 'full') return;
+  const lookupIsOpen = isSeatLookupOpen(getSeatLookupEvaluationTime());
+  seatLookupUnavailable.hidden = lookupIsOpen;
+  seatingDescription.hidden = !lookupIsOpen;
+  seatLookupOpenContent.forEach((element) => {
+    element.hidden = !lookupIsOpen;
+  });
+}
 
 document.querySelectorAll('[data-rsvp-deadline]').forEach((element) => {
   element.textContent = RSVP_DEADLINE_TEXT;
@@ -83,6 +140,7 @@ if (VALID_INVITE_MODES.includes(inviteMode)) {
   document.body.classList.add('invite-missing');
 }
 
+initializeSeatLookupAvailability();
 document.body.classList.remove('invite-pending');
 
 function updateWeddingCountdown() {

@@ -523,12 +523,17 @@
         <header class="section-title section-header seat-title reveal">
           <p class="section-header__eyebrow">SEAT LOOKUP</p>
           <h2 class="section-header__title" id="seating-title">座位查詢</h2>
-          <p class="section-header__description">歡迎蒞臨我們的婚禮<br>請輸入您的姓名即可快速查詢桌位。</p>
+          <p class="section-header__description" id="seating-description">歡迎蒞臨我們的婚禮<br>請輸入您的姓名即可快速查詢桌位。</p>
         </header>
 
         <div class="seat-lookup-stage reveal">
-          <div class="lookup-rule" aria-hidden="true"></div>
-          <form class="seat-search" id="seat-search" novalidate>
+          <article class="seat-lookup-unavailable glass-card" id="seat-lookup-unavailable" hidden>
+            <h3>座位查詢尚未開放</h3>
+            <p>座位資訊將於 <span data-seat-lookup-open-date></span>開放查詢。</p>
+          </article>
+
+          <div class="lookup-rule" aria-hidden="true" data-seat-lookup-open></div>
+          <form class="seat-search" id="seat-search" novalidate data-seat-lookup-open>
             <label class="sr-only" for="guest-name">賓客姓名</label>
             <div class="search-field">
               <span class="search-icon" aria-hidden="true"></span>
@@ -540,9 +545,9 @@
               <span class="button-label">查詢座位</span>
             </button>
           </form>
-          <div class="lookup-rule" aria-hidden="true"></div>
+          <div class="lookup-rule" aria-hidden="true" data-seat-lookup-open></div>
 
-          <div class="lookup-result" id="lookup-result" role="status" aria-live="polite" aria-atomic="true"></div>
+          <div class="lookup-result" id="lookup-result" role="status" aria-live="polite" aria-atomic="true" data-seat-lookup-open></div>
         </div>
       </div>
     </section>

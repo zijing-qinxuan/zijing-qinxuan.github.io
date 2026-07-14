@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#102740">
   <meta name="robots" content="noindex, nofollow">
   <title>Developer Mode｜Wedding Website Preview</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <style>
     :root {
       --navy: #102740;
@@ -149,6 +150,47 @@
       font-weight: 600;
     }
 
+    .seat-preview {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(201, 169, 106, .38);
+    }
+
+    .seat-preview p {
+      margin: 0 0 14px;
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+      letter-spacing: .06em;
+    }
+
+    .seat-preview-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .seat-preview-button {
+      min-height: 44px;
+      padding: 10px 14px;
+      color: white;
+      background: rgba(255, 255, 255, .1);
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 999px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .seat-preview-button[aria-pressed="true"] {
+      color: var(--navy);
+      background: rgba(255, 255, 255, .9);
+      border-color: rgba(255, 255, 255, .7);
+    }
+
+    .seat-preview-button:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+    }
+
     footer {
       padding: 24px 20px max(24px, env(safe-area-inset-bottom));
       text-align: center;
@@ -169,6 +211,7 @@
       .panel { padding: 42px 22px; border-radius: 28px; }
       .mode-grid { grid-template-columns: 1fr; }
       .mode-button { width: 100%; }
+      .seat-preview-options { grid-template-columns: 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -198,6 +241,15 @@
         <a class="mode-button" href="index.html"><span aria-hidden="true">🏠</span> Landing Page</a>
       </nav>
 
+      <div class="seat-preview" id="seat-preview" hidden>
+        <p>座位查詢開放狀態</p>
+        <div class="seat-preview-options">
+          <button class="seat-preview-button" type="button" data-seat-preview="actual" aria-pressed="false">實際日期</button>
+          <button class="seat-preview-button" type="button" data-seat-preview="before" aria-pressed="false">模擬尚未開放</button>
+          <button class="seat-preview-button" type="button" data-seat-preview="open" aria-pressed="false">模擬已開放</button>
+        </div>
+      </div>
+
       <p class="current-mode">目前模式：<strong id="current-mode">Landing Page</strong></p>
     </section>
   </main>
@@ -216,6 +268,32 @@
 
     const currentInvite = new URLSearchParams(window.location.search).get('invite');
     document.querySelector('#current-mode').textContent = modeNames[currentInvite] || 'Landing Page';
+
+    const seatPreview = document.querySelector('#seat-preview');
+    const seatPreviewButtons = [...document.querySelectorAll('[data-seat-preview]')];
+    const seatPreviewKey = 'wedding-seat-lookup-preview';
+    const localDevelopmentHosts = ['localhost', '127.0.0.1', '::1', '[::1]'];
+
+    if (localDevelopmentHosts.includes(window.location.hostname)) {
+      seatPreview.hidden = false;
+
+      const syncSeatPreview = () => {
+        const currentPreview = window.sessionStorage.getItem(seatPreviewKey) || 'actual';
+        seatPreviewButtons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.seatPreview === currentPreview));
+        });
+      };
+
+      seatPreviewButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          if (button.dataset.seatPreview === 'actual') window.sessionStorage.removeItem(seatPreviewKey);
+          else window.sessionStorage.setItem(seatPreviewKey, button.dataset.seatPreview);
+          syncSeatPreview();
+        });
+      });
+
+      syncSeatPreview();
+    }
   </script>
 </body>
 </html>
