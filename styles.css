@@ -534,7 +534,7 @@ html.motion-enabled .hero-image { will-change: transform, opacity; }
 
 .lightbox[hidden] { display: none; }
 .lightbox { position: fixed; z-index: 500; inset: 0; display: grid; grid-template-columns: 80px minmax(0,1fr) 80px; align-items: center; padding: 30px; color: var(--color-text-inverse); background: var(--overlay-dark); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); animation: lightbox-in 400ms var(--motion-ease) both; }
-body.lightbox-open { overflow: hidden; }
+html.lightbox-open, body.lightbox-open { overflow: hidden; }
 .lightbox-stage { min-width: 0; height: calc(100vh - 100px); height: calc(100svh - 100px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
 .lightbox-image { display: block; max-width: 100%; max-height: calc(100% - 32px); width: auto; height: auto; object-fit: contain; box-shadow: var(--shadow-lg); animation: lightbox-image-in 400ms var(--motion-ease) both; }
 .lightbox-image.switching { animation: lightbox-switch-in 380ms var(--motion-ease) both; }

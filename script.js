@@ -59,6 +59,11 @@ function isLocalDevelopmentHost() {
   return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
 }
 
+function debugCarouselLifecycle(label, details = {}) {
+  if (!isLocalDevelopmentHost()) return;
+  console.debug(`[carousel] ${label}`, details);
+}
+
 function getSeatLookupOpenTimestamp() {
   return new Date(SEAT_LOOKUP_OPEN_AT).getTime();
 }
@@ -851,21 +856,32 @@ document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-not
   });
 });
 
-const revealItems = [...document.querySelectorAll('.reveal:not(.is-visible)')]
+const revealItems = [...document.querySelectorAll('.reveal')]
   .filter((item) => !item.hidden && !item.closest('[hidden]') && item.getClientRects().length > 0);
+revealItems.forEach((item) => {
+  if (item.dataset.revealed === 'true') item.classList.add('is-visible');
+});
+const pendingRevealItems = revealItems.filter((item) => !item.classList.contains('is-visible'));
 
 if ('IntersectionObserver' in window) {
   const revealObserver = new IntersectionObserver((entries, currentObserver) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('is-visible');
+      entry.target.dataset.revealed = 'true';
+      if (entry.target.matches('.wedding-carousel')) {
+        debugCarouselLifecycle('reveal observer callback', { revealed: true });
+      }
       currentObserver.unobserve(entry.target);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
 
-  revealItems.forEach((item) => revealObserver.observe(item));
+  pendingRevealItems.forEach((item) => revealObserver.observe(item));
 } else {
-  revealItems.forEach((item) => item.classList.add('is-visible'));
+  pendingRevealItems.forEach((item) => {
+    item.classList.add('is-visible');
+    item.dataset.revealed = 'true';
+  });
 }
 
 document.querySelectorAll('.faq-list details').forEach((details) => {
@@ -1036,6 +1052,10 @@ let carouselLayoutTicking = false;
 let carouselRequestToken = 0;
 let carouselMotionTimer = null;
 let lightboxCarouselState = null;
+let lightboxScrollX = 0;
+let isLightboxClosing = false;
+let isRestoringScroll = false;
+let carouselLayoutPending = false;
 
 function carouselIndex(index) {
   return (index + carouselSlides.length) % carouselSlides.length;
@@ -1186,7 +1206,7 @@ function showCarouselSlide(index, userInitiated = false) {
 }
 
 function updateCarouselFromScroll() {
-  if (!carouselMobileQuery.matches || carouselScrollTicking) return;
+  if (!carouselMobileQuery.matches || carouselScrollTicking || isLightboxClosing || isRestoringScroll || !lightbox.hidden) return;
   carouselScrollTicking = true;
   window.requestAnimationFrame(() => {
     const viewportCenter = carouselViewport.scrollLeft + (carouselViewport.clientWidth / 2);
@@ -1212,6 +1232,15 @@ function updateCarouselFromScroll() {
 }
 
 function requestCarouselLayout() {
+  debugCarouselLifecycle('carousel refresh called', {
+    activeIndex: carouselActiveIndex,
+    isLightboxClosing,
+    isRestoringScroll
+  });
+  if (isLightboxClosing || isRestoringScroll || !lightbox.hidden) {
+    carouselLayoutPending = true;
+    return;
+  }
   if (carouselLayoutTicking) return;
   carouselLayoutTicking = true;
   window.requestAnimationFrame(() => {
@@ -1304,7 +1333,23 @@ if (carouselIsEnabled) {
     scheduleCarouselAutoplay();
   });
   carouselMobileQuery.addEventListener?.('change', requestCarouselLayout);
-  window.addEventListener('resize', requestCarouselLayout, { passive: true });
+  window.addEventListener('resize', () => {
+    debugCarouselLifecycle('resize fired', {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      isLightboxClosing,
+      isRestoringScroll
+    });
+    requestCarouselLayout();
+  }, { passive: true });
+  window.visualViewport?.addEventListener('resize', () => {
+    debugCarouselLifecycle('visualViewport resize fired', {
+      width: window.visualViewport.width,
+      height: window.visualViewport.height,
+      isLightboxClosing,
+      isRestoringScroll
+    });
+  }, { passive: true });
   if ('ResizeObserver' in window) new ResizeObserver(requestCarouselLayout).observe(carouselViewport);
   document.fonts?.ready.then(requestCarouselLayout);
   if ('IntersectionObserver' in window) {
@@ -1386,6 +1431,8 @@ function showAdjacentGalleryImage(step) {
 function openLightbox(index, trigger) {
   window.clearTimeout(lightboxCloseTimer);
   lastGalleryTrigger = trigger;
+  isLightboxClosing = false;
+  isRestoringScroll = false;
   lightboxCarouselState = carouselIsEnabled ? {
     activeIndex: carouselActiveIndex,
     mobileLayout: carouselMobileQuery.matches,
@@ -1399,12 +1446,19 @@ function openLightbox(index, trigger) {
   lightbox.classList.remove('closing');
   lightbox.hidden = false;
   lightboxScrollY = window.scrollY;
+  lightboxScrollX = window.scrollX;
+  debugCarouselLifecycle('lightbox open', {
+    savedScrollX: lightboxScrollX,
+    savedScrollY: lightboxScrollY,
+    activeIndex: carouselActiveIndex
+  });
+  document.documentElement.classList.add('lightbox-open');
   document.body.classList.add('lightbox-open');
   document.body.style.position = 'fixed';
   document.body.style.top = `-${lightboxScrollY}px`;
-  document.body.style.left = '0';
-  document.body.style.right = '0';
+  document.body.style.left = `-${lightboxScrollX}px`;
   document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
   lightboxClose.focus();
 }
 
@@ -1412,28 +1466,50 @@ function restorePagePositionAfterLightbox() {
   const root = document.documentElement;
   const previousScrollBehavior = root.style.scrollBehavior;
   root.style.scrollBehavior = 'auto';
-  window.scrollTo({ top: lightboxScrollY, left: 0, behavior: 'auto' });
+  root.getBoundingClientRect();
+  window.scrollTo({ top: lightboxScrollY, left: lightboxScrollX, behavior: 'auto' });
 
-  if (lastGalleryTrigger) {
-    try {
-      lastGalleryTrigger.focus({ preventScroll: true });
-    } catch {
-      lastGalleryTrigger.focus();
-      window.scrollTo({ top: lightboxScrollY, left: 0, behavior: 'auto' });
+  if (lightboxCarouselState && carouselActiveIndex === lightboxCarouselState.activeIndex) {
+    if (lightboxCarouselState.mobileLayout === carouselMobileQuery.matches) {
+      if (carouselMobileQuery.matches) carouselViewport.scrollLeft = lightboxCarouselState.scrollLeft;
+      else carouselTrack.style.transform = lightboxCarouselState.trackTransform;
     }
+    positionCarousel(lightboxCarouselState.activeIndex, false);
   }
 
   window.requestAnimationFrame(() => {
-    root.style.scrollBehavior = previousScrollBehavior;
-    if (lightboxCarouselState && carouselActiveIndex === lightboxCarouselState.activeIndex) {
-      if (lightboxCarouselState.mobileLayout === carouselMobileQuery.matches) {
-        if (carouselMobileQuery.matches) carouselViewport.scrollLeft = lightboxCarouselState.scrollLeft;
-        else carouselTrack.style.transform = lightboxCarouselState.trackTransform;
+    window.requestAnimationFrame(() => {
+      if (lastGalleryTrigger) {
+        try {
+          lastGalleryTrigger.focus({ preventScroll: true });
+        } catch {
+          lastGalleryTrigger.focus();
+        }
       }
-      requestCarouselLayout();
-      if (lightboxCarouselState.autoplayWasScheduled) scheduleCarouselAutoplay();
-    }
-    lightboxCarouselState = null;
+
+      if (Math.abs(window.scrollY - lightboxScrollY) > 1 || Math.abs(window.scrollX - lightboxScrollX) > 1) {
+        window.scrollTo({ top: lightboxScrollY, left: lightboxScrollX, behavior: 'auto' });
+      }
+
+      debugCarouselLifecycle('lightbox close restored', {
+        activeIndex: carouselActiveIndex,
+        expectedActiveIndex: lightboxCarouselState?.activeIndex,
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        focusTarget: document.activeElement?.dataset?.galleryIndex ?? null
+      });
+
+      const autoplayWasScheduled = lightboxCarouselState?.autoplayWasScheduled;
+      root.style.scrollBehavior = previousScrollBehavior;
+      isRestoringScroll = false;
+      isLightboxClosing = false;
+      lightboxCarouselState = null;
+      if (carouselLayoutPending) {
+        carouselLayoutPending = false;
+        requestCarouselLayout();
+      }
+      if (autoplayWasScheduled) scheduleCarouselAutoplay();
+    });
   });
 }
 
@@ -1441,17 +1517,31 @@ function finishClosingLightbox() {
   lightbox.hidden = true;
   lightbox.classList.remove('closing');
   lightboxImage.removeAttribute('src');
+  const lockedBodyTop = document.body.style.top;
+  const lockedBodyLeft = document.body.style.left;
+  document.documentElement.classList.remove('lightbox-open');
   document.body.classList.remove('lightbox-open');
   document.body.style.position = '';
   document.body.style.top = '';
   document.body.style.left = '';
-  document.body.style.right = '';
   document.body.style.width = '';
+  document.body.style.overflow = '';
+  debugCarouselLifecycle('lightbox scroll lock cleared', {
+    bodyTop: lockedBodyTop,
+    bodyLeft: lockedBodyLeft
+  });
   restorePagePositionAfterLightbox();
 }
 
 function closeLightbox() {
   if (lightbox.hidden || lightbox.classList.contains('closing')) return;
+  isLightboxClosing = true;
+  isRestoringScroll = true;
+  debugCarouselLifecycle('lightbox close start', {
+    savedScrollY: lightboxScrollY,
+    bodyTop: document.body.style.top,
+    activeIndex: carouselActiveIndex
+  });
   lightbox.classList.add('closing');
   lightboxCloseTimer = window.setTimeout(finishClosingLightbox, reducedMotionQuery.matches ? 0 : 480);
 }
