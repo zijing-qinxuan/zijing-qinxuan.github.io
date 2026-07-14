@@ -184,8 +184,8 @@ body.invite-missing .invite-gate { display: grid; }
 @keyframes dialog-backdrop-in { from { opacity: 0; } }
 @keyframes dialog-card-in { from { opacity: 0; transform: translateY(16px) scale(.98); } }
 
-.site-header { position: fixed; z-index: 100; inset: 0 0 auto; height: var(--header-height); color: var(--color-inverse-94); background: var(--color-header-glass); border-bottom: 1px solid var(--color-inverse-08); -webkit-backdrop-filter: blur(12px) saturate(120%); backdrop-filter: blur(12px) saturate(120%); transition: color var(--motion-normal) var(--motion-ease), background var(--motion-normal) var(--motion-ease), border-color var(--motion-normal) var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease); }
-.site-header.scrolled, .site-header.menu-active { color: var(--color-text-secondary); background: var(--color-bg-glass); border-color: var(--color-border); box-shadow: var(--shadow-xs); -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%); }
+.site-header { position: fixed; z-index: 100; inset: 0 0 auto; height: var(--header-height); color: var(--color-inverse-94); background: var(--color-header-glass); border-bottom: 1px solid var(--color-inverse-08); -webkit-backdrop-filter: blur(16px) saturate(135%); backdrop-filter: blur(16px) saturate(135%); transition: color var(--motion-normal) var(--motion-ease), background var(--motion-normal) var(--motion-ease), border-color var(--motion-normal) var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease); }
+.site-header.scrolled, .site-header.menu-active { color: var(--color-text-secondary); background: var(--color-bg-glass); border-color: var(--color-border); box-shadow: var(--shadow-xs); }
 .nav { height: 100%; display: flex; align-items: center; justify-content: space-between; }
 .brand { color: var(--color-text-inverse); font-size: 19px; font-weight: 300; letter-spacing: .14em; text-decoration: none; text-shadow: none; white-space: nowrap; transition: color var(--motion-normal) var(--motion-ease), opacity var(--motion-fast) var(--motion-ease), text-shadow var(--motion-normal) var(--motion-ease); }
 .brand:hover { opacity: .76; }
@@ -257,7 +257,8 @@ body.invite-missing .invite-gate { display: grid; }
 .hero-schedule span + span { position: relative; padding-left: 19px; }
 .hero-schedule span + span::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 12px; background: var(--color-inverse-55); transform: translateY(-50%); }
 .hero-invitation { margin: 15px 0 0; font-size: 15px; letter-spacing: .25em; }
-.scroll-cue { position: absolute; z-index: 1; bottom: max(30px, env(safe-area-inset-bottom)); left: 50%; display: flex; flex-direction: column; align-items: center; gap: 10px; color: white; font-size: 9px; font-weight: 600; letter-spacing: .25em; text-decoration: none; transform: translateX(-50%); animation: cue-float 2.4s var(--motion-ease-soft) infinite; }
+.scroll-cue { position: absolute; z-index: 1; bottom: max(30px, env(safe-area-inset-bottom)); left: 50%; display: flex; flex-direction: column; align-items: center; gap: 10px; color: white; font-size: 9px; font-weight: 600; letter-spacing: .25em; text-decoration: none; transform: translateX(-50%); animation: cue-float 2.4s var(--motion-ease-soft) infinite; animation-play-state: paused; }
+.hero.is-animation-visible .scroll-cue { animation-play-state: running; }
 .scroll-cue i { position: relative; display: block; width: 1px; height: 38px; background: var(--color-inverse-72); }
 .scroll-cue i::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 7px; height: 7px; border-right: 1px solid var(--color-inverse-72); border-bottom: 1px solid var(--color-inverse-72); transform: translateX(-50%) rotate(45deg); }
 html.motion-enabled .hero-content > :where(.hero-kicker, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation) { opacity: 0; transform: translateY(18px); transition: opacity var(--motion-slow) var(--motion-ease), transform var(--motion-slow) var(--motion-ease); }
@@ -270,9 +271,7 @@ html.motion-enabled .hero-content > .hero-schedule { transition-delay: 480ms; }
 html.motion-enabled .hero-content > .hero-invitation { transition-delay: 580ms; }
 html.motion-enabled .scroll-cue { opacity: 0; transition: opacity var(--motion-slow) var(--motion-ease) 680ms; }
 html.motion-enabled.is-ready .scroll-cue { opacity: 1; }
-html.motion-enabled .hero-image { animation: hero-ken-burns 21s ease-in-out 1 both; will-change: transform; }
-html.motion-enabled .hero-image.motion-complete { will-change: auto; }
-@keyframes hero-ken-burns { from { transform: scale(1.02) translate3d(0,0,0); } to { transform: scale(1.06) translate3d(0,-.5%,0); } }
+html.motion-enabled .hero-image { will-change: transform, opacity; }
 @keyframes cue-float { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 7px); } }
 
 .page-section { position: relative; padding: var(--section-spacing) 0; overflow: hidden; scroll-margin-top: calc(var(--header-height) + var(--space-4)); }
@@ -437,8 +436,9 @@ html.motion-enabled .hero-image.motion-complete { will-change: auto; }
 .banquet-parking-media { width: 100%; aspect-ratio: var(--card-image-ratio-landscape); overflow: hidden; flex: 0 0 auto; }
 .banquet-parking-media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .image-shell { position: relative; overflow: hidden; background: var(--ivory-deep); }
-.image-shell::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(105deg, var(--color-surface-muted) 25%, var(--color-bg-soft) 42%, var(--color-accent-soft) 60%); background-size: 200% 100%; animation: gallery-skeleton 1.5s ease-in-out infinite; }
-.image-shell.loaded::before { opacity: 0; visibility: hidden; transition: opacity var(--transition-base) ease, visibility var(--transition-base) ease; }
+.image-shell::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(105deg, var(--color-surface-muted) 25%, var(--color-bg-soft) 42%, var(--color-accent-soft) 60%); background-size: 200% 100%; animation: gallery-skeleton 1.5s ease-in-out infinite; animation-play-state: paused; }
+.image-shell.is-animation-visible:not(.loaded)::before { animation-play-state: running; }
+.image-shell.loaded::before { opacity: 0; visibility: hidden; animation: none; transition: opacity var(--transition-base) ease, visibility var(--transition-base) ease; }
 .image-shell img { position: relative; z-index: 1; width: 100%; height: 100%; opacity: 0; transition: opacity var(--transition-base) ease, transform var(--transition-base) ease; }
 .image-shell.loaded img { opacity: 1; }
 .banquet-parking-body { display: flex; flex-direction: column; flex: 1; padding: var(--card-padding-md); }
@@ -495,20 +495,23 @@ html.motion-enabled .hero-image.motion-complete { will-change: auto; }
 
 .story-gallery { padding: var(--section-spacing) 0; background: var(--ivory); overflow: hidden; }
 .gallery-media { position: relative; display: block; overflow: hidden; padding: 0; background: var(--color-surface-muted); border: var(--card-border); border-radius: var(--card-radius-md); box-shadow: var(--shadow-sm); cursor: zoom-in; }
-.gallery-media::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(105deg, var(--color-surface-muted) 25%, var(--color-bg-soft) 42%, var(--color-accent-soft) 60%); background-size: 200% 100%; animation: gallery-skeleton 1.5s ease-in-out infinite; }
-.gallery-media.loaded::before { opacity: 0; visibility: hidden; transition: opacity .4s, visibility .4s; }
+.gallery-media::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(105deg, var(--color-surface-muted) 25%, var(--color-bg-soft) 42%, var(--color-accent-soft) 60%); background-size: 200% 100%; animation: gallery-skeleton 1.5s ease-in-out infinite; animation-play-state: paused; }
+.gallery-media.is-animation-visible:not(.loaded)::before { animation-play-state: running; }
+.gallery-media.loaded::before { opacity: 0; visibility: hidden; animation: none; transition: opacity .4s, visibility .4s; }
 .gallery-media img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .55s ease, transform .7s cubic-bezier(.22,1,.36,1); }
 .gallery-media.loaded img { opacity: 1; }
 .photo-index { position: absolute; z-index: 2; right: 18px; bottom: 15px; color: var(--color-text-inverse); font-size: 11px; letter-spacing: .12em; text-shadow: var(--shadow-text-xs); }
 .wedding-carousel { --carousel-stage-height: clamp(520px, 62vw, 760px); --carousel-portrait-width: clamp(416px, 49.6vw, 608px); position: relative; width: 100%; max-width: 1680px; margin-inline: auto; }
 .wedding-carousel__viewport { position: relative; min-height: var(--carousel-stage-height); overflow: hidden; padding-inline: clamp(var(--space-4), 5vw, 72px); }
-.wedding-carousel__track { display: flex; align-items: center; gap: clamp(20px, 2.5vw, var(--space-5)); width: max-content; min-height: var(--carousel-stage-height); transition: transform 720ms var(--motion-ease); will-change: transform; }
-.wedding-carousel__slide, .wedding-carousel__clone { display: flex; align-items: center; justify-content: center; flex: 0 0 min(86vw, 1080px); aspect-ratio: 16 / 10; overflow: hidden; background: var(--color-surface-muted); border: var(--card-border); border-radius: var(--card-radius-lg); box-shadow: var(--shadow-md); opacity: .58; transform: scale(.965); transform-origin: center; transition: opacity 680ms var(--motion-ease), transform 680ms var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease); }
+.wedding-carousel__track { display: flex; align-items: center; gap: clamp(20px, 2.5vw, var(--space-5)); width: max-content; min-height: var(--carousel-stage-height); transition: transform 720ms var(--motion-ease); will-change: auto; }
+.wedding-carousel__track.is-moving { will-change: transform; }
+.wedding-carousel__slide, .wedding-carousel__clone { display: flex; align-items: center; justify-content: center; flex: 0 0 min(86vw, 1080px); aspect-ratio: 16 / 10; overflow: hidden; background: var(--color-surface-muted); border: var(--card-border); border-radius: var(--card-radius-lg); box-shadow: var(--shadow-md); opacity: .58; transform: scale(.965); transform-origin: center; transition: none; }
+.wedding-carousel__slide.is-adjacent, .wedding-carousel__clone.is-adjacent { transition: opacity 320ms var(--motion-ease), transform 320ms var(--motion-ease); }
 .wedding-carousel__slide.is-before-active, .wedding-carousel__clone.is-before-active { transform-origin: right center; }
 .wedding-carousel__slide.is-after-active, .wedding-carousel__clone.is-after-active { transform-origin: left center; }
 :is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape { flex-basis: min(86vw, 1080px); aspect-ratio: 16 / 10; }
 :is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait { flex-basis: min(54vw, 680px, var(--carousel-portrait-width)); aspect-ratio: 4 / 5; }
-.wedding-carousel__slide.is-active { opacity: 1; transform: scale(1); box-shadow: var(--shadow-lg); }
+.wedding-carousel__slide.is-active { opacity: 1; transform: scale(1); box-shadow: var(--shadow-lg); transition: opacity 680ms var(--motion-ease), transform 680ms var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease); }
 .wedding-carousel__media { display: block; width: 100%; height: 100%; overflow: hidden; background: var(--color-surface-muted); border: 0; border-radius: 0; box-shadow: none; }
 .wedding-carousel__media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .wedding-carousel__arrow { position: absolute; z-index: 3; top: calc(50% - var(--space-5)); display: grid; place-items: center; width: 52px; height: 52px; padding: 0; color: var(--color-text-primary); background: var(--color-surface-glass); border: 1px solid var(--color-inverse-55); border-radius: 50%; box-shadow: var(--shadow-sm); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transform: translateY(-50%); transition: color var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease), transform var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease); }
@@ -1041,7 +1044,7 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
   .wedding-carousel__track { gap: var(--space-1); padding-inline: var(--carousel-mobile-gutter); transform: none; transition: none; will-change: auto; }
   .wedding-carousel__slide, .wedding-carousel__clone, :is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape { flex-basis: min(80vw, 656px); scroll-snap-align: center; scroll-snap-stop: normal; border-radius: var(--card-radius-md); transform: none; }
   :is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait { flex-basis: min(78vw, 416px); }
-  .wedding-carousel__slide.is-active { transform: none; }
+  :is(.wedding-carousel__slide, .wedding-carousel__clone, .wedding-carousel__slide.is-active, .wedding-carousel__slide.is-adjacent, .wedding-carousel__clone.is-adjacent) { filter: none; transform: none; transition: none; }
   .wedding-carousel__arrow { display: none; }
   .wedding-carousel__controls { gap: var(--space-2); margin-top: var(--space-4); padding-inline: var(--space-3); }
   .wedding-carousel__media { touch-action: pan-x pan-y; }
@@ -1799,7 +1802,19 @@ html.motion-enabled .scroll-cue { transition-duration: 820ms; transition-delay: 
 
 @keyframes hero-ceremonial-unveil {
   from { opacity: .85; transform: scale(1.06) translate3d(0, .35%, 0); }
-  to { opacity: 1; transform: scale(1.02) translate3d(0, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+html.motion-enabled .hero-image.motion-complete {
+  animation: none;
+  transform: none;
+  will-change: auto;
+}
+
+.initial-motion-complete {
+  animation: none;
+  transform: none;
+  will-change: auto;
 }
 
 /* The existing reveal observer drives headers, cards and these one-time masks. */
@@ -1912,6 +1927,17 @@ html.motion-enabled .reveal.is-visible .image-shell.loaded img {
   animation: image-content-reveal var(--motion-image) var(--motion-ease) backwards;
 }
 
+html.motion-enabled .reveal.is-visible .image-shell.image-reveal-complete::after {
+  animation: none;
+  transform: scaleX(0);
+}
+
+html.motion-enabled .reveal.is-visible .image-shell.image-reveal-complete img {
+  animation: none;
+  transform: none;
+  will-change: auto;
+}
+
 @keyframes image-curtain-reveal { to { transform: scaleX(0); } }
 @keyframes image-content-reveal {
   from { opacity: .7; transform: scale(1.08); }
@@ -1923,15 +1949,21 @@ html.motion-enabled .reveal.is-visible .image-shell.loaded img {
   .wedding-carousel__slide,
   .wedding-carousel__clone {
     opacity: .55;
-    filter: blur(.65px);
     transform: scale(.96);
-    transition: opacity 780ms var(--motion-ease), transform 780ms var(--motion-ease), filter 780ms var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease);
+    transition: none;
+  }
+
+  .wedding-carousel__slide.is-adjacent,
+  .wedding-carousel__clone.is-adjacent {
+    filter: blur(.65px);
+    transition: opacity 320ms var(--motion-ease), transform 320ms var(--motion-ease), filter 320ms var(--motion-ease);
   }
 
   .wedding-carousel__slide.is-active {
     opacity: 1;
     filter: blur(0);
     transform: scale(1);
+    transition: opacity 780ms var(--motion-ease), transform 780ms var(--motion-ease), filter 780ms var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease);
   }
 
   .nav-more-menu {

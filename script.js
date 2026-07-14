@@ -712,6 +712,8 @@ document.addEventListener('keydown', (event) => {
 });
 
 let resizeTicking = false;
+let heroInView = true;
+let lastHeroParallaxOffset = null;
 
 function requestResizeUpdate() {
   if (resizeTicking) return;
@@ -741,11 +743,15 @@ function updateScrollEffects() {
   const scrollRatio = scrollableDistance > 0 ? Math.min(1, currentScrollY / scrollableDistance) : 0;
   scrollProgress.style.width = `${scrollRatio * 100}%`;
 
-  if (window.innerWidth > 820 && !reducedMotionQuery.matches && !document.body.classList.contains('invite-missing')) {
+  if (window.innerWidth > 820 && heroInView && !reducedMotionQuery.matches && !document.body.classList.contains('invite-missing')) {
     const parallaxOffset = Math.min(26, Math.max(0, currentScrollY * .055));
-    heroMedia.style.transform = `translate3d(0, ${parallaxOffset}px, 0)`;
-  } else {
+    if (parallaxOffset !== lastHeroParallaxOffset) {
+      heroMedia.style.transform = `translate3d(0, ${parallaxOffset}px, 0)`;
+      lastHeroParallaxOffset = parallaxOffset;
+    }
+  } else if (lastHeroParallaxOffset !== null) {
     heroMedia.style.transform = '';
+    lastHeroParallaxOffset = null;
   }
 
   scrollTicking = false;
@@ -966,6 +972,11 @@ document.querySelectorAll('.image-shell img').forEach((image) => {
     image.closest('.image-shell').classList.add('loaded');
     requestScrollUpdate();
   };
+  image.addEventListener('animationend', (event) => {
+    if (event.animationName === 'image-content-reveal') {
+      image.closest('.image-shell').classList.add('image-reveal-complete');
+    }
+  }, { once: true });
   if (image.complete) markLoaded();
   else image.addEventListener('load', markLoaded, { once: true });
 });
@@ -1023,6 +1034,7 @@ let carouselInView = false;
 let carouselScrollTicking = false;
 let carouselLayoutTicking = false;
 let carouselRequestToken = 0;
+let carouselMotionTimer = null;
 
 function carouselIndex(index) {
   return (index + carouselSlides.length) % carouselSlides.length;
@@ -1049,8 +1061,8 @@ function createCarouselClone(slide) {
 if (carouselIsEnabled) {
   carouselLeadingClone = createCarouselClone(carouselSlides[carouselSlides.length - 1]);
   carouselTrailingClone = createCarouselClone(carouselSlides[0]);
-  carouselLeadingClone.classList.add('is-before-active');
-  carouselTrailingClone.classList.add('is-after-active');
+  carouselLeadingClone.classList.add('is-before-active', 'is-adjacent');
+  carouselTrailingClone.classList.add('is-after-active', 'is-adjacent');
   carouselTrack.prepend(carouselLeadingClone);
   carouselTrack.append(carouselTrailingClone);
 }
@@ -1065,9 +1077,12 @@ function primeCarouselImages(index) {
 
 function setCarouselActiveState(index) {
   carouselActiveIndex = carouselIndex(index);
+  const previousIndex = carouselIndex(carouselActiveIndex - 1);
+  const nextIndex = carouselIndex(carouselActiveIndex + 1);
   carouselSlides.forEach((slide, slideIndex) => {
     const active = slideIndex === carouselActiveIndex;
     slide.classList.toggle('is-active', active);
+    slide.classList.toggle('is-adjacent', !active && (slideIndex === previousIndex || slideIndex === nextIndex));
     slide.classList.toggle('is-before-active', slideIndex < carouselActiveIndex);
     slide.classList.toggle('is-after-active', slideIndex > carouselActiveIndex);
     slide.setAttribute('aria-hidden', String(!active));
@@ -1082,10 +1097,23 @@ function setCarouselActiveState(index) {
   primeCarouselImages(carouselActiveIndex);
 }
 
+function setCarouselTrackMoving(moving) {
+  window.clearTimeout(carouselMotionTimer);
+  carouselMotionTimer = null;
+  carouselTrack.classList.toggle('is-moving', moving);
+  if (moving) {
+    carouselMotionTimer = window.setTimeout(() => {
+      carouselTrack.classList.remove('is-moving');
+      carouselMotionTimer = null;
+    }, 800);
+  }
+}
+
 function positionCarousel(index, smooth = true) {
   const slide = carouselSlides[index];
   if (!slide) return;
   if (carouselMobileQuery.matches) {
+    setCarouselTrackMoving(false);
     carouselTrack.style.transform = '';
     const left = slide.offsetLeft - ((carouselViewport.clientWidth - slide.offsetWidth) / 2);
     carouselViewport.scrollTo({
@@ -1099,6 +1127,7 @@ function positionCarousel(index, smooth = true) {
   const offset = (carouselViewport.clientWidth / 2)
     - (carouselTrack.offsetLeft + slide.offsetLeft + (slide.offsetWidth / 2));
   const immediate = !smooth || reducedMotionQuery.matches;
+  setCarouselTrackMoving(!immediate);
   if (immediate) carouselTrack.style.transition = 'none';
   carouselTrack.style.transform = `translate3d(${offset}px, 0, 0)`;
   if (immediate) {
@@ -1264,6 +1293,9 @@ if (carouselIsEnabled) {
     event.stopImmediatePropagation();
     showCarouselSlide(index, true);
   }, true);
+  carouselTrack.addEventListener('transitionend', (event) => {
+    if (event.target === carouselTrack && event.propertyName === 'transform') setCarouselTrackMoving(false);
+  });
 
   document.addEventListener('visibilitychange', scheduleCarouselAutoplay);
   reducedMotionQuery.addEventListener?.('change', () => {
@@ -1287,6 +1319,45 @@ if (carouselIsEnabled) {
   setCarouselActiveState(0);
   window.requestAnimationFrame(() => positionCarousel(0, false));
 }
+
+function initializeViewportAnimations() {
+  const animationTargets = [hero, ...document.querySelectorAll('.image-shell, .gallery-media')]
+    .filter((element) => element && !element.closest('[hidden]') && element.getClientRects().length > 0);
+
+  heroInView = animationTargets.includes(hero);
+  if (!('IntersectionObserver' in window)) {
+    const syncFallbackAnimationState = () => {
+      animationTargets.forEach((element) => element.classList.toggle('is-animation-visible', !document.hidden));
+      heroInView = animationTargets.includes(hero) && !document.hidden;
+      requestScrollUpdate();
+    };
+    syncFallbackAnimationState();
+    document.addEventListener('visibilitychange', syncFallbackAnimationState);
+    return;
+  }
+
+  const targetVisibility = new Map(animationTargets.map((element) => [element, false]));
+  const syncViewportAnimationState = () => {
+    targetVisibility.forEach((isIntersecting, element) => {
+      const animationIsVisible = isIntersecting && !document.hidden;
+      element.classList.toggle('is-animation-visible', animationIsVisible);
+      if (element === hero) heroInView = animationIsVisible;
+    });
+    requestScrollUpdate();
+  };
+
+  const viewportAnimationObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      targetVisibility.set(entry.target, entry.isIntersecting);
+    });
+    syncViewportAnimationState();
+  }, { threshold: 0, rootMargin: '120px 0px' });
+
+  animationTargets.forEach((element) => viewportAnimationObserver.observe(element));
+  document.addEventListener('visibilitychange', syncViewportAnimationState);
+}
+
+initializeViewportAnimations();
 
 function showGalleryImage(index) {
   currentGalleryIndex = (index + galleryImages.length) % galleryImages.length;
@@ -1410,6 +1481,10 @@ if (!reducedMotionQuery.matches) {
 } else {
   document.documentElement.classList.add('is-ready');
 }
+
+document.querySelectorAll('.landing-image, .landing-brand, .landing-title, .landing-kicker, .landing-date, .landing-line, .landing-message, .landing-help-button').forEach((element) => {
+  element.addEventListener('animationend', () => element.classList.add('initial-motion-complete'), { once: true });
+});
 
 heroImage.addEventListener('animationend', () => heroImage.classList.add('motion-complete'), { once: true });
 reducedMotionQuery.addEventListener?.('change', (event) => {
