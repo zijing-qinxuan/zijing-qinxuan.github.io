@@ -385,9 +385,9 @@ html.motion-enabled .hero-image.motion-complete { will-change: auto; }
 .ceremony-map-mark span { position: absolute; inset: 20px; border: 1px solid var(--gold); border-radius: 50%; }
 .ceremony-parking-reminder { margin: 32px auto 0; color: var(--navy-muted); font-size: var(--font-note); line-height: 1.9; text-align: center; }
 
-.arrival-guides { display: grid; gap: 34px; }
-.arrival-guide { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: var(--card-border); border-radius: var(--card-radius-md); }
-.guide-image { min-height: 0; aspect-ratio: var(--card-image-ratio-landscape); overflow: hidden; background: var(--ivory-deep); }
+.arrival-guides { display: grid; grid-auto-rows: 1fr; gap: 34px; }
+.arrival-guide { min-width: 0; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; overflow: hidden; border: var(--card-border); border-radius: var(--card-radius-md); }
+.guide-image { min-height: 0; height: 100%; align-self: stretch; overflow: hidden; background: var(--ivory-deep); }
 .guide-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.22,1,.36,1); }
 .guide-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: var(--card-padding-large); }
 .guide-copy > p:first-child { margin: 0 0 11px; color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .25em; }
@@ -983,10 +983,10 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
   .ceremony-parking-card .button { width: 100%; justify-content: center; }
   .ceremony-map-mark { width: 54px; height: 54px; }
   .ceremony-map-mark span { inset: 17px; }
-  .arrival-guides { gap: var(--space-5); }
+  .arrival-guides { grid-auto-rows: auto; gap: var(--space-5); }
   .arrival-guide { grid-template-columns: 1fr; min-height: 0; }
   .arrival-guide.reverse .guide-image { order: -1; }
-  .guide-image { min-height: 0; aspect-ratio: var(--card-image-ratio-landscape); }
+  .guide-image { min-height: 0; height: auto; align-self: auto; aspect-ratio: var(--card-image-ratio-landscape); }
   .guide-copy { padding: var(--card-padding-large); }
   .text-link { min-height: 48px; display: inline-flex; align-items: center; }
   .seat-search { margin-block: var(--space-6); }
@@ -1362,7 +1362,6 @@ footer small { color: var(--color-inverse-72); }
   .ceremony-note,
   .ceremony-parking-card,
   .banquet-parking-card,
-  .arrival-guide,
   .share-card,
   .lookup-result
 ) {
@@ -1389,7 +1388,7 @@ footer small { color: var(--color-inverse-72); }
   padding: var(--card-padding-md);
 }
 
-:is(.ceremony-parking-image, .ceremony-parking-map-panel, .banquet-parking-media, .guide-image) {
+:is(.ceremony-parking-image, .ceremony-parking-map-panel, .banquet-parking-media) {
   width: 100%;
   min-height: 0;
   aspect-ratio: var(--card-image-ratio-landscape);
@@ -1397,7 +1396,7 @@ footer small { color: var(--color-inverse-72); }
   flex: 0 0 auto;
 }
 
-:is(.ceremony-parking-image, .banquet-parking-media, .guide-image) img {
+:is(.ceremony-parking-image, .banquet-parking-media) img {
   display: block;
   width: 100%;
   height: 100%;
