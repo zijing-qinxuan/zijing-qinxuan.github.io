@@ -1035,6 +1035,7 @@ let carouselScrollTicking = false;
 let carouselLayoutTicking = false;
 let carouselRequestToken = 0;
 let carouselMotionTimer = null;
+let lightboxCarouselState = null;
 
 function carouselIndex(index) {
   return (index + carouselSlides.length) % carouselSlides.length;
@@ -1385,6 +1386,15 @@ function showAdjacentGalleryImage(step) {
 function openLightbox(index, trigger) {
   window.clearTimeout(lightboxCloseTimer);
   lastGalleryTrigger = trigger;
+  lightboxCarouselState = carouselIsEnabled ? {
+    activeIndex: carouselActiveIndex,
+    mobileLayout: carouselMobileQuery.matches,
+    trackTransform: carouselTrack.style.transform,
+    scrollLeft: carouselViewport.scrollLeft,
+    autoplayWasScheduled: carouselAutoplayTimer !== null
+  } : null;
+  window.clearTimeout(carouselAutoplayTimer);
+  carouselAutoplayTimer = null;
   showGalleryImage(index);
   lightbox.classList.remove('closing');
   lightbox.hidden = false;
@@ -1398,6 +1408,35 @@ function openLightbox(index, trigger) {
   lightboxClose.focus();
 }
 
+function restorePagePositionAfterLightbox() {
+  const root = document.documentElement;
+  const previousScrollBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
+  window.scrollTo({ top: lightboxScrollY, left: 0, behavior: 'auto' });
+
+  if (lastGalleryTrigger) {
+    try {
+      lastGalleryTrigger.focus({ preventScroll: true });
+    } catch {
+      lastGalleryTrigger.focus();
+      window.scrollTo({ top: lightboxScrollY, left: 0, behavior: 'auto' });
+    }
+  }
+
+  window.requestAnimationFrame(() => {
+    root.style.scrollBehavior = previousScrollBehavior;
+    if (lightboxCarouselState && carouselActiveIndex === lightboxCarouselState.activeIndex) {
+      if (lightboxCarouselState.mobileLayout === carouselMobileQuery.matches) {
+        if (carouselMobileQuery.matches) carouselViewport.scrollLeft = lightboxCarouselState.scrollLeft;
+        else carouselTrack.style.transform = lightboxCarouselState.trackTransform;
+      }
+      requestCarouselLayout();
+      if (lightboxCarouselState.autoplayWasScheduled) scheduleCarouselAutoplay();
+    }
+    lightboxCarouselState = null;
+  });
+}
+
 function finishClosingLightbox() {
   lightbox.hidden = true;
   lightbox.classList.remove('closing');
@@ -1408,8 +1447,7 @@ function finishClosingLightbox() {
   document.body.style.left = '';
   document.body.style.right = '';
   document.body.style.width = '';
-  window.scrollTo(0, lightboxScrollY);
-  if (lastGalleryTrigger) lastGalleryTrigger.focus();
+  restorePagePositionAfterLightbox();
 }
 
 function closeLightbox() {
