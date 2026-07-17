@@ -71,12 +71,16 @@
     </div>
   </div>
 
-  <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
   <a class="skip-link" href="#ceremony-info">跳至婚禮資訊</a>
 
   <header class="site-header" id="site-header">
     <nav class="nav shell" aria-label="主要導覽">
-      <a class="brand" href="#home" aria-label="子靖與勤萱，回到首頁">子靖 <span>＆</span> 勤萱</a>
+      <div class="site-brand">
+        <a class="brand" href="#home" aria-label="子靖與勤萱，回到首頁">子靖 <span>＆</span> 勤萱</a>
+        <div class="scroll-progress" id="scroll-progress" role="progressbar" aria-label="頁面閱讀進度" data-i18n-aria-label="accessibility.readingProgress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span class="scroll-progress__bar"></span>
+        </div>
+      </div>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="開啟選單">
         <span></span><span></span>
       </button>
@@ -109,6 +113,10 @@
       </div>
     </nav>
   </header>
+
+  <button class="back-to-top" id="back-to-top" type="button" aria-label="回到頁面頂端" data-i18n-aria-label="accessibility.backToTop">
+    <span class="back-to-top__icon" aria-hidden="true"></span>
+  </button>
 
   <main>
     <section class="hero" id="home" aria-labelledby="hero-title" data-invite="section:hero">

@@ -47,6 +47,8 @@ const inviteMode = new URLSearchParams(window.location.search).get('invite');
 const heroSchedule = document.querySelector('#hero-schedule');
 const weddingCountdown = document.querySelector('#wedding-countdown');
 const scrollProgress = document.querySelector('#scroll-progress');
+const scrollProgressBar = scrollProgress.querySelector('.scroll-progress__bar');
+const backToTopButton = document.querySelector('#back-to-top');
 const ceremonyEntryLabel = document.querySelector('#ceremony-entry-label');
 const onlineMeetingButton = document.querySelector('.online-meeting-button');
 const landingHelpButton = document.querySelector('#landing-help-button');
@@ -782,8 +784,14 @@ function updateScrollEffects() {
   updateHeader();
 
   const scrollableDistance = document.documentElement.scrollHeight - window.innerHeight;
-  const scrollRatio = scrollableDistance > 0 ? Math.min(1, currentScrollY / scrollableDistance) : 0;
-  scrollProgress.style.width = `${scrollRatio * 100}%`;
+  const scrollRatio = scrollableDistance > 0
+    ? Math.min(1, Math.max(0, currentScrollY / scrollableDistance))
+    : 0;
+  scrollProgressBar.style.transform = `scaleX(${scrollRatio})`;
+  scrollProgress.setAttribute('aria-valuenow', String(Math.round(scrollRatio * 100)));
+
+  const backToTopThreshold = Math.max(500, window.innerHeight * .7);
+  backToTopButton.classList.toggle('is-visible', currentScrollY > backToTopThreshold);
 
   if (window.innerWidth > 820 && heroInView && !reducedMotionQuery.matches && !document.body.classList.contains('invite-missing')) {
     const parallaxOffset = Math.min(26, Math.max(0, currentScrollY * .055));
@@ -807,6 +815,13 @@ function requestScrollUpdate() {
 
 requestScrollUpdate();
 window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+
+backToTopButton.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'
+  });
+});
 
 const navSectionLinks = [...navLinks.querySelectorAll('a.nav-link[href^="#"]')];
 let scrollSpyObserver = null;
@@ -2193,6 +2208,7 @@ function syncDynamicLanguage() {
   if (lookupState?.type === 'success') showSeatResult(lookupState.name, lookupState.seat, false);
   else if (lookupState?.type === 'not-found') showNotFound(false);
   syncGalleryLanguage();
+  requestScrollUpdate();
 }
 
 window.addEventListener('wedding:languagechange', syncDynamicLanguage);

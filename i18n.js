@@ -8,6 +8,7 @@ const translations = {
       openMenu: '開啟選單', closeMenu: '關閉選單', main: '主要導覽',
       languageGroup: '選擇語言', chooseChinese: '切換為繁體中文', chooseEnglish: 'Switch to English'
     },
+    accessibility: { backToTop: '回到頁面頂端', readingProgress: '頁面閱讀進度' },
     hero: {
       weddingSchedule: '婚禮｜14:00', banquetSchedule: '婚宴｜18:00',
       ceremonyEntry: '開放入場', onlineEntry: '線上開放進入', scheduleLabel: '邀請行程'
@@ -58,6 +59,7 @@ const translations = {
       openMenu: 'Open menu', closeMenu: 'Close menu', main: 'Main navigation',
       languageGroup: 'Choose language', chooseChinese: 'Switch to Traditional Chinese', chooseEnglish: 'Switch to English'
     },
+    accessibility: { backToTop: 'Back to top', readingProgress: 'Page reading progress' },
     hero: {
       weddingSchedule: 'Wedding Ceremony | 2:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
       ceremonyEntry: 'Admission Opens', onlineEntry: 'Online Room Opens', scheduleLabel: 'Invitation schedule'
@@ -251,6 +253,11 @@ function translateAttributes(root = document) {
   root.querySelectorAll?.('[aria-label], [alt], [placeholder], [title]').forEach((element) => {
     ['aria-label', 'alt', 'placeholder', 'title'].forEach((attribute) => {
       if (!element.hasAttribute(attribute)) return;
+      if (attribute === 'aria-label' && element.dataset.i18nAriaLabel) {
+        const translatedLabel = getTranslation(language, element.dataset.i18nAriaLabel);
+        if (translatedLabel) element.setAttribute(attribute, translatedLabel);
+        return;
+      }
       const dataKey = `weddingOriginal${attribute.replace(/-(.)/g, (_, letter) => letter.toUpperCase()).replace(/^./, (letter) => letter.toUpperCase())}`;
       if (element.dataset[dataKey] === undefined) element.dataset[dataKey] = element.getAttribute(attribute);
       const original = element.dataset[dataKey];
