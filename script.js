@@ -1104,7 +1104,7 @@ const carouselSlides = weddingCarousel ? [...weddingCarousel.querySelectorAll('.
 const carouselPrevious = weddingCarousel?.querySelector('.wedding-carousel__arrow--previous');
 const carouselNext = weddingCarousel?.querySelector('.wedding-carousel__arrow--next');
 const carouselDots = weddingCarousel?.querySelector('.wedding-carousel__dots');
-const carouselRestart = weddingCarousel?.querySelector('.wedding-carousel__restart');
+const carouselReturn = weddingCarousel?.querySelector('.wedding-carousel__return');
 const carouselMobileQuery = window.matchMedia('(max-width: 820px)');
 const carouselIsEnabled = Boolean(
   weddingCarousel
@@ -1137,10 +1137,14 @@ let carouselFrozenForLightbox = false;
 let carouselGesture = null;
 let suppressCarouselClick = false;
 let suppressCarouselClickUntil = 0;
+let carouselDragFrame = null;
+let carouselSnapFrame = null;
+let carouselSnapCompletion = null;
+let carouselProgrammaticScroll = false;
 const CAROUSEL_GESTURE_AXIS_RATIO = 1.2;
 const CAROUSEL_GESTURE_SLOP = 8;
-const CAROUSEL_SWIPE_DISTANCE = 40;
 const CAROUSEL_SWIPE_VELOCITY = 0.45;
+const CAROUSEL_SNAP_DURATION = 440;
 
 function galleryAlt(index) {
   return i18n.value('gallery.imageAlt')?.[normalizeGalleryIndex(index)] || t('gallery.region');
@@ -1164,7 +1168,7 @@ function syncGalleryLanguage() {
   });
   carouselPrevious?.setAttribute('aria-label', t('gallery.previous'));
   carouselNext?.setAttribute('aria-label', t('gallery.next'));
-  carouselRestart?.setAttribute('aria-label', t('gallery.restart'));
+  carouselReturn?.setAttribute('aria-label', t('gallery.returnFirst'));
   lightbox?.setAttribute('aria-label', t('gallery.lightbox'));
   lightboxClose?.setAttribute('aria-label', t('gallery.close'));
   lightboxPrev?.setAttribute('aria-label', t('gallery.previousPhoto'));
@@ -1279,18 +1283,86 @@ function setCarouselTrackMoving(moving) {
   }
 }
 
-function positionCarousel(index, smooth = true) {
+function carouselSnapEase(progress) {
+  const sample = (time, point1, point2) => {
+    const inverse = 1 - time;
+    return (3 * inverse * inverse * time * point1)
+      + (3 * inverse * time * time * point2)
+      + (time * time * time);
+  };
+  const derivative = (time, point1, point2) => {
+    const inverse = 1 - time;
+    return (3 * inverse * inverse * point1)
+      + (6 * inverse * time * (point2 - point1))
+      + (3 * time * time * (1 - point2));
+  };
+  let time = progress;
+  for (let iteration = 0; iteration < 4; iteration += 1) {
+    const slope = derivative(time, 0.22, 0.36);
+    if (Math.abs(slope) < 0.0001) break;
+    time -= (sample(time, 0.22, 0.36) - progress) / slope;
+    time = Math.min(1, Math.max(0, time));
+  }
+  return sample(time, 1, 1);
+}
+
+function cancelMobileCarouselSnap() {
+  if (carouselSnapFrame !== null) window.cancelAnimationFrame(carouselSnapFrame);
+  carouselSnapFrame = null;
+  carouselSnapCompletion = null;
+  carouselProgrammaticScroll = false;
+  carouselViewport?.classList.remove('is-settling');
+}
+
+function positionMobileCarousel(left, animate, onSettled) {
+  cancelMobileCarouselSnap();
+  const startLeft = carouselViewport.scrollLeft;
+  const distance = left - startLeft;
+  const immediate = !animate || reducedMotionQuery.matches || Math.abs(distance) < 0.5;
+
+  if (immediate) {
+    carouselViewport.scrollLeft = left;
+    onSettled?.();
+    return;
+  }
+
+  carouselProgrammaticScroll = true;
+  carouselSnapCompletion = onSettled;
+  carouselViewport.classList.add('is-settling');
+  const startedAt = performance.now();
+
+  const step = (now) => {
+    const progress = Math.min(1, (now - startedAt) / CAROUSEL_SNAP_DURATION);
+    carouselViewport.scrollLeft = startLeft + (distance * carouselSnapEase(progress));
+    if (progress < 1) {
+      carouselSnapFrame = window.requestAnimationFrame(step);
+      return;
+    }
+
+    carouselViewport.scrollLeft = left;
+    carouselSnapFrame = null;
+    carouselProgrammaticScroll = false;
+    carouselViewport.classList.remove('is-settling');
+    const completion = carouselSnapCompletion;
+    carouselSnapCompletion = null;
+    completion?.();
+  };
+
+  carouselSnapFrame = window.requestAnimationFrame(step);
+}
+
+function positionMobileCarouselElement(element, animate, onSettled) {
+  const left = element.offsetLeft - ((carouselViewport.clientWidth - element.offsetWidth) / 2);
+  positionMobileCarousel(left, animate, onSettled);
+}
+
+function positionCarousel(index, smooth = true, onSettled = null) {
   const slide = carouselSlides[index];
   if (!slide) return;
   if (carouselMobileQuery.matches) {
     setCarouselTrackMoving(false);
     carouselTrack.style.transform = '';
-    const left = slide.offsetLeft - ((carouselViewport.clientWidth - slide.offsetWidth) / 2);
-    carouselViewport.scrollTo({
-      left,
-      top: 0,
-      behavior: 'auto'
-    });
+    positionMobileCarouselElement(slide, smooth, onSettled);
     return;
   }
 
@@ -1305,6 +1377,7 @@ function positionCarousel(index, smooth = true) {
     void carouselTrack.offsetWidth;
     window.requestAnimationFrame(() => { carouselTrack.style.transition = ''; });
   }
+  onSettled?.();
 }
 
 function canAutoplayCarousel() {
@@ -1334,7 +1407,7 @@ function pauseCarouselForUser() {
   scheduleCarouselAutoplay();
 }
 
-function showCarouselSlide(index, userInitiated = false, animate = true) {
+function showCarouselSlide(index, userInitiated = false, animate = true, resumeAutoplay = true) {
   if (carouselFrozenForLightbox) return;
   if (userInitiated) pauseCarouselForUser();
   const targetIndex = carouselIndex(index);
@@ -1345,9 +1418,20 @@ function showCarouselSlide(index, userInitiated = false, animate = true) {
     if (requestToken !== carouselRequestToken || carouselFrozenForLightbox) return;
     debugCarouselMetrics('slide change before');
     setCarouselActiveState(targetIndex);
-    positionCarousel(carouselActiveIndex, animate && !wrapped);
+    const finish = () => {
+      if (resumeAutoplay) scheduleCarouselAutoplay();
+    };
+    const mobileWrapClone = carouselMobileQuery.matches && animate && wrapped
+      ? (index < 0 ? carouselLeadingClone : carouselTrailingClone)
+      : null;
+    if (mobileWrapClone) {
+      positionMobileCarouselElement(mobileWrapClone, true, () => {
+        positionCarousel(carouselActiveIndex, false, finish);
+      });
+    } else {
+      positionCarousel(carouselActiveIndex, animate && !wrapped, finish);
+    }
     debugCarouselMetrics('slide change after');
-    scheduleCarouselAutoplay();
   };
 
   if (!image || image.complete) {
@@ -1362,6 +1446,11 @@ function showCarouselSlide(index, userInitiated = false, animate = true) {
 
 function beginCarouselGesture(point, source, pointerId = null) {
   if (!carouselMobileQuery.matches || carouselFrozenForLightbox || !lightbox.hidden) return;
+  const autoplayWasRunning = carouselAutoplayTimer !== null || canAutoplayCarousel();
+  window.clearTimeout(carouselAutoplayTimer);
+  carouselAutoplayTimer = null;
+  carouselRequestToken += 1;
+  cancelMobileCarouselSnap();
   carouselGesture = {
     source,
     pointerId,
@@ -1369,12 +1458,14 @@ function beginCarouselGesture(point, source, pointerId = null) {
     startY: point.clientY,
     currentX: point.clientX,
     currentY: point.clientY,
-    startTime: Date.now(),
+    startTime: performance.now(),
     startScrollLeft: carouselViewport.scrollLeft,
     startIndex: carouselActiveIndex,
+    viewportWidth: carouselViewport.clientWidth,
+    pendingScrollLeft: carouselViewport.scrollLeft,
+    autoplayWasRunning,
     axis: null
   };
-  pauseCarouselForUser();
   debugCarouselMetrics('swipe start');
 }
 
@@ -1398,23 +1489,36 @@ function updateCarouselGesture(point, event) {
 
   if (carouselGesture.axis !== 'horizontal') return;
   if (event.cancelable) event.preventDefault();
-  carouselViewport.scrollLeft = carouselGesture.startScrollLeft - distanceX;
+  carouselGesture.pendingScrollLeft = carouselGesture.startScrollLeft - distanceX;
+  if (carouselDragFrame === null) {
+    const gesture = carouselGesture;
+    carouselDragFrame = window.requestAnimationFrame(() => {
+      carouselDragFrame = null;
+      carouselViewport.scrollLeft = gesture.pendingScrollLeft;
+    });
+  }
   suppressCarouselClick = true;
 }
 
 function finishCarouselGesture(point, cancelled = false) {
   if (!carouselGesture) return;
   const gesture = carouselGesture;
+  if (carouselDragFrame !== null) {
+    window.cancelAnimationFrame(carouselDragFrame);
+    carouselDragFrame = null;
+  }
+  if (gesture.axis === 'horizontal') carouselViewport.scrollLeft = gesture.pendingScrollLeft;
   carouselGesture = null;
   carouselViewport.classList.remove('is-dragging');
   const currentPoint = point ?? { clientX: gesture.currentX, clientY: gesture.currentY };
   const distanceX = currentPoint.clientX - gesture.startX;
   const distanceY = currentPoint.clientY - gesture.startY;
-  const elapsed = Date.now() - gesture.startTime;
+  const elapsed = performance.now() - gesture.startTime;
   const velocityX = Math.abs(distanceX) / Math.max(elapsed, 1);
   const isHorizontal = gesture.axis === 'horizontal'
     || Math.abs(distanceX) > Math.abs(distanceY) * CAROUSEL_GESTURE_AXIS_RATIO;
-  const shouldChange = Math.abs(distanceX) >= CAROUSEL_SWIPE_DISTANCE
+  const distanceThreshold = Math.min(gesture.viewportWidth * 0.18, 72);
+  const shouldChange = Math.abs(distanceX) >= distanceThreshold
     || velocityX > CAROUSEL_SWIPE_VELOCITY;
 
   if (isHorizontal) {
@@ -1423,10 +1527,19 @@ function finishCarouselGesture(point, cancelled = false) {
   }
 
   if (!cancelled && isHorizontal && shouldChange) {
-    showCarouselSlide(gesture.startIndex + (distanceX < 0 ? 1 : -1), true, false);
+    showCarouselSlide(
+      gesture.startIndex + (distanceX < 0 ? 1 : -1),
+      false,
+      true,
+      gesture.autoplayWasRunning
+    );
   } else if (isHorizontal) {
     setCarouselActiveState(gesture.startIndex);
-    positionCarousel(gesture.startIndex, false);
+    positionCarousel(gesture.startIndex, true, () => {
+      if (gesture.autoplayWasRunning) scheduleCarouselAutoplay();
+    });
+  } else if (gesture.autoplayWasRunning) {
+    scheduleCarouselAutoplay();
   }
 }
 
@@ -1515,6 +1628,7 @@ function updateCarouselFromScroll() {
   if (!carouselMobileQuery.matches
     || carouselScrollTicking
     || carouselGesture
+    || carouselProgrammaticScroll
     || carouselFrozenForLightbox
     || isLightboxClosing
     || isRestoringScroll
@@ -1609,10 +1723,12 @@ if (carouselIsEnabled) {
 
   carouselPrevious.addEventListener('click', () => showCarouselSlide(carouselActiveIndex - 1, true));
   carouselNext.addEventListener('click', () => showCarouselSlide(carouselActiveIndex + 1, true));
-  carouselRestart.addEventListener('click', () => {
+  carouselReturn.addEventListener('click', () => {
+    window.clearTimeout(carouselAutoplayTimer);
+    carouselAutoplayTimer = null;
     carouselUserPaused = false;
     carouselFocusInside = false;
-    scheduleCarouselAutoplay();
+    showCarouselSlide(0, false, true, true);
   });
 
   initializeCarouselGestures();

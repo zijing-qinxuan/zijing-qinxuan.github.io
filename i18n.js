@@ -43,7 +43,7 @@ const translations = {
       region: '婚紗相簿', carouselRole: '輪播', slideRole: '投影片',
       slideLabel: '第 {current} 張，共 {total} 張', openPhoto: '開啟婚紗相簿第 {current} 張照片',
       viewPhoto: '查看第 {current} 張婚紗照', previous: '上一張婚紗照', next: '下一張婚紗照',
-      restart: '重新播放婚紗相簿', lightbox: '婚紗相簿燈箱', close: '關閉相簿',
+      returnFirst: '返回第一張照片', lightbox: '婚紗相簿燈箱', close: '關閉相簿',
       previousPhoto: '上一張照片', nextPhoto: '下一張照片', counter: '{current} / {total}',
       imageAlt: [
         '子靖向勤萱獻上戒指的婚紗照', '子靖與勤萱牽手歡笑的婚紗照', '子靖向勤萱求婚的全身婚紗照',
@@ -95,7 +95,7 @@ const translations = {
       region: 'Wedding Gallery', carouselRole: 'carousel', slideRole: 'slide',
       slideLabel: 'Photo {current} of {total}', openPhoto: 'Open wedding gallery photo {current}',
       viewPhoto: 'View wedding photo {current}', previous: 'Previous wedding photo', next: 'Next wedding photo',
-      restart: 'Play wedding gallery', lightbox: 'Wedding gallery lightbox', close: 'Close gallery',
+      returnFirst: 'Return to first photo', lightbox: 'Wedding gallery lightbox', close: 'Close gallery',
       previousPhoto: 'Previous photo', nextPhoto: 'Next photo', counter: 'Photo {current} of {total}',
       imageAlt: [
         'Zijing offering a ring to Qinxuan', 'Zijing and Qinxuan laughing while holding hands', 'Zijing proposing to Qinxuan',
