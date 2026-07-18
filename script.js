@@ -1,5 +1,5 @@
 const ONLINE_MEETING_URL = "";
-const RSVP_DEADLINE_TEXT = "2026 年 12 月 20 日";
+const RSVP_DEADLINE_TEXT = "2026 年 11 月 1 日";
 const SEAT_LOOKUP_OPEN_AT = "2026-12-19T00:00:00+08:00";
 const SEAT_LOOKUP_DEV_PREVIEW_KEY = "wedding-seat-lookup-preview";
 const RSVP_ENDPOINT =

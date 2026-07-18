@@ -33,7 +33,7 @@ const translations = {
       statusTimeout: '目前無法確認回覆是否成功送達。\n請稍後查看或重新整理後再試一次。'
     },
     seating: {
-      date: '2026 年 12 月 19 日', deadline: '2026 年 12 月 20 日',
+      date: '2026 年 12 月 19 日', deadline: '2026 年 11 月 1 日',
       loading: '查詢中...', lookup: '查詢座位', welcome: '歡迎蒞臨', closing: '期待與您共度美好時光',
       table: '{table} 桌', guests: '{guests}賓客', specialMeal: '※ 已安排{meal}',
       regularMeal: '一般餐', vegetarianMeal: '素食',
@@ -54,7 +54,7 @@ const translations = {
     }
   },
   en: {
-    meta: { title: 'Zijing & Qinxuan | Wedding Invitation' },
+    meta: { title: 'Zeric & Lily | Wedding Invitation' },
     nav: {
       openMenu: 'Open menu', closeMenu: 'Close menu', main: 'Main navigation',
       languageGroup: 'Choose language', chooseChinese: 'Switch to Traditional Chinese', chooseEnglish: 'Switch to English'
@@ -85,7 +85,7 @@ const translations = {
       statusTimeout: 'We could not confirm whether your RSVP was received.\nPlease check again later or refresh the page and try again.'
     },
     seating: {
-      date: 'December 19, 2026', deadline: 'December 20, 2026',
+      date: 'December 19, 2026', deadline: 'November 1, 2026',
       loading: 'Searching…', lookup: 'Look Up My Table', welcome: 'Welcome', closing: 'We look forward to celebrating with you',
       table: 'Table {table}', guests: '{guests} guests', specialMeal: '※ {meal} arranged',
       regularMeal: 'regular meals', vegetarianMeal: 'vegetarian meals',
@@ -98,17 +98,17 @@ const translations = {
       returnFirst: 'Return to first photo', lightbox: 'Wedding gallery lightbox', close: 'Close gallery',
       previousPhoto: 'Previous photo', nextPhoto: 'Next photo', counter: 'Photo {current} of {total}',
       imageAlt: [
-        'Zijing offering a ring to Qinxuan', 'Zijing and Qinxuan laughing while holding hands', 'Zijing proposing to Qinxuan',
-        'Zijing and Qinxuan holding a bouquet of red roses', 'Zijing and Qinxuan seated together in wedding attire', 'Zijing watching Qinxuan read by the window',
-        'Qinxuan showing the back of her white wedding gown', 'Portrait of Zijing in a light-colored suit', 'Zijing and Qinxuan posing together against a dark backdrop',
-        'Zijing and Qinxuan exchanging a bouquet in black and red formalwear', 'Zijing holding hands with Qinxuan in a red gown'
+        'Zeric offering a ring to Lily', 'Zeric and Lily laughing while holding hands', 'Zeric proposing to Lily',
+        'Zeric and Lily holding a bouquet of red roses', 'Zeric and Lily seated together in wedding attire', 'Zeric watching Lily read by the window',
+        'Lily showing the back of her white wedding gown', 'Portrait of Zeric in a light-colored suit', 'Zeric and Lily posing together against a dark backdrop',
+        'Zeric and Lily exchanging a bouquet in black and red formalwear', 'Zeric holding hands with Lily in a red gown'
       ]
     }
   }
 };
 
 const englishPhrases = {
-  '子靖': 'Zijing', '勤萱': 'Qinxuan', '＆': '&',
+  '子靖': 'Zeric', '勤萱': 'Lily', '＆': '&',
   '謝謝您接受我們的邀請': 'Thank you for accepting our invitation',
   '請使用邀請訊息中的專屬連結': 'Please use the personal link in your invitation message',
   '查看本次婚禮資訊。': 'to view the wedding details.', '我已有邀請連結': 'I Have an Invitation Link',
@@ -117,7 +117,7 @@ const englishPhrases = {
   '出席回覆': 'RSVP', '婚禮資訊': 'Wedding Ceremony', '婚宴資訊': 'Wedding Banquet', '座位查詢': 'Table Lookup',
   '婚紗相簿': 'Wedding Gallery', '更多': 'More', '婚禮停車': 'Ceremony Parking', '交通': 'Directions', '婚宴停車': 'Banquet Parking',
   '照片分享': 'Photo Sharing', '常見問題': 'FAQ', '誠摯邀請您': 'You’re Warmly Invited', '往下滑': 'Scroll Down',
-  '給親愛的家人與朋友': 'To Our Dear Family & Friends',
+  '給親愛的家人': 'To Our Dear Family', '與朋友': '& Friends',
   '謝謝您願意在百忙之中，': 'Thank you for making time in your busy lives', '與我們一起迎接人生的重要時刻。': 'to share this important moment with us.',
   '一路走來，': 'Along the way,', '因為有家人與朋友的陪伴和支持，': 'the love and support of our family and friends', '我們才能一步一步走到今天。': 'have helped us reach this day.',
   '這一天，': 'On this day,', '我們最期待的不是盛大的婚禮，': 'what we look forward to most is not a grand celebration,',
@@ -137,7 +137,7 @@ const englishPhrases = {
   '使用相同的姓名與聯絡電話再次送出，': 'Submit again with the same name and phone number', '系統會更新您原本的回覆。': 'to update your previous response.',
   '若想再次確認或需要協助，': 'If you would like to confirm your response or need help,', '請透過原邀請的 LINE 訊息聯絡我們。': 'please contact us through the original LINE invitation message.',
   '進入線上婚禮': 'Join the Online Wedding', '修改回覆': 'Edit RSVP',
-  '一點小心意': 'A Small Note', '您願意來到現場，': 'Your presence with us,', '與我們一起見證這個重要的時刻，': 'sharing and witnessing this meaningful moment,',
+  '一個小提醒': 'A Gentle Reminder', '您願意來到現場，': 'Your presence with us,', '與我們一起見證這個重要的時刻，': 'sharing and witnessing this meaningful moment,',
   '就是我們最珍貴的禮物。': 'is the most precious gift we could receive.', '本次婚禮不收禮金，': 'Please do not prepare a monetary gift.',
   '請帶著輕鬆的心情前來，': 'Simply come with a light heart', '和我們一起分享這份喜悅。': 'and celebrate this joy with us.',
   '婚禮日期': 'Ceremony Date', '婚宴日期': 'Banquet Date', '開放入場': 'Admission Opens', '婚禮開始': 'Ceremony Begins', '宴席開始': 'Banquet Begins',
@@ -183,8 +183,8 @@ const englishPhrases = {
 };
 
 const englishAttributes = {
-  '子靖與勤萱的婚紗照': 'Wedding portrait of Zijing and Qinxuan', '子靖與勤萱婚紗照': 'Wedding portrait of Zijing and Qinxuan', '子靖與勤萱': 'Zijing and Qinxuan',
-  '子靖與勤萱，回到首頁': 'Zijing and Qinxuan, back to home', '邀請行程': 'Invitation schedule',
+  '子靖與勤萱的婚紗照': 'Wedding portrait of Zeric and Lily', '子靖與勤萱婚紗照': 'Wedding portrait of Zeric and Lily', '子靖與勤萱': 'Zeric and Lily',
+  '子靖與勤萱，回到首頁': 'Zeric and Lily, back to home', '邀請行程': 'Invitation schedule',
   '主要導覽': 'Main navigation', '開啟選單': 'Open menu', '線上婚禮時間': 'Online wedding schedule',
   '查看中興路一段路邊停車位置': 'View roadside parking on Sec. 1, Zhongxing Rd.', '查看聚會所對面巷內停車位置': 'View parking in the lane opposite the Kingdom Hall',
   '查看步行約三分鐘的停車位置': 'View the nearby parking option', '中興路一段路邊停車位置': 'Roadside parking on Sec. 1, Zhongxing Rd.',
