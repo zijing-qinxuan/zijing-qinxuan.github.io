@@ -11,7 +11,8 @@ const translations = {
     accessibility: { backToTop: '回到頁面頂端', readingProgress: '頁面閱讀進度' },
     infoTabs: {
       label: '婚禮資訊分類', ceremony: '婚禮資訊', onlineCeremony: '線上婚禮',
-      banquet: '婚宴資訊', gallery: '婚紗與分享'
+      banquet: '婚宴資訊', gallery: '婚紗與分享', galleryCompact: '婚紗分享',
+      galleryLabel: '婚紗相簿與照片分享'
     },
     hero: {
       weddingSchedule: '婚禮｜14:00', banquetSchedule: '婚宴｜18:00',
@@ -66,7 +67,8 @@ const translations = {
     accessibility: { backToTop: 'Back to top', readingProgress: 'Page reading progress' },
     infoTabs: {
       label: 'Wedding information categories', ceremony: 'Ceremony', onlineCeremony: 'Online Ceremony',
-      banquet: 'Banquet', gallery: 'Gallery & Sharing'
+      banquet: 'Banquet', gallery: 'Gallery & Sharing', galleryCompact: 'Gallery',
+      galleryLabel: 'Wedding gallery and photo sharing'
     },
     hero: {
       weddingSchedule: 'Wedding Ceremony | 2:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',

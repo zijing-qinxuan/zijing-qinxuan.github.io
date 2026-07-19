@@ -731,15 +731,34 @@ function availableInfoTabs() {
 
 function renderInfoTabsLanguage() {
   if (!infoTabs) return;
+  const useCompactLabels = window.innerWidth <= 820;
   infoTabList.setAttribute('aria-label', t('infoTabs.label'));
   infoTabButtons.forEach((button) => {
     const tabId = button.dataset.infoTab;
-    const key = tabId === 'ceremony' && inviteMode === 'online'
-      ? 'infoTabs.onlineCeremony'
-      : `infoTabs.${tabId}`;
+    const key = tabId === 'gallery' && useCompactLabels
+      ? 'infoTabs.galleryCompact'
+      : (tabId === 'ceremony' && inviteMode === 'online'
+        ? 'infoTabs.onlineCeremony'
+        : `infoTabs.${tabId}`);
     const label = t(key);
     button.textContent = label;
-    button.setAttribute('aria-label', label);
+    button.setAttribute('aria-label', tabId === 'gallery' ? t('infoTabs.galleryLabel') : label);
+  });
+}
+
+function scrollInfoTabsToHeader(force = false) {
+  if (!infoTabs) return;
+  const navigation = infoTabs.querySelector('.info-tabs__navigation');
+  const navigationRect = navigation.getBoundingClientRect();
+  const headerOffset = header.offsetHeight + 12;
+  const needsAdjustment = force
+    || navigationRect.top < header.offsetHeight - 1
+    || navigationRect.top > window.innerHeight * .58;
+  if (!needsAdjustment) return;
+  const tabsDocumentTop = window.scrollY + infoTabs.getBoundingClientRect().top;
+  window.scrollTo({
+    top: Math.max(0, tabsDocumentTop - headerOffset),
+    behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'
   });
 }
 
@@ -796,8 +815,6 @@ function activateInfoTab(tabId, {
   if (!targetButton || !targetPanel) return false;
 
   const changingPanel = activeInfoTab !== tabId || targetPanel.hidden;
-  const navigationTop = infoTabList.getBoundingClientRect().top;
-
   infoTabButtons.forEach((button) => {
     const selected = button === targetButton;
     button.classList.toggle('is-active', selected);
@@ -836,12 +853,7 @@ function activateInfoTab(tabId, {
   syncInfoTabNavigationState(tabId);
   requestScrollUpdate();
 
-  if (maintainPosition && navigationTop < header.offsetHeight) {
-    infoTabs.querySelector('.info-tabs__navigation').scrollIntoView({
-      behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
-      block: 'start'
-    });
-  }
+  if (maintainPosition) scrollInfoTabsToHeader();
   return true;
 }
 
@@ -892,7 +904,16 @@ document.addEventListener('click', (event) => {
   const anchor = event.target.closest('a[href^="#"]');
   if (!anchor) return;
   const targetTab = infoTabFromHash(anchor.getAttribute('href'));
-  if (targetTab) activateInfoTab(targetTab, { updateHistory: false, maintainPosition: false });
+  if (!targetTab) return;
+  const isPrimaryHeaderTabLink = anchor.closest('#nav-links')
+    && ['#ceremony-info', '#wedding-info', '#gallery'].includes(anchor.getAttribute('href'));
+  if (isPrimaryHeaderTabLink) {
+    event.preventDefault();
+    activateInfoTab(targetTab, { updateHistory: true, maintainPosition: false });
+    window.requestAnimationFrame(() => scrollInfoTabsToHeader(true));
+    return;
+  }
+  activateInfoTab(targetTab, { updateHistory: false, maintainPosition: false });
 }, true);
 
 window.addEventListener('hashchange', () => {
@@ -979,6 +1000,7 @@ function requestResizeUpdate() {
   window.requestAnimationFrame(() => {
     if (window.innerWidth > 820) setMenu(false);
     else setMoreMenu(false);
+    renderInfoTabsLanguage();
     requestScrollUpdate();
     resizeTicking = false;
   });
