@@ -593,7 +593,7 @@ html.motion-enabled .info-tabs__panel.is-entering .image-shell::after {
 
 .ceremony-parking-section { background: var(--color-bg); }
 .ceremony-parking-shell { max-width: 1100px; }
-.ceremony-parking-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--content-gap); align-items: stretch; }
+.ceremony-parking-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--content-gap); width: min(100%, 720px); margin-inline: auto; align-items: stretch; }
 .ceremony-parking-card { overflow: hidden; border-color: var(--color-border); }
 .ceremony-parking-card { display: flex; flex-direction: column; }
 .ceremony-parking-image { aspect-ratio: var(--card-image-ratio-landscape); }
