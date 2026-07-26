@@ -6,6 +6,19 @@
   <meta name="theme-color" content="#f5f0e8">
   <script>
     (() => {
+      const navigationEntry = performance.getEntriesByType('navigation')[0];
+      const navigationType = navigationEntry?.type || 'navigate';
+      const initialHash = window.location.hash;
+      const infoTabHashes = new Set(['#ceremony', '#banquet', '#gallery']);
+      const startAtTop = navigationType === 'reload'
+        || (navigationType === 'navigate' && (!initialHash || infoTabHashes.has(initialHash)));
+      window.__weddingInitialNavigation = { type: navigationType, hash: initialHash, startAtTop };
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = navigationType === 'back_forward' ? 'auto' : 'manual';
+      }
+      if (startAtTop && initialHash) {
+        history.replaceState(history.state, '', `${window.location.pathname}${window.location.search}`);
+      }
       try {
         const language = localStorage.getItem('wedding-language');
         if (language === 'en' || language === 'zh-TW') {
@@ -581,7 +594,7 @@
 
       <div class="info-tabs__panel" id="panel-gallery" role="tabpanel" aria-labelledby="tab-gallery" data-info-panel="gallery" hidden>
 
-    <section class="story-gallery" id="gallery" aria-labelledby="gallery-title" data-invite="section:gallery">
+    <section class="story-gallery" id="wedding-gallery" aria-labelledby="gallery-title" data-invite="section:gallery">
       <header class="section-title section-header story-title shell reveal">
         <p class="section-header__eyebrow">05 · GALLERY</p>
         <h2 class="section-header__title" id="gallery-title">OUR STORY</h2>

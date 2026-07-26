@@ -44,6 +44,14 @@ const navMore = document.querySelector('#nav-more');
 const navMoreToggle = document.querySelector('#nav-more-toggle');
 const navMoreMenu = document.querySelector('#nav-more-menu');
 const inviteMode = new URLSearchParams(window.location.search).get('invite');
+const initialNavigation = window.__weddingInitialNavigation || {
+  type: 'navigate',
+  hash: window.location.hash,
+  startAtTop: !window.location.hash
+};
+if (initialNavigation.startAtTop) {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+}
 const heroSchedule = document.querySelector('#hero-schedule');
 const weddingCountdown = document.querySelector('#wedding-countdown');
 const scrollProgress = document.querySelector('#scroll-progress');
@@ -85,6 +93,7 @@ const INFO_TAB_SECTION_MAP = new Map([
   ['parking', 'banquet'],
   ['seating', 'banquet'],
   ['gallery', 'gallery'],
+  ['wedding-gallery', 'gallery'],
   ['share', 'gallery']
 ]);
 let activeInfoTab = 'ceremony';
@@ -731,6 +740,11 @@ function infoTabFromHash(hash = window.location.hash) {
   return INFO_TAB_SECTION_MAP.get(hash.replace(/^#/, '')) || null;
 }
 
+function navigationTargetFromHash(hash) {
+  if (hash === '#gallery') return document.querySelector('#wedding-gallery');
+  return document.querySelector(hash);
+}
+
 function availableInfoTabs() {
   return INFO_TABS_BY_MODE[inviteMode] || [];
 }
@@ -778,7 +792,7 @@ function completePendingInfoNavigation(tabId) {
     const navigation = infoTabs.querySelector('.info-tabs__navigation');
     const target = navigationRequest.toTabs
       ? navigation
-      : document.querySelector(navigationRequest.targetHash);
+      : navigationTargetFromHash(navigationRequest.targetHash);
     if (!target || !target.getClientRects().length) return;
     const stickyTabsHeight = navigationRequest.toTabs ? 0 : navigation.offsetHeight;
     const targetTop = window.scrollY + target.getBoundingClientRect().top
@@ -953,7 +967,8 @@ function activateInfoTab(tabId, {
   updateHistory = true,
   animate = true,
   focus = false,
-  maintainPosition = true
+  scroll = true,
+  source = 'user'
 } = {}) {
   if (!infoTabs || !availableInfoTabs().includes(tabId)) return false;
   const lightboxElement = document.querySelector('#gallery-lightbox');
@@ -976,6 +991,7 @@ function activateInfoTab(tabId, {
     button.tabIndex = selected ? 0 : -1;
   });
   activeInfoTab = tabId;
+  infoTabs.dataset.activationSource = source;
   updateTabIndicator(targetButton, changingPanel && animate);
   if (focus) targetButton.focus({ preventScroll: true });
 
@@ -1003,7 +1019,7 @@ function activateInfoTab(tabId, {
     completeInfoTabChange(tabId);
   }
 
-  if (maintainPosition) scrollInfoTabsToHeader();
+  if (scroll) scrollInfoTabsToHeader();
   return true;
 }
 
@@ -1015,32 +1031,39 @@ function initializeInfoTabs() {
   infoTabList.style.setProperty('--info-tab-count', String(allowedTabs.length));
   renderInfoTabsLanguage();
 
-  const hashTab = infoTabFromHash();
+  const initialHash = initialNavigation.hash || window.location.hash;
+  const hashTab = infoTabFromHash(initialHash);
   const initialTab = hashTab && allowedTabs.includes(hashTab) ? hashTab : 'ceremony';
-  activateInfoTab(initialTab, { updateHistory: false, animate: false, maintainPosition: false });
+  activateInfoTab(initialTab, {
+    updateHistory: false,
+    animate: false,
+    scroll: false,
+    source: 'initial-load'
+  });
   if ('ResizeObserver' in window) {
     infoTabsResizeObserver = new ResizeObserver(() => scheduleInfoTabIndicatorUpdate(false));
     infoTabsResizeObserver.observe(infoTabList);
   }
   document.fonts?.ready.then(() => scheduleInfoTabIndicatorUpdate(false));
 
+  let restoredHash = '';
   if (hashTab && !allowedTabs.includes(hashTab)) {
+    restoredHash = INFO_TAB_HASH.ceremony;
+  } else if (initialNavigation.startAtTop && initialHash) {
+    restoredHash = initialHash;
+  }
+  if (restoredHash) {
     const url = new URL(window.location.href);
-    url.hash = INFO_TAB_HASH.ceremony;
+    url.hash = restoredHash;
     window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
-  } else if (hashTab) {
-    window.requestAnimationFrame(() => {
-      const hashTarget = document.querySelector(window.location.hash);
-      (hashTarget || infoTabs.querySelector('.info-tabs__navigation')).scrollIntoView({
-        behavior: 'auto',
-        block: 'start'
-      });
-    });
   }
 }
 
 infoTabButtons.forEach((button) => {
-  button.addEventListener('click', () => activateInfoTab(button.dataset.infoTab));
+  button.addEventListener('click', () => activateInfoTab(button.dataset.infoTab, {
+    scroll: true,
+    source: 'tab-click'
+  }));
   button.addEventListener('keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
@@ -1051,7 +1074,11 @@ infoTabButtons.forEach((button) => {
       : (event.key === 'End'
         ? enabledButtons.length - 1
         : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + enabledButtons.length) % enabledButtons.length);
-    activateInfoTab(enabledButtons[targetIndex].dataset.infoTab, { focus: true });
+    activateInfoTab(enabledButtons[targetIndex].dataset.infoTab, {
+      focus: true,
+      scroll: true,
+      source: 'tab-keyboard'
+    });
   });
 });
 
@@ -1068,19 +1095,28 @@ document.addEventListener('click', (event) => {
     pendingInfoNavigation = { tabId: targetTab, targetHash, toTabs };
     const activated = activateInfoTab(targetTab, {
       updateHistory: toTabs || targetHash === '#gallery',
-      maintainPosition: false
+      scroll: false,
+      source: 'header-navigation'
     });
     if (!activated) pendingInfoNavigation = null;
     return;
   }
-  activateInfoTab(targetTab, { updateHistory: false, maintainPosition: false });
+  activateInfoTab(targetTab, {
+    updateHistory: false,
+    scroll: false,
+    source: 'anchor-navigation'
+  });
 }, true);
 
 window.addEventListener('hashchange', () => {
   if (!infoTabsInitialized) return;
   const targetTab = infoTabFromHash();
   if (!targetTab) return;
-  activateInfoTab(targetTab, { updateHistory: false, maintainPosition: false });
+  activateInfoTab(targetTab, {
+    updateHistory: false,
+    scroll: false,
+    source: 'history-navigation'
+  });
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => syncInfoTabNavigationState(targetTab));
   });
@@ -1289,7 +1325,7 @@ function initializeScrollSpy() {
       && !link.closest('[hidden]')
       && window.getComputedStyle(link).display !== 'none')
     .map((link) => {
-      const section = document.querySelector(link.getAttribute('href'));
+      const section = navigationTargetFromHash(link.getAttribute('href'));
       return section && !section.hidden && !section.closest('[hidden]') && section.getClientRects().length > 0
         ? { link, section }
         : null;
@@ -1542,7 +1578,7 @@ const carouselNext = weddingCarousel?.querySelector('.wedding-carousel__arrow--n
 const carouselDots = weddingCarousel?.querySelector('.wedding-carousel__dots');
 const carouselReturn = weddingCarousel?.querySelector('.wedding-carousel__return');
 const carouselMobileQuery = window.matchMedia('(max-width: 820px)');
-const gallerySection = weddingCarousel?.closest('#gallery');
+const gallerySection = weddingCarousel?.closest('#wedding-gallery');
 const carouselIsEnabled = Boolean(
   weddingCarousel
   && carouselSlides.length
@@ -1630,7 +1666,7 @@ function getCarouselLayoutMetrics() {
   return {
     activeIndex: carouselActiveIndex,
     scrollY: window.scrollY,
-    sectionHeight: weddingCarousel.closest('#gallery')?.getBoundingClientRect().height ?? 0,
+    sectionHeight: weddingCarousel.closest('#wedding-gallery')?.getBoundingClientRect().height ?? 0,
     viewportHeight: carouselViewport.getBoundingClientRect().height,
     trackHeight: carouselTrack.getBoundingClientRect().height,
     slideHeight: activeSlide?.getBoundingClientRect().height ?? 0,
