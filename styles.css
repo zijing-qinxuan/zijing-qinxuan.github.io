@@ -246,6 +246,10 @@ body.invite-missing .invite-gate { display: grid; }
 .site-header:not(.scrolled):not(.menu-active) .nav-link:hover { color: var(--color-text-inverse); }
 
 @media (min-width: 821px) {
+  .nav-rsvp-primary {
+    font-weight: var(--weight-semibold);
+    opacity: 1;
+  }
   .nav-links > a.nav-link::after {
     content: "";
     position: absolute;
@@ -259,6 +263,10 @@ body.invite-missing .invite-gate { display: grid; }
   }
   .nav-links > a.nav-link:hover::after,
   .nav-links > a.nav-link:focus-visible::after { width: 14px; }
+  .nav-links > a.nav-rsvp-primary::after { width: 18px; }
+  .site-header:not(.scrolled):not(.menu-active) .nav-links > a.nav-rsvp-primary::after {
+    background: var(--color-accent-soft);
+  }
   .nav-links > a.nav-link.is-active::after { width: 22px; }
   .nav-more-toggle.is-active { color: var(--color-accent-dark); opacity: 1; }
 }
@@ -320,8 +328,11 @@ html.motion-enabled .hero-image { will-change: transform, opacity; }
 
 .info-tabs { position: relative; background: var(--color-bg); }
 .info-tabs__navigation {
-  position: relative;
-  z-index: 5;
+  position: sticky;
+  top: var(--header-height);
+  z-index: 30;
+  background: var(--color-bg-soft);
+  border-bottom: 1px solid var(--color-border);
   scroll-margin-top: calc(var(--header-height) + var(--space-3));
 }
 .info-tabs__list {
@@ -384,7 +395,9 @@ html.motion-enabled .info-tabs__panel.is-entering .image-shell::after {
   .info-tabs__navigation {
     padding: 0;
     background: var(--color-bg-soft);
-    border: 0;
+    border-width: 0 0 1px;
+    border-style: solid;
+    border-color: var(--color-border);
   }
   .info-tabs__list {
     display: flex;
@@ -440,11 +453,8 @@ html.motion-enabled .info-tabs__panel.is-entering .image-shell::after {
 @media (max-width: 768px) {
   body .page-section.gift-note-section { padding-bottom: var(--space-4); }
   .info-tabs__navigation {
-    position: sticky;
-    top: var(--header-height);
-    z-index: 20;
     padding-block: var(--space-2);
-    background: linear-gradient(to bottom, var(--color-bg-glass), var(--color-bg-soft));
+    background: var(--color-bg-soft);
   }
   .info-tabs__navigation .shell { width: 100%; }
   .info-tabs__list {
@@ -1185,6 +1195,7 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
     background: var(--color-accent-dark);
     transform: translateY(-50%);
   }
+  .nav-rsvp-primary { display: none; }
   .nav-more { display: contents; }
   .nav-more::before { display: none; }
   .nav-more-toggle { display: none; }
