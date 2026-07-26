@@ -135,6 +135,7 @@
   --radius-card-small: var(--card-radius-sm);
   --radius: var(--card-radius-md);
   --header-height: 68px;
+  --info-tabs-height: 54px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -375,6 +376,7 @@ html.motion-enabled .hero-image { will-change: transform, opacity; }
   position: relative;
   min-width: 0;
   overflow-anchor: none;
+  scroll-margin-top: calc(var(--header-height) + var(--info-tabs-height) + var(--space-3));
 }
 .info-tabs__panel.is-entering,
 .info-tabs__panel.is-leaving {
@@ -451,6 +453,7 @@ html.motion-enabled .info-tabs__panel.is-entering .image-shell::after {
 }
 
 @media (max-width: 768px) {
+  :root { --info-tabs-height: 78px; }
   body .page-section.gift-note-section { padding-bottom: var(--space-4); }
   .info-tabs__navigation {
     padding-block: var(--space-2);

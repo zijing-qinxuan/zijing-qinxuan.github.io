@@ -103,6 +103,7 @@ let infoTransitionSequence = 0;
 let infoIndicatorFrame = null;
 let infoTabsResizeObserver = null;
 let pendingInfoNavigation = null;
+let pendingInfoPanelScroll = null;
 
 function isLocalDevelopmentHost() {
   return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
@@ -767,19 +768,35 @@ function renderInfoTabsLanguage() {
   if (infoTabsInitialized) scheduleInfoTabIndicatorUpdate(false);
 }
 
-function scrollInfoTabsToHeader(force = false) {
-  if (!infoTabs) return;
-  const navigation = infoTabs.querySelector('.info-tabs__navigation');
-  const navigationRect = navigation.getBoundingClientRect();
-  const headerOffset = header.offsetHeight + 12;
-  const needsAdjustment = force
-    || navigationRect.top < header.offsetHeight - 1
-    || navigationRect.top > window.innerHeight * .58;
-  if (!needsAdjustment) return;
-  const tabsDocumentTop = window.scrollY + infoTabs.getBoundingClientRect().top;
+function scrollToActivePanel(panel, {
+  behavior = reducedMotionQuery.matches ? 'auto' : 'smooth'
+} = {}) {
+  if (!panel || panel.hidden || !panel.getClientRects().length) return;
+  const stickyTabs = infoTabs?.querySelector('.info-tabs__navigation');
+  const headerHeight = header?.getBoundingClientRect().height || 0;
+  const stickyTabsHeight = stickyTabs?.getBoundingClientRect().height || 0;
+  const extraGap = 16;
+  const targetY = panel.getBoundingClientRect().top
+    + window.scrollY
+    - headerHeight
+    - stickyTabsHeight
+    - extraGap;
   window.scrollTo({
-    top: Math.max(0, tabsDocumentTop - headerOffset),
-    behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'
+    top: Math.max(0, targetY),
+    behavior
+  });
+  requestScrollUpdate();
+}
+
+function completePendingInfoPanelScroll(tabId) {
+  if (!pendingInfoPanelScroll || pendingInfoPanelScroll.tabId !== tabId) return;
+  const scrollRequest = pendingInfoPanelScroll;
+  pendingInfoPanelScroll = null;
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      if (activeInfoTab !== tabId) return;
+      scrollToActivePanel(scrollRequest.panel);
+    });
   });
 }
 
@@ -794,13 +811,14 @@ function completePendingInfoNavigation(tabId) {
       ? navigation
       : navigationTargetFromHash(navigationRequest.targetHash);
     if (!target || !target.getClientRects().length) return;
-    const stickyTabsHeight = navigationRequest.toTabs ? 0 : navigation.offsetHeight;
+    const stickyTabsHeight = navigationRequest.toTabs ? 0 : navigation.getBoundingClientRect().height;
     const targetTop = window.scrollY + target.getBoundingClientRect().top
-      - header.offsetHeight - stickyTabsHeight - 12;
+      - header.getBoundingClientRect().height - stickyTabsHeight - 16;
     window.scrollTo({
       top: Math.max(0, targetTop),
       behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'
     });
+    requestScrollUpdate();
     if (!navigationRequest.toTabs) {
       const url = new URL(window.location.href);
       url.hash = navigationRequest.targetHash;
@@ -862,16 +880,22 @@ function cancelInfoPanelTransition() {
 }
 
 function completeInfoTabChange(tabId) {
+  initializeScrollSpy();
+  syncInfoTabNavigationState(tabId);
+  requestScrollUpdate();
+  const completeNavigation = () => {
+    completePendingInfoPanelScroll(tabId);
+    completePendingInfoNavigation(tabId);
+  };
   if (tabId === 'gallery') {
     window.requestAnimationFrame(() => {
       updateCarouselMetrics();
       scheduleCarouselAutoplay();
+      completeNavigation();
     });
+  } else {
+    completeNavigation();
   }
-  initializeScrollSpy();
-  syncInfoTabNavigationState(tabId);
-  requestScrollUpdate();
-  completePendingInfoNavigation(tabId);
 }
 
 function finishInfoPanelTransition(sequence, targetPanel, tabId) {
@@ -967,7 +991,7 @@ function activateInfoTab(tabId, {
   updateHistory = true,
   animate = true,
   focus = false,
-  scroll = true,
+  scrollToPanel = false,
   source = 'user'
 } = {}) {
   if (!infoTabs || !availableInfoTabs().includes(tabId)) return false;
@@ -992,6 +1016,12 @@ function activateInfoTab(tabId, {
   });
   activeInfoTab = tabId;
   infoTabs.dataset.activationSource = source;
+  if (scrollToPanel) {
+    pendingInfoNavigation = null;
+    pendingInfoPanelScroll = { tabId, panel: targetPanel, source };
+  } else {
+    pendingInfoPanelScroll = null;
+  }
   updateTabIndicator(targetButton, changingPanel && animate);
   if (focus) targetButton.focus({ preventScroll: true });
 
@@ -1019,7 +1049,6 @@ function activateInfoTab(tabId, {
     completeInfoTabChange(tabId);
   }
 
-  if (scroll) scrollInfoTabsToHeader();
   return true;
 }
 
@@ -1037,7 +1066,7 @@ function initializeInfoTabs() {
   activateInfoTab(initialTab, {
     updateHistory: false,
     animate: false,
-    scroll: false,
+    scrollToPanel: false,
     source: 'initial-load'
   });
   if ('ResizeObserver' in window) {
@@ -1061,7 +1090,7 @@ function initializeInfoTabs() {
 
 infoTabButtons.forEach((button) => {
   button.addEventListener('click', () => activateInfoTab(button.dataset.infoTab, {
-    scroll: true,
+    scrollToPanel: true,
     source: 'tab-click'
   }));
   button.addEventListener('keydown', (event) => {
@@ -1076,7 +1105,7 @@ infoTabButtons.forEach((button) => {
         : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + enabledButtons.length) % enabledButtons.length);
     activateInfoTab(enabledButtons[targetIndex].dataset.infoTab, {
       focus: true,
-      scroll: true,
+      scrollToPanel: true,
       source: 'tab-keyboard'
     });
   });
@@ -1091,19 +1120,21 @@ document.addEventListener('click', (event) => {
   const isHeaderInfoLink = anchor.closest('#nav-links');
   if (isHeaderInfoLink) {
     event.preventDefault();
-    const toTabs = ['#ceremony-info', '#wedding-info'].includes(targetHash);
-    pendingInfoNavigation = { tabId: targetTab, targetHash, toTabs };
+    const targetsPanelTop = ['#ceremony-info', '#wedding-info', '#gallery'].includes(targetHash);
+    if (!targetsPanelTop) {
+      pendingInfoNavigation = { tabId: targetTab, targetHash, toTabs: false };
+    }
     const activated = activateInfoTab(targetTab, {
-      updateHistory: toTabs || targetHash === '#gallery',
-      scroll: false,
-      source: 'header-navigation'
+      updateHistory: targetsPanelTop,
+      scrollToPanel: targetsPanelTop,
+      source: 'header-menu'
     });
-    if (!activated) pendingInfoNavigation = null;
+    if (!activated && !targetsPanelTop) pendingInfoNavigation = null;
     return;
   }
   activateInfoTab(targetTab, {
     updateHistory: false,
-    scroll: false,
+    scrollToPanel: false,
     source: 'anchor-navigation'
   });
 }, true);
@@ -1114,7 +1145,7 @@ window.addEventListener('hashchange', () => {
   if (!targetTab) return;
   activateInfoTab(targetTab, {
     updateHistory: false,
-    scroll: false,
+    scrollToPanel: false,
     source: 'history-navigation'
   });
   window.requestAnimationFrame(() => {
