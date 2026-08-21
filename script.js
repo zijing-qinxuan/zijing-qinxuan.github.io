@@ -1340,7 +1340,10 @@ function normalizeGalleryData(source) {
       height: dimensions[1],
       largeWidth: dimensions[2],
       largeHeight: dimensions[3],
-      alt: item.alt
+      alt: item.alt,
+      objectPosition: typeof item.objectPosition === 'string'
+        ? item.objectPosition.trim()
+        : ''
     }];
   });
 }
@@ -1359,7 +1362,9 @@ function galleryItemAlt(item) {
 
 function createGallerySlide(item, index) {
   const slide = document.createElement('article');
-  slide.className = 'wedding-carousel__slide';
+  const orientation = item.width > item.height ? 'landscape' : 'portrait';
+  slide.className = `wedding-carousel__slide is-${orientation}`;
+  slide.dataset.orientation = orientation;
   slide.dataset.galleryId = item.id;
   slide.dataset.revealed = 'true';
   slide.classList.add('is-revealed');
@@ -1378,6 +1383,7 @@ function createGallerySlide(item, index) {
   image.height = item.height;
   image.decoding = 'async';
   image.loading = index === 0 ? 'eager' : 'lazy';
+  if (item.objectPosition) image.style.objectPosition = item.objectPosition;
   if (index === 0) {
     image.src = item.thumb;
     image.fetchPriority = 'high';
@@ -2061,12 +2067,14 @@ function setCarouselImageOrientation(image, updateMetrics = true) {
   if (!imageWidth || !imageHeight) return false;
   const slide = image.closest('.wedding-carousel__slide, .wedding-carousel__clone');
   if (!slide) return false;
-  const portrait = imageHeight > imageWidth;
+  const portrait = imageWidth <= imageHeight;
+  const orientation = portrait ? 'portrait' : 'landscape';
   const orientationChanged = portrait
     ? !slide.classList.contains('is-portrait')
     : !slide.classList.contains('is-landscape');
   slide.classList.toggle('is-portrait', portrait);
   slide.classList.toggle('is-landscape', !portrait);
+  slide.dataset.orientation = orientation;
   if (orientationChanged && updateMetrics) updateCarouselMetrics();
   return orientationChanged;
 }

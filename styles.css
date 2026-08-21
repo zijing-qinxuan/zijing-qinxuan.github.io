@@ -707,18 +707,18 @@ html.motion-enabled .hero-image { will-change: transform, opacity; }
 .gallery-media img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .55s ease, transform .7s cubic-bezier(.22,1,.36,1); }
 .gallery-media.loaded img { opacity: 1; }
 .photo-index { position: absolute; z-index: 2; right: 18px; bottom: 15px; color: var(--color-text-inverse); font-size: 11px; letter-spacing: .12em; text-shadow: var(--shadow-text-xs); }
-.wedding-carousel { --carousel-stage-height: clamp(500px, 58vw, 720px); --carousel-slide-width: min(78vw, 980px); position: relative; width: 100%; max-width: 1680px; margin-inline: auto; overflow-anchor: none; }
+.wedding-carousel { --carousel-stage-height: clamp(520px, 55vw, 720px); --carousel-slide-width: min(78vw, 1040px); position: relative; width: 100%; max-width: 1680px; margin-inline: auto; overflow-anchor: none; }
 .wedding-carousel__viewport { position: relative; width: 100%; height: var(--carousel-stage-height); min-height: var(--carousel-stage-height); max-height: var(--carousel-stage-height); overflow: hidden; padding-inline: clamp(var(--space-4), 5vw, 72px); contain: layout paint; overflow-anchor: none; }
 .wedding-carousel__track { display: flex; align-items: stretch; gap: clamp(20px, 2.5vw, var(--space-5)); width: max-content; height: 100%; transition: transform 720ms var(--motion-ease); will-change: auto; overflow-anchor: none; }
 .wedding-carousel__track.is-moving { will-change: transform; }
-.wedding-carousel__slide, .wedding-carousel__clone { display: flex; align-items: stretch; justify-content: center; flex: 0 0 var(--carousel-slide-width); min-width: 0; height: 100%; min-height: 0; overflow: hidden; background: var(--color-surface-muted); border: var(--card-border); border-radius: var(--card-radius-lg); box-shadow: var(--shadow-md); opacity: .58; transform: scale(.965); transform-origin: center; transition: none; overflow-anchor: none; }
+.wedding-carousel__slide, .wedding-carousel__clone { display: flex; align-items: stretch; justify-content: center; flex: 0 0 var(--carousel-slide-width); min-width: 0; height: 100%; min-height: 0; overflow: visible; background: transparent; border: 0; border-radius: 0; box-shadow: none; opacity: .58; transform: scale(.965); transform-origin: center; transition: none; overflow-anchor: none; }
 .wedding-carousel__slide.is-adjacent, .wedding-carousel__clone.is-adjacent { transition: opacity 320ms var(--motion-ease), transform 320ms var(--motion-ease); }
 .wedding-carousel__slide.is-before-active, .wedding-carousel__clone.is-before-active { transform-origin: right center; }
 .wedding-carousel__slide.is-after-active, .wedding-carousel__clone.is-after-active { transform-origin: left center; }
-:is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape { --carousel-slide-width: min(78vw, 980px); }
-:is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait { --carousel-slide-width: min(60vw, 720px); }
-.wedding-carousel__slide.is-active { opacity: 1; transform: scale(1); box-shadow: var(--shadow-lg); transition: opacity 680ms var(--motion-ease), transform 680ms var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease); }
-.wedding-carousel__media { position: relative; display: block; flex: 1 1 auto; width: 100%; height: 100%; min-height: 0; overflow: hidden; background: var(--color-surface-muted); border: 0; border-radius: 0; box-shadow: none; }
+:is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape { --carousel-slide-width: min(78vw, 1040px); }
+:is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait { --carousel-slide-width: min(46vw, 480px); }
+.wedding-carousel__slide.is-active { opacity: 1; transform: scale(1); transition: opacity 680ms var(--motion-ease), transform 680ms var(--motion-ease); }
+.wedding-carousel__media { position: relative; display: block; flex: 1 1 auto; width: 100%; height: 100%; min-height: 0; overflow: hidden; background: var(--color-surface-muted); border: var(--card-border); border-radius: var(--card-radius-lg); box-shadow: var(--shadow-md); }
 .wedding-carousel__media img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
 .wedding-carousel__arrow { position: absolute; z-index: 3; top: calc(50% - var(--space-5)); display: grid; place-items: center; width: 52px; height: 52px; padding: 0; color: var(--color-text-primary); background: var(--color-surface-glass); border: 1px solid var(--color-inverse-55); border-radius: 50%; box-shadow: var(--shadow-sm); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transform: translateY(-50%); transition: color var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease), transform var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease); }
 .wedding-carousel__arrow--previous { left: clamp(var(--space-4), 4vw, var(--space-7)); }
@@ -1271,15 +1271,17 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
   .wedding-carousel__viewport { overflow-x: auto; overflow-y: hidden; padding-inline: 0; scroll-snap-type: x mandatory; scroll-padding-inline: var(--carousel-mobile-gutter); scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-y pinch-zoom; -webkit-overflow-scrolling: touch; }
   .wedding-carousel__viewport:is(.is-dragging, .is-settling) { scroll-snap-type: none; }
   .wedding-carousel__viewport::-webkit-scrollbar { display: none; }
-  .wedding-carousel__track { gap: var(--space-1); padding-inline: var(--carousel-mobile-gutter); transform: none; transition: none; will-change: auto; }
-  .wedding-carousel__slide, .wedding-carousel__clone, :is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape { --carousel-slide-width: min(88vw, 430px); scroll-snap-align: center; scroll-snap-stop: always; border-radius: var(--card-radius-md); transform: none; }
-  :is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait { --carousel-slide-width: min(82vw, 400px); }
-  .wedding-carousel__media img[src$="/02.jpg"] { object-position: 62% center; }
-  .wedding-carousel__media img[src$="/10.jpg"] { object-position: 38% center; }
-  .wedding-carousel__media img[src$="/11.jpg"] { object-position: 60% center; }
-  :is(.wedding-carousel__slide, .wedding-carousel__clone, .wedding-carousel__slide.is-active, .wedding-carousel__slide.is-adjacent, .wedding-carousel__clone.is-adjacent) { opacity: 1; filter: none; transform: none; box-shadow: var(--shadow-md); transition: none; }
+  .wedding-carousel__track { align-items: center; gap: var(--space-1); padding-inline: var(--carousel-mobile-gutter); transform: none; transition: none; will-change: auto; }
+  .wedding-carousel__slide, .wedding-carousel__clone { height: auto; align-items: center; align-self: center; scroll-snap-align: center; scroll-snap-stop: always; transform: none; }
+  :is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape { --carousel-slide-width: min(90vw, 460px); }
+  :is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait { --carousel-slide-width: min(78vw, 380px); }
+  :is(.wedding-carousel__slide, .wedding-carousel__clone, .wedding-carousel__slide.is-active, .wedding-carousel__slide.is-adjacent, .wedding-carousel__clone.is-adjacent) { opacity: 1; filter: none; transform: none; box-shadow: none; transition: none; }
+  .wedding-carousel__media { flex: 0 0 auto; height: auto; border-radius: var(--card-radius-md); }
+  :is(.wedding-carousel__slide, .wedding-carousel__clone).is-portrait .wedding-carousel__media { aspect-ratio: 2 / 3; }
+  :is(.wedding-carousel__slide, .wedding-carousel__clone).is-landscape .wedding-carousel__media { aspect-ratio: 3 / 2; }
   .wedding-carousel .gallery-media img { opacity: 1; transform: none; transition: none; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-  .wedding-carousel__dot, .wedding-carousel__dot.is-active { width: 16px; transition: none; }
+  .wedding-carousel__dots { gap: 1px; }
+  .wedding-carousel__dot, .wedding-carousel__dot.is-active { width: 10px; transition: none; }
   .wedding-carousel__dot::before, .wedding-carousel__dot.is-active::before { width: 8px; transform: translate(-50%, -50%) scaleX(1); transition: background-color 220ms ease; }
   .wedding-carousel__dot.is-active::before { background: var(--color-accent-dark); transform: translate(-50%, -50%) scaleX(1.5); }
   .wedding-carousel__arrow { display: none; }
@@ -1311,6 +1313,10 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
     width: 100%;
     justify-content: center;
   }
+
+  .wedding-carousel__controls { padding-inline: var(--space-2); }
+  .wedding-carousel__dots { gap: 0; }
+  .wedding-carousel__dot, .wedding-carousel__dot.is-active { width: 8px; }
 }
 
 @media (min-width: 821px) {
@@ -1814,8 +1820,8 @@ body {
 
 .wedding-carousel .wedding-carousel__media {
   background: var(--color-surface-muted);
-  border: 0;
-  box-shadow: none;
+  border: var(--card-border);
+  box-shadow: var(--shadow-md);
 }
 
 :is(.rsvp-card, .gift-note-panel, .share-card, .lookup-result, .landing-dialog-card) {
@@ -2367,15 +2373,13 @@ html.motion-enabled .reveal.is-visible .image-shell.image-reveal-complete img {
 
   .wedding-carousel__slide.is-adjacent,
   .wedding-carousel__clone.is-adjacent {
-    filter: blur(.65px);
-    transition: opacity 320ms var(--motion-ease), transform 320ms var(--motion-ease), filter 320ms var(--motion-ease);
+    transition: opacity 320ms var(--motion-ease), transform 320ms var(--motion-ease);
   }
 
   .wedding-carousel__slide.is-active {
     opacity: 1;
-    filter: blur(0);
     transform: scale(1);
-    transition: opacity 780ms var(--motion-ease), transform 780ms var(--motion-ease), filter 780ms var(--motion-ease), box-shadow var(--motion-normal) var(--motion-ease);
+    transition: opacity 780ms var(--motion-ease), transform 780ms var(--motion-ease);
   }
 
   .nav-more-menu {
