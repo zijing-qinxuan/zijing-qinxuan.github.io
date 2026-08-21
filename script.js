@@ -26,9 +26,9 @@ const INVITE_CONFIG = {
   },
   online: {
     heroKeys: ["hero.weddingSchedule"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery"],
-    navigation: ["rsvp", "ceremony-info", "gallery"],
-    hiddenSections: ["gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery", "share"],
+    navigation: ["rsvp", "ceremony-info", "gallery", "share"],
+    hiddenSections: ["gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
     content: ["online-attendance"],
     ceremonyEntryKey: "hero.onlineEntry"
   }
@@ -66,44 +66,19 @@ const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const seatLookupUnavailable = document.querySelector('#seat-lookup-unavailable');
 const seatingDescription = document.querySelector('#seating-description');
 const seatLookupOpenContent = [...document.querySelectorAll('[data-seat-lookup-open]')];
-const infoTabs = document.querySelector('#info-tabs');
-const infoTabList = infoTabs?.querySelector('.info-tabs__list');
-const infoTabIndicator = infoTabList?.querySelector('.info-tabs__indicator');
-const infoTabStage = infoTabs?.querySelector('.info-tabs__stage');
-const infoTabButtons = infoTabs ? [...infoTabs.querySelectorAll('[data-info-tab]')] : [];
-const infoTabPanels = infoTabs ? [...infoTabs.querySelectorAll('[data-info-panel]')] : [];
-const INFO_TABS_BY_MODE = {
-  full: ['ceremony', 'banquet', 'gallery'],
-  wedding: ['ceremony', 'gallery'],
-  online: ['ceremony', 'gallery']
+const quickNavWrapper = document.querySelector('#quick-nav-wrapper');
+const quickNav = document.querySelector('#quick-nav');
+const quickNavLinks = quickNav ? [...quickNav.querySelectorAll('[data-quick-nav]')] : [];
+const infoAccordions = [...document.querySelectorAll('[data-info-accordion]')];
+let quickNavObserver = null;
+const quickNavIntersections = new Map();
+
+const QUICK_NAV_SECTION_IDS = {
+  ceremony: ['ceremony-info', 'ceremony-parking', 'ceremony-notes'],
+  banquet: ['wedding-info', 'venue', 'parking', 'seating'],
+  gallery: ['wedding-gallery'],
+  share: ['share']
 };
-const INFO_TAB_HASH = {
-  ceremony: '#ceremony',
-  banquet: '#banquet',
-  gallery: '#gallery'
-};
-const INFO_TAB_SECTION_MAP = new Map([
-  ['ceremony', 'ceremony'],
-  ['ceremony-info', 'ceremony'],
-  ['ceremony-parking', 'ceremony'],
-  ['ceremony-notes', 'ceremony'],
-  ['banquet', 'banquet'],
-  ['wedding-info', 'banquet'],
-  ['venue', 'banquet'],
-  ['parking', 'banquet'],
-  ['seating', 'banquet'],
-  ['gallery', 'gallery'],
-  ['wedding-gallery', 'gallery'],
-  ['share', 'gallery']
-]);
-let activeInfoTab = 'ceremony';
-let infoTabsInitialized = false;
-let activeInfoTransition = null;
-let infoTransitionSequence = 0;
-let infoIndicatorFrame = null;
-let infoTabsResizeObserver = null;
-let pendingInfoNavigation = null;
-let pendingInfoPanelScroll = null;
 
 function isLocalDevelopmentHost() {
   return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
@@ -737,422 +712,170 @@ rsvpEdit.addEventListener('click', () => {
   rsvpName.focus({ preventScroll: true });
 });
 
-function infoTabFromHash(hash = window.location.hash) {
-  return INFO_TAB_SECTION_MAP.get(hash.replace(/^#/, '')) || null;
-}
-
 function navigationTargetFromHash(hash) {
   if (hash === '#gallery') return document.querySelector('#wedding-gallery');
   return document.querySelector(hash);
 }
 
-function availableInfoTabs() {
-  return INFO_TABS_BY_MODE[inviteMode] || [];
-}
-
-function renderInfoTabsLanguage() {
-  if (!infoTabs) return;
-  const useCompactLabels = window.innerWidth <= 768;
-  infoTabList.setAttribute('aria-label', t('infoTabs.label'));
-  infoTabButtons.forEach((button) => {
-    const tabId = button.dataset.infoTab;
-    const key = tabId === 'gallery' && useCompactLabels
-      ? 'infoTabs.galleryCompact'
-      : (tabId === 'ceremony' && inviteMode === 'online'
-        ? 'infoTabs.onlineCeremony'
-        : `infoTabs.${tabId}`);
-    const label = t(key);
-    button.textContent = label;
-    button.setAttribute('aria-label', tabId === 'gallery' ? t('infoTabs.galleryLabel') : label);
+function renderQuickNavigationLanguage() {
+  if (!quickNav) return;
+  const compact = window.innerWidth <= 768;
+  quickNav.setAttribute('aria-label', t('quickNav.label'));
+  quickNavLinks.forEach((link) => {
+    const key = link.dataset.quickNav;
+    const isOnlineCeremony = key === 'ceremony' && inviteMode === 'online';
+    const labelKey = isOnlineCeremony
+      ? (compact ? 'quickNav.onlineCeremony' : 'quickNav.onlineCeremonyFull')
+      : `quickNav.${key}${compact ? '' : 'Full'}`;
+    link.textContent = t(labelKey);
+    link.setAttribute('aria-label', t(isOnlineCeremony ? 'quickNav.onlineCeremonyFull' : `quickNav.${key}Full`));
   });
-  if (infoTabsInitialized) scheduleInfoTabIndicatorUpdate(false);
+  const visibleCount = quickNavLinks.filter((link) => !link.hidden && !link.closest('[hidden]')).length;
+  quickNav.style.setProperty('--quick-nav-count', String(Math.max(visibleCount, 1)));
 }
 
-function scrollToActivePanel(panel, {
-  behavior = reducedMotionQuery.matches ? 'auto' : 'smooth'
-} = {}) {
-  if (!panel || panel.hidden || !panel.getClientRects().length) return;
-  const stickyTabs = infoTabs?.querySelector('.info-tabs__navigation');
+function renderInfoAccordionLanguage(accordion) {
+  const trigger = accordion.querySelector('.info-accordion__trigger');
+  const label = accordion.querySelector('[data-info-accordion-label]');
+  if (!trigger || !label) return;
+  const labelText = t(`accordion.${accordion.dataset.infoAccordion}`);
+  const expanded = trigger.getAttribute('aria-expanded') === 'true';
+  const separator = i18n.getLanguage() === 'en' ? ', ' : '，';
+  label.textContent = labelText;
+  trigger.setAttribute('aria-label', `${labelText}${separator}${t(expanded ? 'accordion.collapse' : 'accordion.expand')}`);
+}
+
+function renderInfoAccordionsLanguage() {
+  infoAccordions.forEach(renderInfoAccordionLanguage);
+}
+
+function navigationOffsetForSection(section) {
   const headerHeight = header?.getBoundingClientRect().height || 0;
-  const stickyTabsHeight = stickyTabs?.getBoundingClientRect().height || 0;
-  const extraGap = 16;
-  const targetY = panel.getBoundingClientRect().top
-    + window.scrollY
-    - headerHeight
-    - stickyTabsHeight
-    - extraGap;
-  window.scrollTo({
-    top: Math.max(0, targetY),
-    behavior
-  });
-  requestScrollUpdate();
+  const quickNavHeight = quickNavWrapper?.getBoundingClientRect().height || 0;
+  const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+  const quickNavTop = quickNavWrapper
+    ? quickNavWrapper.getBoundingClientRect().top + window.scrollY
+    : Number.POSITIVE_INFINITY;
+  return headerHeight + (sectionTop >= quickNavTop ? quickNavHeight : 0) + 16;
 }
 
-function completePendingInfoPanelScroll(tabId) {
-  if (!pendingInfoPanelScroll || pendingInfoPanelScroll.tabId !== tabId) return;
-  const scrollRequest = pendingInfoPanelScroll;
-  pendingInfoPanelScroll = null;
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      if (activeInfoTab !== tabId) return;
-      scrollToActivePanel(scrollRequest.panel);
-    });
-  });
-}
-
-function completePendingInfoNavigation(tabId) {
-  if (!pendingInfoNavigation || pendingInfoNavigation.tabId !== tabId) return;
-  const navigationRequest = pendingInfoNavigation;
-  pendingInfoNavigation = null;
-  window.requestAnimationFrame(() => {
-    if (activeInfoTab !== tabId) return;
-    const navigation = infoTabs.querySelector('.info-tabs__navigation');
-    const target = navigationRequest.toTabs
-      ? navigation
-      : navigationTargetFromHash(navigationRequest.targetHash);
-    if (!target || !target.getClientRects().length) return;
-    const stickyTabsHeight = navigationRequest.toTabs ? 0 : navigation.getBoundingClientRect().height;
-    const targetTop = window.scrollY + target.getBoundingClientRect().top
-      - header.getBoundingClientRect().height - stickyTabsHeight - 16;
-    window.scrollTo({
-      top: Math.max(0, targetTop),
-      behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'
-    });
-    requestScrollUpdate();
-    if (!navigationRequest.toTabs) {
-      const url = new URL(window.location.href);
-      url.hash = navigationRequest.targetHash;
-      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
-    }
-  });
-}
-
-function updateTabIndicator(activeTab, animate = true) {
-  if (!infoTabList || !infoTabIndicator || !activeTab || activeTab.hidden || !activeTab.offsetWidth) return;
-  const shouldAnimate = animate && !reducedMotionQuery.matches && infoTabList.classList.contains('is-indicator-ready');
-  infoTabList.classList.toggle('is-indicator-static', !shouldAnimate);
-  infoTabIndicator.style.width = `${activeTab.offsetWidth}px`;
-  infoTabIndicator.style.transform = `translate3d(${activeTab.offsetLeft}px, 0, 0)`;
-  infoTabList.classList.add('is-indicator-ready');
-  if (!shouldAnimate) {
-    infoTabIndicator.getBoundingClientRect();
-    infoTabList.classList.remove('is-indicator-static');
-  }
-}
-
-function scheduleInfoTabIndicatorUpdate(animate = false) {
-  if (!infoTabList) return;
-  if (infoIndicatorFrame !== null) window.cancelAnimationFrame(infoIndicatorFrame);
-  infoIndicatorFrame = window.requestAnimationFrame(() => {
-    infoIndicatorFrame = null;
-    const activeButton = infoTabButtons.find((button) => button.dataset.infoTab === activeInfoTab && !button.hidden);
-    updateTabIndicator(activeButton, animate);
-  });
-}
-
-function resetInfoPanelState(activePanel) {
-  infoTabPanels.forEach((panel) => {
-    const selected = panel === activePanel;
-    panel.classList.remove('is-entering', 'is-leaving');
-    panel.classList.toggle('is-active', selected);
-    panel.hidden = !selected;
-    panel.inert = false;
-    panel.removeAttribute('aria-hidden');
-  });
-  if (infoTabStage) {
-    infoTabStage.classList.remove('is-transitioning');
-    infoTabStage.style.height = '';
-  }
-}
-
-function cancelInfoPanelTransition() {
-  if (!activeInfoTransition) return null;
-  const currentPanel = infoTabPanels.find((panel) => panel.dataset.infoPanel === activeInfoTab && !panel.hidden);
-  const currentStyle = currentPanel ? window.getComputedStyle(currentPanel) : null;
-  const currentVisual = currentStyle
-    ? { opacity: currentStyle.opacity, transform: currentStyle.transform }
-    : null;
-  infoTransitionSequence += 1;
-  activeInfoTransition.animations.forEach((animation) => animation.cancel());
-  activeInfoTransition = null;
-  resetInfoPanelState(currentPanel);
-  return currentVisual;
-}
-
-function completeInfoTabChange(tabId) {
-  initializeScrollSpy();
-  syncInfoTabNavigationState(tabId);
-  requestScrollUpdate();
-  const completeNavigation = () => {
-    completePendingInfoPanelScroll(tabId);
-    completePendingInfoNavigation(tabId);
-  };
-  if (tabId === 'gallery') {
-    window.requestAnimationFrame(() => {
-      updateCarouselMetrics();
-      scheduleCarouselAutoplay();
-      completeNavigation();
-    });
-  } else {
-    completeNavigation();
-  }
-}
-
-function finishInfoPanelTransition(sequence, targetPanel, tabId) {
-  if (!activeInfoTransition || activeInfoTransition.sequence !== sequence) return;
-  activeInfoTransition.animations.forEach((animation) => animation.cancel());
-  activeInfoTransition = null;
-  resetInfoPanelState(targetPanel);
-  completeInfoTabChange(tabId);
-}
-
-function updateInfoTransitionProgress(sequence) {
-  if (!activeInfoTransition || activeInfoTransition.sequence !== sequence) return;
-  requestScrollUpdate();
-  window.requestAnimationFrame(() => updateInfoTransitionProgress(sequence));
-}
-
-function animateInfoPanelTransition(currentPanel, targetPanel, tabId, direction, currentVisual) {
-  if (!infoTabStage || !currentPanel || currentPanel === targetPanel) {
-    resetInfoPanelState(targetPanel);
-    completeInfoTabChange(tabId);
-    return;
-  }
-
-  const mobile = window.innerWidth <= 768;
-  const leaveDuration = 170;
-  const enterDuration = mobile ? 320 : 310;
-  const enterDelay = mobile ? 60 : 50;
-  const heightDuration = mobile ? 360 : 340;
-  const distance = mobile ? 14 : 12;
-  const easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
-  const oldHeight = Math.max(1, currentPanel.offsetHeight);
-
-  infoTabStage.style.height = `${oldHeight}px`;
-  infoTabStage.classList.add('is-transitioning');
-  currentPanel.classList.remove('is-active');
-  currentPanel.classList.add('is-leaving');
-  currentPanel.setAttribute('aria-hidden', 'true');
-  currentPanel.inert = true;
-  targetPanel.hidden = false;
-  targetPanel.classList.add('is-active', 'is-entering');
-  targetPanel.removeAttribute('aria-hidden');
-  targetPanel.inert = false;
-  revealInfoPanelContent(targetPanel);
-
-  const newHeight = Math.max(1, targetPanel.offsetHeight);
-  const oldTransform = currentVisual?.transform && currentVisual.transform !== 'none'
-    ? currentVisual.transform
-    : 'translate3d(0, 0, 0)';
-  const oldOpacity = currentVisual?.opacity ?? '1';
-  const animations = [
-    currentPanel.animate([
-      { opacity: oldOpacity, transform: oldTransform },
-      { opacity: 0, transform: `translate3d(${-direction * distance}px, 0, 0)` }
-    ], { duration: leaveDuration, easing, fill: 'forwards' }),
-    targetPanel.animate([
-      { opacity: 0, transform: `translate3d(${direction * distance}px, 0, 0)` },
-      { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-    ], { duration: enterDuration, delay: enterDelay, easing, fill: 'both' }),
-    infoTabStage.animate([
-      { height: `${oldHeight}px` },
-      { height: `${newHeight}px` }
-    ], { duration: heightDuration, easing, fill: 'forwards' })
-  ];
-
-  const sequence = ++infoTransitionSequence;
-  activeInfoTransition = { sequence, animations, targetPanel };
-  updateInfoTransitionProgress(sequence);
-  Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
-    finishInfoPanelTransition(sequence, targetPanel, tabId);
-  });
-}
-
-function revealInfoPanelContent(panel) {
-  panel.querySelectorAll('.reveal').forEach((element) => {
-    element.classList.add('is-visible');
-    element.dataset.revealed = 'true';
-  });
-}
-
-function syncInfoTabNavigationState(tabId) {
-  const currentHash = window.location.hash;
-  const currentHashTab = infoTabFromHash(currentHash);
-  const preferredHref = currentHashTab === tabId ? currentHash : '';
-  const defaultHref = tabId === 'ceremony'
-    ? '#ceremony-info'
-    : (tabId === 'banquet' ? '#wedding-info' : '#gallery');
-  const matchingLink = navSectionLinks?.find((link) => link.getAttribute('href') === preferredHref)
-    || navSectionLinks?.find((link) => link.getAttribute('href') === defaultHref);
-  if (matchingLink && !matchingLink.hidden) setActiveNavLink(matchingLink);
-}
-
-function activateInfoTab(tabId, {
+function scrollToSection(section, {
   updateHistory = true,
-  animate = true,
-  focus = false,
-  scrollToPanel = false,
-  source = 'user'
+  hash = null
 } = {}) {
-  if (!infoTabs || !availableInfoTabs().includes(tabId)) return false;
-  const lightboxElement = document.querySelector('#gallery-lightbox');
-  if (lightboxElement && !lightboxElement.hidden && tabId !== activeInfoTab) return false;
-
-  const targetButton = infoTabButtons.find((button) => button.dataset.infoTab === tabId);
-  const targetPanel = infoTabPanels.find((panel) => panel.dataset.infoPanel === tabId);
-  if (!targetButton || !targetPanel) return false;
-
-  const previousTab = activeInfoTab;
-  const currentVisual = cancelInfoPanelTransition();
-  const currentPanel = infoTabPanels.find((panel) => panel.dataset.infoPanel === previousTab && !panel.hidden);
-  const changingPanel = previousTab !== tabId || targetPanel.hidden;
-  const availableTabs = availableInfoTabs();
-  const direction = Math.sign(availableTabs.indexOf(tabId) - availableTabs.indexOf(previousTab)) || 1;
-  infoTabButtons.forEach((button) => {
-    const selected = button === targetButton;
-    button.classList.toggle('is-active', selected);
-    button.setAttribute('aria-selected', String(selected));
-    button.tabIndex = selected ? 0 : -1;
+  if (!section || section.hidden || section.closest('[hidden]') || !section.getClientRects().length) return false;
+  const target = section.getBoundingClientRect().top + window.scrollY - navigationOffsetForSection(section);
+  window.scrollTo({
+    top: Math.max(0, target),
+    behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'
   });
-  activeInfoTab = tabId;
-  infoTabs.dataset.activationSource = source;
-  if (scrollToPanel) {
-    pendingInfoNavigation = null;
-    pendingInfoPanelScroll = { tabId, panel: targetPanel, source };
-  } else {
-    pendingInfoPanelScroll = null;
-  }
-  updateTabIndicator(targetButton, changingPanel && animate);
-  if (focus) targetButton.focus({ preventScroll: true });
-
   if (updateHistory) {
     const url = new URL(window.location.href);
-    url.hash = INFO_TAB_HASH[tabId];
+    url.hash = hash || `#${section.id}`;
     window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
   }
-
-  if (tabId !== 'gallery') {
-    window.clearTimeout(carouselAutoplayTimer);
-    carouselAutoplayTimer = null;
-  }
-
-  syncInfoTabNavigationState(tabId);
-  const supportsPanelAnimation = typeof currentPanel?.animate === 'function'
-    && typeof targetPanel.animate === 'function'
-    && typeof infoTabStage?.animate === 'function';
-  if (changingPanel && animate && !reducedMotionQuery.matches && supportsPanelAnimation) {
-    scrollSpyObserver?.disconnect();
-    animateInfoPanelTransition(currentPanel, targetPanel, tabId, direction, currentVisual);
-  } else {
-    revealInfoPanelContent(targetPanel);
-    resetInfoPanelState(targetPanel);
-    completeInfoTabChange(tabId);
-  }
-
+  requestScrollUpdate();
   return true;
 }
 
-function initializeInfoTabs() {
-  if (!infoTabs || infoTabsInitialized || !VALID_INVITE_MODES.includes(inviteMode)) return;
-  infoTabsInitialized = true;
-  const allowedTabs = availableInfoTabs();
-  infoTabButtons.forEach((button) => { button.hidden = !allowedTabs.includes(button.dataset.infoTab); });
-  infoTabList.style.setProperty('--info-tab-count', String(allowedTabs.length));
-  renderInfoTabsLanguage();
-
-  const initialHash = initialNavigation.hash || window.location.hash;
-  const hashTab = infoTabFromHash(initialHash);
-  const initialTab = hashTab && allowedTabs.includes(hashTab) ? hashTab : 'ceremony';
-  activateInfoTab(initialTab, {
-    updateHistory: false,
-    animate: false,
-    scrollToPanel: false,
-    source: 'initial-load'
+function setQuickNavActive(activeKey) {
+  quickNavLinks.forEach((link) => {
+    const active = link.dataset.quickNav === activeKey && !link.hidden && !link.closest('[hidden]');
+    link.classList.toggle('is-active', active);
+    if (active) link.setAttribute('aria-current', 'location');
+    else link.removeAttribute('aria-current');
   });
-  if ('ResizeObserver' in window) {
-    infoTabsResizeObserver = new ResizeObserver(() => scheduleInfoTabIndicatorUpdate(false));
-    infoTabsResizeObserver.observe(infoTabList);
-  }
-  document.fonts?.ready.then(() => scheduleInfoTabIndicatorUpdate(false));
-
-  let restoredHash = '';
-  if (hashTab && !allowedTabs.includes(hashTab)) {
-    restoredHash = INFO_TAB_HASH.ceremony;
-  } else if (initialNavigation.startAtTop && initialHash) {
-    restoredHash = initialHash;
-  }
-  if (restoredHash) {
-    const url = new URL(window.location.href);
-    url.hash = restoredHash;
-    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
-  }
 }
 
-infoTabButtons.forEach((button) => {
-  button.addEventListener('click', () => activateInfoTab(button.dataset.infoTab, {
-    scrollToPanel: true,
-    source: 'tab-click'
-  }));
-  button.addEventListener('keydown', (event) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    const enabledButtons = infoTabButtons.filter((candidate) => !candidate.hidden);
-    const currentIndex = enabledButtons.indexOf(button);
-    const targetIndex = event.key === 'Home'
-      ? 0
-      : (event.key === 'End'
-        ? enabledButtons.length - 1
-        : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + enabledButtons.length) % enabledButtons.length);
-    activateInfoTab(enabledButtons[targetIndex].dataset.infoTab, {
-      focus: true,
-      scrollToPanel: true,
-      source: 'tab-keyboard'
+function initializeQuickNavScrollSpy() {
+  quickNavObserver?.disconnect();
+  quickNavObserver = null;
+  quickNavIntersections.clear();
+  setQuickNavActive(null);
+  if (!quickNav || !('IntersectionObserver' in window)) return;
+
+  const items = quickNavLinks
+    .filter((link) => !link.hidden && !link.closest('[hidden]'))
+    .flatMap((link) => (QUICK_NAV_SECTION_IDS[link.dataset.quickNav] || [])
+      .map((id) => document.getElementById(id))
+      .filter((section) => section
+        && !section.hidden
+        && !section.closest('[hidden]')
+        && section.getClientRects().length)
+      .map((section) => ({ link, section })));
+  if (!items.length) return;
+
+  const keyBySection = new Map(items.map(({ link, section }) => [section, link.dataset.quickNav]));
+  const topOffset = (header?.getBoundingClientRect().height || 0)
+    + (quickNavWrapper?.getBoundingClientRect().height || 0)
+    + 16;
+  quickNavObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) quickNavIntersections.set(entry.target, entry);
+      else quickNavIntersections.delete(entry.target);
+    });
+    const candidates = [...quickNavIntersections.values()]
+      .sort((first, second) => Math.abs(first.boundingClientRect.top - topOffset)
+        - Math.abs(second.boundingClientRect.top - topOffset));
+    setQuickNavActive(candidates[0] ? keyBySection.get(candidates[0].target) : null);
+  }, {
+    threshold: [0, .15, .35],
+    rootMargin: `-${Math.round(topOffset)}px 0px -62% 0px`
+  });
+  items.forEach(({ section }) => quickNavObserver.observe(section));
+}
+
+function setInfoAccordionOpen(accordion, open) {
+  const trigger = accordion.querySelector('.info-accordion__trigger');
+  const body = accordion.querySelector('.info-accordion__body');
+  if (!trigger || !body) return;
+  accordion.classList.toggle('is-open', open);
+  trigger.setAttribute('aria-expanded', String(open));
+  body.setAttribute('aria-hidden', String(!open));
+  body.inert = !open;
+  if (open) {
+    body.querySelectorAll('.reveal').forEach((element) => {
+      element.classList.add('is-visible');
+      element.dataset.revealed = 'true';
+    });
+  }
+  renderInfoAccordionLanguage(accordion);
+  window.requestAnimationFrame(() => {
+    requestScrollUpdate();
+  });
+}
+
+function initializeInformationAccordions() {
+  infoAccordions.forEach((accordion) => {
+    const trigger = accordion.querySelector('.info-accordion__trigger');
+    if (!trigger) return;
+    setInfoAccordionOpen(accordion, false);
+    const body = accordion.querySelector('.info-accordion__body');
+    body?.addEventListener('transitionend', (event) => {
+      if (event.target === body && event.propertyName === 'grid-template-rows') requestScrollUpdate();
+    });
+    trigger.addEventListener('click', () => {
+      setInfoAccordionOpen(accordion, trigger.getAttribute('aria-expanded') !== 'true');
     });
   });
-});
+}
 
 document.addEventListener('click', (event) => {
-  const anchor = event.target.closest('a[href^="#"]');
+  const anchor = event.target.closest('.quick-nav__link, #nav-links a.nav-link[href^="#"]');
   if (!anchor) return;
   const targetHash = anchor.getAttribute('href');
-  const targetTab = infoTabFromHash(targetHash);
-  if (!targetTab) return;
-  const isHeaderInfoLink = anchor.closest('#nav-links');
-  if (isHeaderInfoLink) {
-    event.preventDefault();
-    const targetsPanelTop = ['#ceremony-info', '#wedding-info', '#gallery'].includes(targetHash);
-    if (!targetsPanelTop) {
-      pendingInfoNavigation = { tabId: targetTab, targetHash, toTabs: false };
-    }
-    const activated = activateInfoTab(targetTab, {
-      updateHistory: targetsPanelTop,
-      scrollToPanel: targetsPanelTop,
-      source: 'header-menu'
-    });
-    if (!activated && !targetsPanelTop) pendingInfoNavigation = null;
-    return;
-  }
-  activateInfoTab(targetTab, {
-    updateHistory: false,
-    scrollToPanel: false,
-    source: 'anchor-navigation'
-  });
+  const target = navigationTargetFromHash(targetHash);
+  if (!target || target.hidden || target.closest('[hidden]')) return;
+  event.preventDefault();
+  if (anchor.matches('.quick-nav__link')) setQuickNavActive(anchor.dataset.quickNav);
+  scrollToSection(target, { hash: targetHash });
 }, true);
 
-window.addEventListener('hashchange', () => {
-  if (!infoTabsInitialized) return;
-  const targetTab = infoTabFromHash();
-  if (!targetTab) return;
-  activateInfoTab(targetTab, {
-    updateHistory: false,
-    scrollToPanel: false,
-    source: 'history-navigation'
-  });
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => syncInfoTabNavigationState(targetTab));
-  });
-});
-
+initializeInformationAccordions();
+renderQuickNavigationLanguage();
+renderInfoAccordionsLanguage();
+initializeQuickNavScrollSpy();
+document.fonts?.ready.then(initializeQuickNavScrollSpy);
 function setMenu(open) {
   menuButton.setAttribute('aria-expanded', String(open));
   menuButton.setAttribute('aria-label', open ? t('nav.closeMenu') : t('nav.openMenu'));
@@ -1259,7 +982,9 @@ function requestResizeUpdate() {
   window.requestAnimationFrame(() => {
     if (window.innerWidth > 820) setMenu(false);
     else setMoreMenu(false);
-    renderInfoTabsLanguage();
+    renderQuickNavigationLanguage();
+    renderInfoAccordionsLanguage();
+    initializeQuickNavScrollSpy();
     initializeScrollSpy();
     requestScrollUpdate();
     resizeTicking = false;
@@ -1411,7 +1136,10 @@ document.querySelectorAll('.wedding-facts, .ceremony-parking-grid, .ceremony-not
 });
 
 const revealItems = [...document.querySelectorAll('.reveal')]
-  .filter((item) => !item.hidden && !item.closest('[hidden]') && item.getClientRects().length > 0);
+  .filter((item) => !item.hidden
+    && !item.closest('[hidden]')
+    && !item.closest('.info-accordion__body[aria-hidden="true"]')
+    && item.getClientRects().length > 0);
 revealItems.forEach((item) => {
   if (item.dataset.revealed === 'true') item.classList.add('is-visible');
 });
@@ -2341,8 +2069,6 @@ if (carouselIsEnabled) {
   window.requestAnimationFrame(() => positionCarousel(0, false));
 }
 
-initializeInfoTabs();
-
 function initializeViewportAnimations() {
   const animationTargets = [hero, ...document.querySelectorAll('.image-shell, .gallery-media')]
     .filter((element) => element && !element.closest('[hidden]') && element.getClientRects().length > 0);
@@ -2823,7 +2549,8 @@ document.addEventListener('keydown', (event) => {
 
 function syncDynamicLanguage() {
   renderInviteModeLanguage();
-  renderInfoTabsLanguage();
+  renderQuickNavigationLanguage();
+  renderInfoAccordionsLanguage();
   updateWeddingCountdown();
   document.querySelectorAll('[data-rsvp-deadline]').forEach((element) => {
     element.textContent = t('seating.deadline');

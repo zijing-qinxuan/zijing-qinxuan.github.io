@@ -9,10 +9,13 @@ const translations = {
       languageGroup: '選擇語言', chooseChinese: '切換為繁體中文', chooseEnglish: 'Switch to English'
     },
     accessibility: { backToTop: '回到頁面頂端', readingProgress: '頁面閱讀進度' },
-    infoTabs: {
-      label: '婚禮資訊分類', ceremony: '婚禮資訊', onlineCeremony: '線上婚禮',
-      banquet: '婚宴資訊', gallery: '婚紗與分享', galleryCompact: '婚紗分享',
-      galleryLabel: '婚紗相簿與照片分享'
+    quickNav: {
+      label: '頁面快速導覽', ceremony: '婚禮', ceremonyFull: '婚禮資訊', onlineCeremony: '線上婚禮',
+      onlineCeremonyFull: '線上婚禮資訊', banquet: '婚宴', banquetFull: '婚宴資訊',
+      gallery: '婚紗', galleryFull: '婚紗相簿', share: '分享', shareFull: '照片分享'
+    },
+    accordion: {
+      arrival: '交通與抵達', parking: '停車資訊', sharing: '如何分享照片', expand: '展開', collapse: '收合'
     },
     hero: {
       weddingSchedule: '婚禮｜14:00', banquetSchedule: '婚宴｜18:00',
@@ -65,10 +68,14 @@ const translations = {
       languageGroup: 'Choose language', chooseChinese: 'Switch to Traditional Chinese', chooseEnglish: 'Switch to English'
     },
     accessibility: { backToTop: 'Back to top', readingProgress: 'Page reading progress' },
-    infoTabs: {
-      label: 'Wedding information categories', ceremony: 'Ceremony', onlineCeremony: 'Online Ceremony',
-      banquet: 'Banquet', gallery: 'Gallery & Sharing', galleryCompact: 'Gallery',
-      galleryLabel: 'Wedding gallery and photo sharing'
+    quickNav: {
+      label: 'Page quick navigation', ceremony: 'Ceremony', ceremonyFull: 'Ceremony Information',
+      onlineCeremony: 'Online', onlineCeremonyFull: 'Online Ceremony', banquet: 'Banquet',
+      banquetFull: 'Banquet Information', gallery: 'Gallery', galleryFull: 'Wedding Gallery',
+      share: 'Share', shareFull: 'Photo Sharing'
+    },
+    accordion: {
+      arrival: 'Getting There', parking: 'Parking', sharing: 'How to Share Photos', expand: 'Expand', collapse: 'Collapse'
     },
     hero: {
       weddingSchedule: 'Wedding Ceremony | 2:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
