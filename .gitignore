@@ -1,1 +1,8 @@
 dev.html
+
+# Wedding gallery builder: keep local originals and generated previews out of Git.
+tools/wedding-gallery-builder/original/*
+!tools/wedding-gallery-builder/original/.gitkeep
+tools/wedding-gallery-builder/output/*
+!tools/wedding-gallery-builder/output/.gitkeep
+tools/wedding-gallery-builder/.build-*

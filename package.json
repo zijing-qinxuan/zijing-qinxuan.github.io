@@ -1,0 +1,7 @@
+{
+  "name": "zeric-lily-wedding-site",
+  "private": true,
+  "scripts": {
+    "build-gallery": "node tools/wedding-gallery-builder/build-gallery.js"
+  }
+}

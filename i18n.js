@@ -52,13 +52,7 @@ const translations = {
       slideLabel: '第 {current} 張，共 {total} 張', openPhoto: '開啟婚紗相簿第 {current} 張照片',
       viewPhoto: '查看第 {current} 張婚紗照', previous: '上一張婚紗照', next: '下一張婚紗照',
       returnFirst: '返回第一張照片', lightbox: '婚紗相簿燈箱', close: '關閉相簿',
-      previousPhoto: '上一張照片', nextPhoto: '下一張照片', counter: '{current} / {total}',
-      imageAlt: [
-        '子靖向勤萱獻上戒指的婚紗照', '子靖與勤萱牽手歡笑的婚紗照', '子靖向勤萱求婚的全身婚紗照',
-        '子靖與勤萱手捧紅玫瑰的婚紗照', '子靖與勤萱並肩端坐的婚紗照', '子靖陪勤萱閱讀的婚紗照',
-        '勤萱展示白色婚紗背影的婚紗照', '子靖穿著淺色西裝的個人婚紗照', '子靖與勤萱在深色背景前相依的婚紗照',
-        '子靖與勤萱穿著黑色禮服與紅色禮服互贈花束的婚紗照', '子靖牽著穿紅色禮服的勤萱的婚紗照'
-      ]
+      previousPhoto: '上一張照片', nextPhoto: '下一張照片', counter: '{current} / {total}'
     }
   },
   en: {
@@ -113,13 +107,7 @@ const translations = {
       slideLabel: 'Photo {current} of {total}', openPhoto: 'Open wedding gallery photo {current}',
       viewPhoto: 'View wedding photo {current}', previous: 'Previous wedding photo', next: 'Next wedding photo',
       returnFirst: 'Return to first photo', lightbox: 'Wedding gallery lightbox', close: 'Close gallery',
-      previousPhoto: 'Previous photo', nextPhoto: 'Next photo', counter: 'Photo {current} of {total}',
-      imageAlt: [
-        'Zeric offering a ring to Lily', 'Zeric and Lily laughing while holding hands', 'Zeric proposing to Lily',
-        'Zeric and Lily holding a bouquet of red roses', 'Zeric and Lily seated together in wedding attire', 'Zeric watching Lily read by the window',
-        'Lily showing the back of her white wedding gown', 'Portrait of Zeric in a light-colored suit', 'Zeric and Lily posing together against a dark backdrop',
-        'Zeric and Lily exchanging a bouquet in black and red formalwear', 'Zeric holding hands with Lily in a red gown'
-      ]
+      previousPhoto: 'Previous photo', nextPhoto: 'Next photo', counter: 'Photo {current} of {total}'
     }
   }
 };
