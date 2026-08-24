@@ -178,7 +178,7 @@ document.body.classList.remove('invite-pending');
 function updateWeddingCountdown() {
   const now = new Date();
   const weddingDayStart = new Date('2026-12-26T00:00:00+08:00');
-  const weddingCeremony = new Date('2026-12-26T14:00:00+08:00');
+  const weddingCeremony = new Date('2026-12-26T15:00:00+08:00');
   const weddingDayEnd = new Date('2026-12-27T00:00:00+08:00');
 
   if (now < weddingDayStart) {

@@ -18,7 +18,7 @@ const translations = {
       arrival: '到場指引', parking: '停車資訊', sharing: '如何分享照片', expand: '展開', collapse: '收合'
     },
     hero: {
-      weddingSchedule: '婚禮｜14:00', banquetSchedule: '婚宴｜18:00',
+      weddingSchedule: '婚禮｜15:00', banquetSchedule: '婚宴｜18:00',
       ceremonyEntry: '開放入場', onlineEntry: '線上開放進入', scheduleLabel: '邀請行程'
     },
     countdown: {
@@ -72,7 +72,7 @@ const translations = {
       arrival: 'Arrival Guide', parking: 'Parking', sharing: 'How to Share Photos', expand: 'Expand', collapse: 'Collapse'
     },
     hero: {
-      weddingSchedule: 'Wedding Ceremony | 2:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
+      weddingSchedule: 'Wedding Ceremony | 3:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
       ceremonyEntry: 'Admission Opens', onlineEntry: 'Online Room Opens', scheduleLabel: 'Invitation schedule'
     },
     countdown: {
@@ -129,7 +129,7 @@ const englishPhrases = {
   '而是能與最重要的人，': 'but the chance to be with the people who mean the most to us', '一起分享這份喜悅。': 'and share this joy together.',
   '期待在 2026 年 12 月 26 日，': 'We look forward to seeing you', '與您相見。': 'on December 26, 2026.',
   '我們誠摯期待您的蒞臨。': 'We sincerely hope you can join us.', '為了讓我們能更完善地安排，': 'To help us prepare for the day,', '請花約 30 秒完成出席回覆。': 'please take about 30 seconds to complete your RSVP.',
-  '請於': 'Please respond by', '前完成回覆。': '.', '回覆後仍可使用相同姓名與聯絡電話更新資料。': 'You may update your response later using the same name and phone number.',
+  '請於': 'Please respond by', '前完成回覆。': '.', '回覆完成後，若要更新資料，請使用相同姓名及聯絡電話即可': 'After submitting your RSVP, you can update your information later by using the same name and phone number.',
   '立即回覆': 'RSVP Now', '您的出席，是我們收到最珍貴的禮物。': 'Your presence is the most precious gift we could receive.',
   '姓名': 'Name', '聯絡電話': 'Phone Number', '僅供新人確認與更新您的出席回覆使用。': 'Used only by the couple to confirm and update your RSVP.',
   '是否參加婚禮？': 'Will you attend the wedding ceremony?', '現場參加': 'Attending in Person', '線上參加': 'Attending Online', '無法參加': 'Unable to Attend',
@@ -139,7 +139,6 @@ const englishPhrases = {
   '備註': 'Notes', '留下一句想對我們說的話': 'Message for the Couple',
   '婚禮後，我們會將大家留下的祝福整理成紀念影片。': 'After the wedding, we may include your messages in a keepsake video.', '謝謝您送給我們最珍貴的一句話。': 'Thank you for leaving us a message to treasure.',
   '送出回覆': 'Submit RSVP', '謝謝您的回覆': 'Thank You for Your RSVP',
-  '使用相同的姓名與聯絡電話再次送出，': 'Submit again with the same name and phone number', '系統會更新您原本的回覆。': 'to update your previous response.',
   '若想再次確認或需要協助，': 'If you would like to confirm your response or need help,', '請透過原邀請的 LINE 訊息聯絡我們。': 'please contact us through the original LINE invitation message.',
   '進入線上婚禮': 'Join the Online Wedding', '修改回覆': 'Edit RSVP',
   '一個小提醒': 'A Gentle Reminder', '您願意來到現場，': 'Your presence with us,', '與我們一起見證這個重要的時刻，': 'sharing and witnessing this meaningful moment,',
@@ -157,9 +156,9 @@ const englishPhrases = {
   'Google Maps 導航': 'Open in Google Maps',
   'Times 新竹竹東長春路三段停車場': 'Times Hsinchu Zhudong Changchun Rd. Sec. 3 Parking Lot', '步行約 3-5 分鐘': 'About a 3–5 minute walk', '距離婚禮場地步行約 3-5 分鐘，': 'This parking option is about a 3–5 minute walk from the ceremony venue.',
   '可依現場交通狀況自由選擇停放。': 'Please choose a suitable space according to current traffic conditions.', '請依現場交通標誌與道路規定停放，': 'Please follow posted signs and local parking regulations.', '勿停於紅線、出入口或妨礙通行的位置。': 'Do not park along red lines, in front of entrances, or where you may block traffic.',
-  '婚禮注意事項': 'Before You Arrive', '預留抵達時間': 'Allow Time to Arrive', '婚禮將於 14:00 開始，建議預留交通與入場時間。': 'The ceremony begins at 2:00 PM. Please allow enough time for travel and admission.',
+  '婚禮注意事項': 'Before You Arrive', '預留抵達時間': 'Allow Time to Arrive', '婚禮將於 15:00 開始，建議預留交通與入場時間。': 'The ceremony begins at 3:00 PM. Please allow enough time for travel and admission.',
   '依': 'Follow the ', '現場': 'On-site', '引導入場': ' Guidance', '抵達聚會所後，請依現場接待人員指引前往 2 樓。': 'After arriving at the Kingdom Hall, please follow our reception team’s directions to the second floor.',
-  '準時入席': 'Please Be Seated on Time', '13:30 開放入場，期待與您一同見證這個重要時刻。': 'Admission opens at 1:30 PM. We look forward to sharing this meaningful moment with you.',
+  '準時入席': 'Please Be Seated on Time', '14:30 開放入場，期待與您一同見證這個重要時刻。': 'Admission opens at 2:30 PM. We look forward to sharing this meaningful moment with you.',
   '晶宴會館－御豐館': 'Amazing Hall — Yufeng Venue', '2F｜星辰劇場': '2F, Star Theater', '300 新竹市東區公道五路三段 1 號 2 樓': '2F, No. 1, Sec. 3, Gongdao 5th Rd., East Dist., Hsinchu City',
   '到場指引': 'Arrival Guide', '建議提前': 'We recommend arriving', '20～30 分鐘': '20–30 minutes ', '抵達，預留停車、報到與入座時間。': 'early to allow time for parking, check-in, and seating.',
   '開啟會館導航': 'Open Venue Directions', '前往 2F 星辰劇場': 'Proceed to the Star Theater on 2F', '抵達會館後，請依現場指示搭乘電梯前往 2 樓。': 'After arriving, please follow the signs and take the elevator to the second floor.',
@@ -175,10 +174,10 @@ const englishPhrases = {
   '歡迎上傳到我們的共同相簿，': 'we invite you to add them to our shared album', '一起收藏這份珍貴回憶。': 'and help us preserve these precious memories.',
   '開啟共同相簿': 'Open Shared Album', '登入 Google 帳號': 'Sign in to your Google account', '選擇照片或影片並新增': 'Select and add photos or videos',
   '上傳照片時需要登入 Google 帳號。': 'A Google account is required to upload photos.', '進入相簿後，請點選「新增相片」或「加入相簿」即可分享。': 'In the album, select “Add photos” or “Join album” to share your images.',
-  '婚禮幾點開放入場？': 'What time does ceremony admission begin?', '13:30 開放入場，婚禮將於 14:00 開始，建議預留交通與入場時間。': 'Admission opens at 1:30 PM and the ceremony begins at 2:00 PM. Please allow enough time for travel and entry.',
+  '婚禮幾點開放入場？': 'What time does ceremony admission begin?', '14:30 開放入場，婚禮將於 15:00 開始，建議預留交通與入場時間。': 'Admission opens at 2:30 PM and the ceremony begins at 3:00 PM. Please allow enough time for travel and entry.',
   '婚禮場地位於哪裡？': 'Where is the ceremony venue?', '婚禮位於耶和華見證人王國聚會所－竹東會眾，會場在 2 樓。': 'The ceremony will be held on the second floor of the Kingdom Hall of Jehovah’s Witnesses — Zhudong Congregation.',
   '這次婚禮會收禮金嗎？': 'Should I prepare a monetary gift?', '您願意與我們一起見證這個重要的時刻，': 'Your presence and warm wishes are the greatest gifts to us.', '本次婚禮不收禮金，': 'Please do not prepare a monetary gift.', '請帶著輕鬆的心情前來。': 'Please come and celebrate with a light heart.',
-  '需要在什麼時候前完成出席回覆？': 'When should I submit my RSVP?', '若出席狀況有變，': 'If your plans change,', '可使用相同姓名與聯絡電話再次提交，': 'submit again using the same name and phone number,', '系統會更新原本的回覆。': 'and the system will update your previous response.',
+  '需要在什麼時候前完成出席回覆？': 'When should I submit my RSVP?',
   '婚宴幾點開始？': 'What time does the banquet begin?', '17:00 開放入場，宴席將於 18:00 正式開始。': 'Banquet admission opens at 5:00 PM and dinner begins at 6:00 PM.',
   '婚宴停車如何辦理消磁？': 'How do I validate banquet parking?', '地下停車場由服務人員至桌邊協助；戶外停車場請於離場前至櫃檯報車號。': 'Staff will assist with underground parking validation at your table. For outdoor parking, provide your license plate number at the front desk before leaving.',
   '2026.12.26 · 新竹': 'December 26, 2026 · Hsinchu'
@@ -291,8 +290,8 @@ function applyFormattedValues() {
     element.textContent = formatWeddingTime(element.dateTime, language);
   });
   const onlineTimes = document.querySelectorAll('.online-schedule time');
-  if (onlineTimes[0]) onlineTimes[0].textContent = language === 'en' ? '2:00–3:00 PM' : '14:00–15:00';
-  if (onlineTimes[1]) onlineTimes[1].textContent = language === 'en' ? '3:10 PM' : '15:10';
+  if (onlineTimes[0]) onlineTimes[0].textContent = language === 'en' ? '3:00 PM' : '15:00';
+  if (onlineTimes[1]) onlineTimes[1].textContent = language === 'en' ? '4:10 PM' : '16:10';
   document.querySelectorAll('[data-rsvp-deadline]').forEach((element) => {
     element.textContent = getTranslation(language, 'seating.deadline');
   });
