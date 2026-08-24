@@ -574,6 +574,17 @@ html.motion-enabled .hero-image { will-change: transform, opacity; }
 .clock-icon::after { content: ""; position: absolute; top: 16px; left: 16px; width: 8px; height: 1px; background: currentColor; transform: rotate(28deg); transform-origin: left; }
 .wedding-venue-card { min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--card-gap-lg); margin-top: var(--space-4); padding: var(--card-padding-md); border: var(--card-border); border-radius: var(--card-radius-md); }
 .wedding-venue-card .button { justify-self: end; }
+.banquet-venue-card {
+  grid-template-columns: auto minmax(0, 1fr) minmax(300px, 42%);
+  grid-template-areas:
+    "mark copy media"
+    "mark action media";
+}
+.banquet-venue-card .venue-line-mark { grid-area: mark; }
+.banquet-venue-card .wedding-venue-copy { grid-area: copy; }
+.banquet-venue-card .button { grid-area: action; align-self: start; justify-self: start; margin-top: var(--space-4); }
+.banquet-venue-image { grid-area: media; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--card-radius-sm); }
+.banquet-venue-image img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .venue-line-mark { display: grid; place-items: center; width: 64px; height: 64px; color: var(--gold); border: 1px solid currentColor; border-radius: 50%; }
 .venue-line-mark span { position: relative; width: 17px; height: 22px; border: 1px solid currentColor; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
 .venue-line-mark span::after { content: ""; position: absolute; top: 7px; left: 5px; width: 4px; height: 4px; border: 1px solid currentColor; border-radius: 50%; }
@@ -1230,6 +1241,16 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
   .wedding-facts { grid-template-columns: 1fr; gap: var(--content-gap); }
   .fact-card { min-height: 0; padding: var(--card-padding-sm); }
   .wedding-venue-card { grid-template-columns: 1fr; gap: var(--space-5); margin-top: var(--space-4); padding: var(--card-padding-large); }
+  .banquet-venue-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "media"
+      "mark"
+      "copy"
+      "action";
+  }
+  .banquet-venue-card .button { width: 100%; justify-content: center; margin-top: 0; }
+  .banquet-venue-image { aspect-ratio: 4 / 3; }
   .ceremony-venue-card { grid-template-columns: 1fr; }
   .ceremony-venue-card .button { width: 100%; justify-content: center; }
   .online-attendance-card { grid-template-columns: 1fr; gap: var(--space-5); padding: var(--card-padding-large); }

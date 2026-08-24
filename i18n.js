@@ -15,7 +15,7 @@ const translations = {
       gallery: '婚紗', galleryFull: '婚紗相簿', share: '分享', shareFull: '照片分享'
     },
     accordion: {
-      arrival: '交通與抵達', parking: '停車資訊', sharing: '如何分享照片', expand: '展開', collapse: '收合'
+      arrival: '到場指引', parking: '停車資訊', sharing: '如何分享照片', expand: '展開', collapse: '收合'
     },
     hero: {
       weddingSchedule: '婚禮｜14:00', banquetSchedule: '婚宴｜18:00',
@@ -69,7 +69,7 @@ const translations = {
       share: 'Share', shareFull: 'Photo Sharing'
     },
     accordion: {
-      arrival: 'Getting There', parking: 'Parking', sharing: 'How to Share Photos', expand: 'Expand', collapse: 'Collapse'
+      arrival: 'Arrival Guide', parking: 'Parking', sharing: 'How to Share Photos', expand: 'Expand', collapse: 'Collapse'
     },
     hero: {
       weddingSchedule: 'Wedding Ceremony | 2:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
@@ -161,7 +161,7 @@ const englishPhrases = {
   '依': 'Follow the ', '現場': 'On-site', '引導入場': ' Guidance', '抵達聚會所後，請依現場接待人員指引前往 2 樓。': 'After arriving at the Kingdom Hall, please follow our reception team’s directions to the second floor.',
   '準時入席': 'Please Be Seated on Time', '13:30 開放入場，期待與您一同見證這個重要時刻。': 'Admission opens at 1:30 PM. We look forward to sharing this meaningful moment with you.',
   '晶宴會館－御豐館': 'Amazing Hall — Yufeng Venue', '2F｜星辰劇場': '2F, Star Theater', '300 新竹市東區公道五路三段 1 號 2 樓': '2F, No. 1, Sec. 3, Gongdao 5th Rd., East Dist., Hsinchu City',
-  '交通與抵達': 'Directions & Arrival', '建議提前': 'We recommend arriving', '20～30 分鐘': '20–30 minutes ', '抵達，預留停車、報到與入座時間。': 'early to allow time for parking, check-in, and seating.',
+  '到場指引': 'Arrival Guide', '建議提前': 'We recommend arriving', '20～30 分鐘': '20–30 minutes ', '抵達，預留停車、報到與入座時間。': 'early to allow time for parking, check-in, and seating.',
   '開啟會館導航': 'Open Venue Directions', '前往 2F 星辰劇場': 'Proceed to the Star Theater on 2F', '抵達會館後，請依現場指示搭乘電梯前往 2 樓。': 'After arriving, please follow the signs and take the elevator to the second floor.',
   '婚宴場地為星辰劇場。': 'The banquet will be held in the Star Theater.', '停車資訊': 'Banquet Parking', '會館備有地下與戶外停車空間。': 'Indoor and outdoor parking are available at the venue.',
   '推薦': 'Recommended', '地下停車場': 'Underground Parking', '建議優先停放地下停車場，可直接搭乘電梯前往 2 樓星辰劇場。': 'We recommend using the underground parking area, which offers direct elevator access to the Star Theater on 2F.',
@@ -189,7 +189,7 @@ const englishAttributes = {
   '子靖與勤萱，回到首頁': 'Zeric and Lily, back to home', '邀請行程': 'Invitation schedule',
   '主要導覽': 'Main navigation', '開啟選單': 'Open menu', '線上婚禮時間': 'Online wedding schedule',
   '查看 Times 新竹竹東長春路三段停車場位置': 'View Times Hsinchu Zhudong Changchun Rd. Sec. 3 Parking Lot',
-  '晶宴會館御豐館外觀': 'Exterior of Amazing Hall — Yufeng Venue',
+  '晶宴會館－御豐館外觀': 'Exterior of Amazing Hall — Yufeng Venue',
   '晶宴會館御豐館星辰劇場入口': 'Entrance to the Star Theater at Amazing Hall — Yufeng Venue', '晶宴會館地下停車場入口': 'Entrance to the underground parking at Amazing Hall',
   '晶宴會館戶外平面停車場': 'Outdoor parking at Amazing Hall', '查看晶宴會館地下停車場位置': 'View Amazing Hall underground parking',
   '查看晶宴會館戶外平面停車場位置': 'View Amazing Hall outdoor parking', '照片上傳步驟': 'Photo upload steps',
