@@ -1381,6 +1381,7 @@ function createGallerySlide(item, index) {
   image.alt = galleryItemAlt(item);
   image.width = item.width;
   image.height = item.height;
+  image.draggable = false;
   image.decoding = 'async';
   image.loading = index === 0 ? 'eager' : 'lazy';
   if (item.objectPosition) image.style.objectPosition = item.objectPosition;
@@ -1439,11 +1440,9 @@ let carouselLeadingClone;
 let carouselTrailingClone;
 let carouselActiveIndex = 0;
 let carouselAutoplayTimer = null;
-let carouselUserPaused = false;
 let carouselPointerInside = false;
 let carouselFocusInside = false;
 let carouselInView = false;
-let carouselScrollTicking = false;
 let isUpdatingCarouselMetrics = false;
 let carouselRequestToken = 0;
 let carouselMotionTimer = null;
@@ -1453,16 +1452,8 @@ let isLightboxClosing = false;
 let isRestoringScroll = false;
 let carouselMetricsPending = false;
 let carouselFrozenForLightbox = false;
-let carouselGesture = null;
-let suppressCarouselClick = false;
-let suppressCarouselClickUntil = 0;
-let carouselDragFrame = null;
 let carouselSnapFrame = null;
 let carouselSnapCompletion = null;
-let carouselProgrammaticScroll = false;
-const CAROUSEL_GESTURE_AXIS_RATIO = 1.2;
-const CAROUSEL_GESTURE_SLOP = 8;
-const CAROUSEL_SWIPE_VELOCITY = 0.45;
 const CAROUSEL_SNAP_DURATION = 440;
 
 function galleryAlt(index) {
@@ -1577,7 +1568,7 @@ function rebuildCarouselDots() {
     dot.type = 'button';
     dot.setAttribute('aria-label', t('gallery.viewPhoto', { current: index + 1 }));
     dot.setAttribute('aria-controls', 'gallery-carousel-viewport');
-    dot.addEventListener('click', () => showCarouselSlide(index, true));
+    dot.addEventListener('click', () => goToSlide(index, { source: 'pagination-dot' }));
     carouselDots.append(dot);
   });
 }
@@ -1690,7 +1681,6 @@ function cancelMobileCarouselSnap() {
   if (carouselSnapFrame !== null) window.cancelAnimationFrame(carouselSnapFrame);
   carouselSnapFrame = null;
   carouselSnapCompletion = null;
-  carouselProgrammaticScroll = false;
   carouselViewport?.classList.remove('is-settling');
 }
 
@@ -1706,7 +1696,6 @@ function positionMobileCarousel(left, animate, onSettled) {
     return;
   }
 
-  carouselProgrammaticScroll = true;
   carouselSnapCompletion = onSettled;
   carouselViewport.classList.add('is-settling');
   const startedAt = performance.now();
@@ -1721,7 +1710,6 @@ function positionMobileCarousel(left, animate, onSettled) {
 
     carouselViewport.scrollLeft = left;
     carouselSnapFrame = null;
-    carouselProgrammaticScroll = false;
     carouselViewport.classList.remove('is-settling');
     const completion = carouselSnapCompletion;
     carouselSnapCompletion = null;
@@ -1762,7 +1750,6 @@ function positionCarousel(index, smooth = true, onSettled = null) {
 
 function canAutoplayCarousel() {
   return carouselInView
-    && !carouselUserPaused
     && !carouselPointerInside
     && !carouselFocusInside
     && !carouselFrozenForLightbox
@@ -1777,19 +1764,20 @@ function scheduleCarouselAutoplay() {
   if (!canAutoplayCarousel()) return;
   carouselAutoplayTimer = window.setTimeout(() => {
     carouselAutoplayTimer = null;
-    showCarouselSlide(carouselActiveIndex + 1);
+    goToSlide(carouselActiveIndex + 1, { source: 'autoplay' });
   }, 6000);
 }
 
-function pauseCarouselForUser() {
-  carouselRequestToken += 1;
-  carouselUserPaused = true;
-  scheduleCarouselAutoplay();
-}
-
-function showCarouselSlide(index, userInitiated = false, animate = true, resumeAutoplay = true) {
+function goToSlide(index, {
+  animate = true,
+  source = 'programmatic',
+  resumeAutoplay = true
+} = {}) {
   if (carouselFrozenForLightbox) return;
-  if (userInitiated) pauseCarouselForUser();
+  if (source !== 'autoplay') {
+    window.clearTimeout(carouselAutoplayTimer);
+    carouselAutoplayTimer = null;
+  }
   const targetIndex = carouselIndex(index);
   const wrapped = index < 0 || index >= carouselSlides.length;
   const image = ensureCarouselThumbnail(targetIndex, true);
@@ -1821,219 +1809,6 @@ function showCarouselSlide(index, userInitiated = false, animate = true, resumeA
 
   image.addEventListener('load', activate, { once: true });
   image.addEventListener('error', activate, { once: true });
-}
-
-function beginCarouselGesture(point, source, pointerId = null) {
-  if (!carouselMobileQuery.matches || carouselFrozenForLightbox || !lightbox.hidden) return;
-  const autoplayWasRunning = carouselAutoplayTimer !== null || canAutoplayCarousel();
-  window.clearTimeout(carouselAutoplayTimer);
-  carouselAutoplayTimer = null;
-  carouselRequestToken += 1;
-  cancelMobileCarouselSnap();
-  carouselGesture = {
-    source,
-    pointerId,
-    startX: point.clientX,
-    startY: point.clientY,
-    currentX: point.clientX,
-    currentY: point.clientY,
-    startTime: performance.now(),
-    startScrollLeft: carouselViewport.scrollLeft,
-    startIndex: carouselActiveIndex,
-    viewportWidth: carouselViewport.clientWidth,
-    pendingScrollLeft: carouselViewport.scrollLeft,
-    autoplayWasRunning,
-    axis: null
-  };
-  debugCarouselMetrics('swipe start');
-}
-
-function updateCarouselGesture(point, event) {
-  if (!carouselGesture) return;
-  carouselGesture.currentX = point.clientX;
-  carouselGesture.currentY = point.clientY;
-  const distanceX = point.clientX - carouselGesture.startX;
-  const distanceY = point.clientY - carouselGesture.startY;
-  const absoluteX = Math.abs(distanceX);
-  const absoluteY = Math.abs(distanceY);
-
-  if (!carouselGesture.axis && Math.max(absoluteX, absoluteY) >= CAROUSEL_GESTURE_SLOP) {
-    if (absoluteX > absoluteY * CAROUSEL_GESTURE_AXIS_RATIO) {
-      carouselGesture.axis = 'horizontal';
-      carouselViewport.classList.add('is-dragging');
-    } else if (absoluteY > absoluteX * CAROUSEL_GESTURE_AXIS_RATIO) {
-      carouselGesture.axis = 'vertical';
-    }
-  }
-
-  if (carouselGesture.axis !== 'horizontal') return;
-  if (event.cancelable) event.preventDefault();
-  carouselGesture.pendingScrollLeft = carouselGesture.startScrollLeft - distanceX;
-  if (carouselDragFrame === null) {
-    const gesture = carouselGesture;
-    carouselDragFrame = window.requestAnimationFrame(() => {
-      carouselDragFrame = null;
-      carouselViewport.scrollLeft = gesture.pendingScrollLeft;
-    });
-  }
-  suppressCarouselClick = true;
-}
-
-function finishCarouselGesture(point, cancelled = false) {
-  if (!carouselGesture) return;
-  const gesture = carouselGesture;
-  if (carouselDragFrame !== null) {
-    window.cancelAnimationFrame(carouselDragFrame);
-    carouselDragFrame = null;
-  }
-  if (gesture.axis === 'horizontal') carouselViewport.scrollLeft = gesture.pendingScrollLeft;
-  carouselGesture = null;
-  carouselViewport.classList.remove('is-dragging');
-  const currentPoint = point ?? { clientX: gesture.currentX, clientY: gesture.currentY };
-  const distanceX = currentPoint.clientX - gesture.startX;
-  const distanceY = currentPoint.clientY - gesture.startY;
-  const elapsed = performance.now() - gesture.startTime;
-  const velocityX = Math.abs(distanceX) / Math.max(elapsed, 1);
-  const isHorizontal = gesture.axis === 'horizontal'
-    || Math.abs(distanceX) > Math.abs(distanceY) * CAROUSEL_GESTURE_AXIS_RATIO;
-  const distanceThreshold = Math.min(gesture.viewportWidth * 0.18, 72);
-  const shouldChange = Math.abs(distanceX) >= distanceThreshold
-    || velocityX > CAROUSEL_SWIPE_VELOCITY;
-
-  if (isHorizontal) {
-    suppressCarouselClick = true;
-    suppressCarouselClickUntil = performance.now() + 500;
-  }
-
-  if (!cancelled && isHorizontal && shouldChange) {
-    showCarouselSlide(
-      gesture.startIndex + (distanceX < 0 ? 1 : -1),
-      false,
-      true,
-      gesture.autoplayWasRunning
-    );
-  } else if (isHorizontal) {
-    setCarouselActiveState(gesture.startIndex);
-    positionCarousel(gesture.startIndex, true, () => {
-      if (gesture.autoplayWasRunning) scheduleCarouselAutoplay();
-    });
-  } else if (gesture.autoplayWasRunning) {
-    scheduleCarouselAutoplay();
-  }
-}
-
-function cancelCarouselGesture() {
-  finishCarouselGesture(null, true);
-}
-
-function initializeCarouselGestures() {
-  carouselViewport.addEventListener('click', (event) => {
-    if (!suppressCarouselClick || performance.now() > suppressCarouselClickUntil) {
-      suppressCarouselClick = false;
-      return;
-    }
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    suppressCarouselClick = false;
-    suppressCarouselClickUntil = 0;
-  }, true);
-
-  const useTouchEvents = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  if (!useTouchEvents && 'PointerEvent' in window) {
-    carouselViewport.addEventListener('pointerdown', (event) => {
-      if (!event.isPrimary || !['touch', 'pen'].includes(event.pointerType)) return;
-      beginCarouselGesture({ clientX: event.clientX, clientY: event.clientY }, 'pointer', event.pointerId);
-    }, { passive: true });
-
-    carouselViewport.addEventListener('pointermove', (event) => {
-      if (!carouselGesture
-        || carouselGesture.source !== 'pointer'
-        || carouselGesture.pointerId !== event.pointerId) return;
-      updateCarouselGesture({ clientX: event.clientX, clientY: event.clientY }, event);
-      if (carouselGesture?.axis === 'horizontal' && !carouselViewport.hasPointerCapture(event.pointerId)) {
-        try {
-          carouselViewport.setPointerCapture(event.pointerId);
-        } catch {
-          // Pointer capture is optional on older mobile Safari versions.
-        }
-      }
-    }, { passive: false });
-
-    carouselViewport.addEventListener('pointerup', (event) => {
-      if (!carouselGesture
-        || carouselGesture.source !== 'pointer'
-        || carouselGesture.pointerId !== event.pointerId) return;
-      finishCarouselGesture({ clientX: event.clientX, clientY: event.clientY });
-    }, { passive: true });
-
-    carouselViewport.addEventListener('pointercancel', (event) => {
-      if (!carouselGesture
-        || carouselGesture.source !== 'pointer'
-        || carouselGesture.pointerId !== event.pointerId) return;
-      cancelCarouselGesture();
-    }, { passive: true });
-    return;
-  }
-
-  const findCarouselTouch = (touchList) => Array.from(touchList).find(
-    (touch) => touch.identifier === carouselGesture?.pointerId
-  );
-
-  carouselViewport.addEventListener('touchstart', (event) => {
-    if (event.touches.length !== 1) {
-      cancelCarouselGesture();
-      return;
-    }
-    const touch = event.touches[0];
-    beginCarouselGesture({ clientX: touch.clientX, clientY: touch.clientY }, 'touch', touch.identifier);
-  }, { passive: true });
-
-  carouselViewport.addEventListener('touchmove', (event) => {
-    const touch = findCarouselTouch(event.touches);
-    if (!touch) return;
-    updateCarouselGesture({ clientX: touch.clientX, clientY: touch.clientY }, event);
-  }, { passive: false });
-
-  carouselViewport.addEventListener('touchend', (event) => {
-    const touch = findCarouselTouch(event.changedTouches);
-    if (!touch) return;
-    finishCarouselGesture({ clientX: touch.clientX, clientY: touch.clientY });
-  }, { passive: true });
-
-  carouselViewport.addEventListener('touchcancel', cancelCarouselGesture, { passive: true });
-}
-
-function updateCarouselFromScroll() {
-  if (!carouselMobileQuery.matches
-    || carouselScrollTicking
-    || carouselGesture
-    || carouselProgrammaticScroll
-    || carouselFrozenForLightbox
-    || isLightboxClosing
-    || isRestoringScroll
-    || !lightbox.hidden) return;
-  carouselScrollTicking = true;
-  window.requestAnimationFrame(() => {
-    const viewportCenter = carouselViewport.scrollLeft + (carouselViewport.clientWidth / 2);
-    const items = [carouselLeadingClone, ...carouselSlides, carouselTrailingClone].filter(Boolean);
-    const closestItem = items.reduce((closest, item) => {
-      const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
-      const closestCenter = closest.offsetLeft + (closest.offsetWidth / 2);
-      return Math.abs(itemCenter - viewportCenter) < Math.abs(closestCenter - viewportCenter) ? item : closest;
-    }, items[0]);
-
-    if (closestItem === carouselLeadingClone) {
-      setCarouselActiveState(carouselSlides.length - 1);
-      positionCarousel(carouselActiveIndex, false);
-    } else if (closestItem === carouselTrailingClone) {
-      setCarouselActiveState(0);
-      positionCarousel(carouselActiveIndex, false);
-    } else {
-      const closestIndex = carouselSlides.indexOf(closestItem);
-      if (closestIndex !== carouselActiveIndex) setCarouselActiveState(closestIndex);
-    }
-    carouselScrollTicking = false;
-  });
 }
 
 function updateCarouselMetrics() {
@@ -2150,18 +1925,23 @@ function registerCarouselImage(image) {
 if (carouselIsEnabled) {
   rebuildCarouselDots();
 
-  carouselPrevious.addEventListener('click', () => showCarouselSlide(carouselActiveIndex - 1, true));
-  carouselNext.addEventListener('click', () => showCarouselSlide(carouselActiveIndex + 1, true));
-  carouselReturn.addEventListener('click', () => {
-    window.clearTimeout(carouselAutoplayTimer);
-    carouselAutoplayTimer = null;
-    carouselUserPaused = false;
+  carouselPrevious.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    goToSlide(carouselActiveIndex - 1, { source: 'previous-button' });
+  });
+  carouselNext.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    goToSlide(carouselActiveIndex + 1, { source: 'next-button' });
+  });
+  carouselReturn.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     carouselFocusInside = false;
-    showCarouselSlide(0, false, true, true);
+    goToSlide(0, { source: 'return-button' });
   });
 
-  initializeCarouselGestures();
-  carouselViewport.addEventListener('scroll', updateCarouselFromScroll, { passive: true });
   weddingCarousel.addEventListener('mouseenter', () => {
     carouselPointerInside = true;
     scheduleCarouselAutoplay();
@@ -2183,7 +1963,9 @@ if (carouselIsEnabled) {
   weddingCarousel.addEventListener('keydown', (event) => {
     if (!lightbox.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
-    showCarouselSlide(carouselActiveIndex + (event.key === 'ArrowRight' ? 1 : -1), true);
+    goToSlide(carouselActiveIndex + (event.key === 'ArrowRight' ? 1 : -1), {
+      source: 'keyboard'
+    });
   });
   carouselTrack.addEventListener('click', (event) => {
     const button = event.target.closest('[data-gallery-id]');
@@ -2192,7 +1974,7 @@ if (carouselIsEnabled) {
     if (index < 0 || index === carouselActiveIndex) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    showCarouselSlide(index, true);
+    goToSlide(index, { source: 'adjacent-slide' });
   }, true);
   carouselTrack.addEventListener('transitionend', (event) => {
     if (event.target === carouselTrack && event.propertyName === 'transform') setCarouselTrackMoving(false);
