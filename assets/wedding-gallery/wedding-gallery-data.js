@@ -174,30 +174,30 @@
     "id": "18",
     "thumb": "assets/wedding-gallery/thumb/18.jpg",
     "large": "assets/wedding-gallery/large/18-large.jpg",
-    "width": 933,
-    "height": 1400,
-    "largeWidth": 1666,
-    "largeHeight": 2500,
+    "width": 1600,
+    "height": 1066,
+    "largeWidth": 3000,
+    "largeHeight": 2000,
     "alt": "Zeric and Lily wedding photo 18"
   },
   {
     "id": "19",
     "thumb": "assets/wedding-gallery/thumb/19.jpg",
     "large": "assets/wedding-gallery/large/19-large.jpg",
-    "width": 1600,
-    "height": 1066,
-    "largeWidth": 3000,
-    "largeHeight": 2000,
+    "width": 933,
+    "height": 1400,
+    "largeWidth": 1666,
+    "largeHeight": 2500,
     "alt": "Zeric and Lily wedding photo 19"
   },
   {
     "id": "20",
     "thumb": "assets/wedding-gallery/thumb/20.jpg",
     "large": "assets/wedding-gallery/large/20-large.jpg",
-    "width": 933,
-    "height": 1400,
-    "largeWidth": 1666,
-    "largeHeight": 2500,
+    "width": 1600,
+    "height": 1066,
+    "largeWidth": 3000,
+    "largeHeight": 2000,
     "alt": "Zeric and Lily wedding photo 20"
   },
   {
@@ -214,21 +214,11 @@
     "id": "22",
     "thumb": "assets/wedding-gallery/thumb/22.jpg",
     "large": "assets/wedding-gallery/large/22-large.jpg",
-    "width": 1600,
-    "height": 1066,
-    "largeWidth": 3000,
-    "largeHeight": 2000,
-    "alt": "Zeric and Lily wedding photo 22"
-  },
-  {
-    "id": "23",
-    "thumb": "assets/wedding-gallery/thumb/23.jpg",
-    "large": "assets/wedding-gallery/large/23-large.jpg",
     "width": 933,
     "height": 1400,
     "largeWidth": 1666,
     "largeHeight": 2500,
-    "alt": "Zeric and Lily wedding photo 23"
+    "alt": "Zeric and Lily wedding photo 22"
   }
 ];
 
