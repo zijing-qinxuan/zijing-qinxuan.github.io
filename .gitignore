@@ -6,3 +6,7 @@ tools/wedding-gallery-builder/original/*
 tools/wedding-gallery-builder/output/*
 !tools/wedding-gallery-builder/output/.gitkeep
 tools/wedding-gallery-builder/.build-*
+
+# Local dashboard assets are never published.
+dev.js
+dev.css

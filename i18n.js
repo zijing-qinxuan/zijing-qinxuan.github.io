@@ -22,6 +22,7 @@ const translations = {
       ceremonyEntry: '開放入場', onlineEntry: '線上開放進入', scheduleLabel: '邀請行程'
     },
     countdown: {
+      day: '天', days: '天',
       before: '距離我們的婚禮還有 {days} 天', today: '今天，我們結婚了。', after: '謝謝您與我們一起見證這一天。'
     },
     online: {
@@ -35,6 +36,7 @@ const translations = {
       createdMessage: '期待與您一起分享這個重要的日子。',
       updatedMessage: '您的最新回覆已成功儲存，<br>已取代先前資料。',
       onlineSuccess: '我們已為您登記線上參加婚禮。<br>正式連結將於婚禮前透過原邀請訊息提供，<br>請於婚禮前再次查看 LINE 訊息。',
+      localPreview: '本機預覽不會送出正式 RSVP。請使用您的正式邀請連結回覆。',
       nameRequired: '請輸入您的姓名。', phoneRequired: '請輸入您的聯絡電話。',
       phoneInvalid: '請輸入至少 8 位數字的聯絡電話。', attendanceRequired: '請選擇您的出席狀況。',
       vegetarianInvalid: '素食人數不得超過出席人數。', submitFailed: '目前無法送出，請稍後再試。',
@@ -47,7 +49,12 @@ const translations = {
       regularMeal: '一般餐', vegetarianMeal: '素食',
       notFoundTitle: '很抱歉', notFound: '目前找不到您的座位資訊。<br>請確認姓名是否與喜帖相同，<br>或向現場接待人員詢問。'
     },
+    share: {
+      title: '分享婚禮中的美好時刻',
+      intro: '如果您在婚禮當天拍下了照片或影片，<br>歡迎上傳到我們的共同相簿，<br>一起收藏這份珍貴回憶。'
+    },
     gallery: {
+      photoAlt: '子靖與勤萱的第 {current} 張婚紗照',
       region: '婚紗相簿', carouselRole: '輪播', slideRole: '投影片',
       slideLabel: '第 {current} 張，共 {total} 張', openPhoto: '開啟婚紗相簿第 {current} 張照片',
       viewPhoto: '查看第 {current} 張婚紗照', previous: '上一張照片', next: '下一張照片',
@@ -90,6 +97,7 @@ const translations = {
       createdMessage: 'We look forward to sharing this special day with you.',
       updatedMessage: 'Your latest RSVP has been saved<br>and has replaced your previous response.',
       onlineSuccess: 'We have registered your online attendance.<br>The official link will be sent through the original invitation message before the wedding.<br>Please check your LINE messages again before the ceremony.',
+      localPreview: 'Local previews cannot submit an RSVP. Please use your official invitation link.',
       nameRequired: 'Please enter your name.', phoneRequired: 'Please enter your phone number.',
       phoneInvalid: 'Please enter a phone number with at least 8 digits.', attendanceRequired: 'Please select an attendance option.',
       vegetarianInvalid: 'Vegetarian meals cannot exceed the number of guests.', submitFailed: 'We are unable to submit your RSVP right now. Please try again later.',
@@ -102,7 +110,12 @@ const translations = {
       regularMeal: 'regular meals', vegetarianMeal: 'vegetarian meals',
       notFoundTitle: 'We’re sorry', notFound: 'We could not find your table information.<br>Please make sure the name matches your invitation,<br>or ask our reception team for assistance.'
     },
+    share: {
+      title: 'Share Your Favorite Wedding Moments',
+      intro: 'If you capture photos or videos during the wedding,<br>we invite you to add them to our shared album<br>and help us preserve these precious memories.'
+    },
     gallery: {
+      photoAlt: 'Zeric and Lily wedding photo {current}',
       region: 'Wedding Gallery', carouselRole: 'carousel', slideRole: 'slide',
       slideLabel: 'Photo {current} of {total}', openPhoto: 'Open wedding gallery photo {current}',
       viewPhoto: 'View wedding photo {current}', previous: 'Previous photo', next: 'Next photo',
@@ -113,6 +126,15 @@ const translations = {
 };
 
 const englishPhrases = {
+  '晶宴會館御豐館外觀': 'Exterior of Amazing Hall — Yufeng Venue',
+  '請依現場交通標誌與可停放範圍停車。': 'Please park only where permitted by posted signs.',
+  '位於聚會所對面的巷子內，': 'This parking area is located in the lane opposite the Kingdom Hall.',
+  '步行約 2-4 分鐘': 'About a 2–4 minute walk',
+  '聚會所對面巷內停車': 'Parking in the Lane Opposite the Kingdom Hall',
+  '請依現場交通標誌與道路規定停放。': 'Please follow posted signs and local parking regulations.',
+  '位於聚會所旁邊的中興路一段沿線，': 'Parking is available along Sec. 1, Zhongxing Rd. beside the Kingdom Hall.',
+  '步行約 1-5 分鐘': 'About a 1–5 minute walk',
+  '中興路一段路邊停車': 'Roadside Parking on Sec. 1, Zhongxing Rd.',
   '子靖': 'Zeric', '勤萱': 'Lily', '＆': '&',
   '謝謝您接受我們的邀請': 'Thank you for accepting our invitation',
   '請使用邀請訊息中的專屬連結': 'Please use the personal link in your invitation message',
@@ -145,6 +167,8 @@ const englishPhrases = {
   '就是我們最珍貴的禮物。': 'is the most precious gift we could receive.', '本次婚禮不收禮金，': 'Please do not prepare a monetary gift.',
   '請帶著輕鬆的心情前來，': 'Simply come with a light heart', '和我們一起分享這份喜悅。': 'and celebrate this joy with us.',
   '婚禮日期': 'Ceremony Date', '婚宴日期': 'Banquet Date', '開放入場': 'Admission Opens', '婚禮開始': 'Ceremony Begins', '宴席開始': 'Banquet Begins',
+  '王國聚會所－竹東會眾': 'Kingdom Hall of Jehovah’s Witnesses — Zhudong Congregation',
+  '送客': 'Farewell',
   '耶和華見證人王國聚會所': 'Kingdom Hall of Jehovah’s Witnesses', '竹東會眾': 'Zhudong Congregation',
   '新竹縣竹東鎮': 'Zhudong Township, Hsinchu County', '長春路三段 376 號 2 樓': '2F, No. 376, Sec. 3, Changchun Rd.',
   '開啟婚禮場地導航': 'Open Ceremony Venue Directions', '線上參加婚禮': 'Attend the Wedding Online', '線上婚禮': 'Online Wedding',
@@ -158,7 +182,7 @@ const englishPhrases = {
   '可依現場交通狀況自由選擇停放。': 'Please choose a suitable space according to current traffic conditions.', '請依現場交通標誌與道路規定停放，': 'Please follow posted signs and local parking regulations.', '勿停於紅線、出入口或妨礙通行的位置。': 'Do not park along red lines, in front of entrances, or where you may block traffic.',
   '婚禮注意事項': 'Before You Arrive', '預留抵達時間': 'Allow Time to Arrive', '婚禮將於 15:00 開始，建議預留交通與入場時間。': 'The ceremony begins at 3:00 PM. Please allow enough time for travel and admission.',
   '依': 'Follow the ', '現場': 'On-site', '引導入場': ' Guidance', '抵達聚會所後，請依現場接待人員指引前往 2 樓。': 'After arriving at the Kingdom Hall, please follow our reception team’s directions to the second floor.',
-  '準時入席': 'Please Be Seated on Time', '14:30 開放入場，期待與您一同見證這個重要時刻。': 'Admission opens at 2:30 PM. We look forward to sharing this meaningful moment with you.',
+  '準時入席': 'Please Be Seated on Time', '14:00 開放入場，期待與您一同見證這個重要時刻。': 'Admission opens at 2:00 PM. We look forward to sharing this meaningful moment with you.',
   '晶宴會館－御豐館': 'Amazing Hall — Yufeng Venue', '2F｜星辰劇場': '2F, Star Theater', '300 新竹市東區公道五路三段 1 號 2 樓': '2F, No. 1, Sec. 3, Gongdao 5th Rd., East Dist., Hsinchu City',
   '到場指引': 'Arrival Guide', '建議提前': 'We recommend arriving', '20～30 分鐘': '20–30 minutes ', '抵達，預留停車、報到與入座時間。': 'early to allow time for parking, check-in, and seating.',
   '開啟會館導航': 'Open Venue Directions', '前往 2F 星辰劇場': 'Proceed to the Star Theater on 2F', '抵達會館後，請依現場指示搭乘電梯前往 2 樓。': 'After arriving, please follow the signs and take the elevator to the second floor.',
@@ -174,16 +198,21 @@ const englishPhrases = {
   '歡迎上傳到我們的共同相簿，': 'we invite you to add them to our shared album', '一起收藏這份珍貴回憶。': 'and help us preserve these precious memories.',
   '開啟共同相簿': 'Open Shared Album', '登入 Google 帳號': 'Sign in to your Google account', '選擇照片或影片並新增': 'Select and add photos or videos',
   '上傳照片時需要登入 Google 帳號。': 'A Google account is required to upload photos.', '進入相簿後，請點選「新增相片」或「加入相簿」即可分享。': 'In the album, select “Add photos” or “Join album” to share your images.',
-  '婚禮幾點開放入場？': 'What time does ceremony admission begin?', '14:30 開放入場，婚禮將於 15:00 開始，建議預留交通與入場時間。': 'Admission opens at 2:30 PM and the ceremony begins at 3:00 PM. Please allow enough time for travel and entry.',
-  '婚禮場地位於哪裡？': 'Where is the ceremony venue?', '婚禮位於耶和華見證人王國聚會所－竹東會眾，會場在 2 樓。': 'The ceremony will be held on the second floor of the Kingdom Hall of Jehovah’s Witnesses — Zhudong Congregation.',
+  '婚禮幾點開放入場？': 'What time does ceremony admission begin?', '14:00 開放入場，婚禮將於 15:00 開始，建議預留交通與入場時間。': 'Admission opens at 2:00 PM and the ceremony begins at 3:00 PM. Please allow enough time for travel and entry.',
+  '婚禮場地位於哪裡？': 'Where is the ceremony venue?', '婚禮位於王國聚會所－竹東會眾，會場在 2 樓。': 'The ceremony will be held on the second floor of the Kingdom Hall of Jehovah’s Witnesses — Zhudong Congregation.',
   '這次婚禮會收禮金嗎？': 'Should I prepare a monetary gift?', '您願意與我們一起見證這個重要的時刻，': 'Your presence and warm wishes are the greatest gifts to us.', '本次婚禮不收禮金，': 'Please do not prepare a monetary gift.', '請帶著輕鬆的心情前來。': 'Please come and celebrate with a light heart.',
   '需要在什麼時候前完成出席回覆？': 'When should I submit my RSVP?',
-  '婚宴幾點開始？': 'What time does the banquet begin?', '17:00 開放入場，宴席將於 18:00 正式開始。': 'Banquet admission opens at 5:00 PM and dinner begins at 6:00 PM.',
+  '婚宴幾點開始？': 'What time does the banquet begin?', '17:00 開放入場，宴席將於 18:00 正式開始，20:30 送客。': 'Banquet admission opens at 5:00 PM, dinner begins at 6:00 PM, and farewell is at 8:30 PM.',
   '婚宴停車如何辦理消磁？': 'How do I validate banquet parking?', '地下停車場由服務人員至桌邊協助；戶外停車場請於離場前至櫃檯報車號。': 'Staff will assist with underground parking validation at your table. For outdoor parking, provide your license plate number at the front desk before leaving.',
   '2026.12.26 · 新竹': 'December 26, 2026 · Hsinchu'
 };
 
 const englishAttributes = {
+  '聚會所對面巷內停車入口': 'Entrance to parking in the lane opposite the Kingdom Hall',
+  '中興路一段路邊停車位置': 'Roadside parking on Sec. 1, Zhongxing Rd.',
+  '查看步行約三分鐘的停車位置': 'View the nearby parking option',
+  '查看聚會所對面巷內停車位置': 'View parking in the lane opposite the Kingdom Hall',
+  '查看中興路一段路邊停車位置': 'View roadside parking on Sec. 1, Zhongxing Rd.',
   '子靖與勤萱的婚紗照': 'Wedding portrait of Zeric and Lily', '子靖與勤萱婚紗照': 'Wedding portrait of Zeric and Lily', '子靖與勤萱': 'Zeric and Lily',
   '子靖與勤萱，回到首頁': 'Zeric and Lily, back to home', '邀請行程': 'Invitation schedule',
   '主要導覽': 'Main navigation', '開啟選單': 'Open menu', '線上婚禮時間': 'Online wedding schedule',
@@ -289,6 +318,12 @@ function applyFormattedValues() {
   document.querySelectorAll('.fact-card time[datetime]').forEach((element) => {
     element.textContent = formatWeddingTime(element.dateTime, language);
   });
+  const address = document.querySelector('[data-ceremony-address]');
+  if (address) {
+    address.replaceChildren(...(language === 'en'
+      ? ['2F, No. 376, Sec. 3, Changchun Rd.,', document.createElement('br'), 'Zhudong Township, Hsinchu County']
+      : ['新竹縣竹東鎮長春路三段 376 號 2 樓']));
+  }
   const onlineTimes = document.querySelectorAll('.online-schedule time');
   if (onlineTimes[0]) onlineTimes[0].textContent = language === 'en' ? '3:00 PM' : '15:00';
   if (onlineTimes[1]) onlineTimes[1].textContent = language === 'en' ? '4:10 PM' : '16:10';
@@ -322,7 +357,7 @@ function applyLanguage(language, { persist = true, announce = true } = {}) {
   if (persist) {
     try { window.localStorage.setItem(WEDDING_LANGUAGE_STORAGE_KEY, language); } catch { /* Storage is optional. */ }
   }
-  document.documentElement.lang = language === 'en' ? 'en' : 'zh-Hant-TW';
+  document.documentElement.lang = language === 'en' ? 'en' : 'zh-TW';
   document.documentElement.dir = 'ltr';
   document.documentElement.dataset.language = language;
   document.title = getTranslation(language, 'meta.title');

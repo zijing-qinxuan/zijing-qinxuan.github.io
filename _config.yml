@@ -1,3 +1,6 @@
 # Local development tools must not be copied into the GitHub Pages build.
 exclude:
   - tools
+  - dev.html
+  - dev.js
+  - dev.css

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant-TW" dir="ltr" data-language="zh-TW">
+<html lang="zh-TW" dir="ltr" data-language="zh-TW">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,20 +9,13 @@
       const navigationEntry = performance.getEntriesByType('navigation')[0];
       const navigationType = navigationEntry?.type || 'navigate';
       const initialHash = window.location.hash;
-      const quickNavHashes = new Set(['#ceremony-info', '#wedding-info', '#gallery', '#wedding-gallery', '#share']);
-      const startAtTop = navigationType === 'reload'
-        || (navigationType === 'navigate' && (!initialHash || quickNavHashes.has(initialHash)));
+      const startAtTop = navigationType !== 'back_forward' && !initialHash;
       window.__weddingInitialNavigation = { type: navigationType, hash: initialHash, startAtTop };
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = navigationType === 'back_forward' ? 'auto' : 'manual';
-      }
-      if (startAtTop && initialHash) {
-        history.replaceState(history.state, '', `${window.location.pathname}${window.location.search}`);
-      }
+      if ('scrollRestoration' in history) history.scrollRestoration = 'auto';
       try {
         const language = localStorage.getItem('wedding-language');
         if (language === 'en' || language === 'zh-TW') {
-          document.documentElement.lang = language === 'en' ? 'en' : 'zh-Hant-TW';
+          document.documentElement.lang = language === 'en' ? 'en' : 'zh-TW';
           document.documentElement.dataset.language = language;
         }
       } catch {
@@ -30,11 +23,11 @@
       }
     })();
   </script>
-  <title>子靖 ＆ 勤萱｜婚禮邀請</title>
+  <title>子靖 ＆ 勤萱 Zeric &amp; Lily｜婚禮邀請</title>
   <meta name="description" content="誠摯邀請您與我們一同見證這個重要的日子。請點擊專屬邀請連結查看邀請內容。">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="子靖 ＆ 勤萱">
-  <meta property="og:title" content="子靖 ＆ 勤萱｜婚禮邀請">
+  <meta property="og:title" content="子靖 ＆ 勤萱 Zeric &amp; Lily｜婚禮邀請">
   <meta property="og:description" content="誠摯邀請您與我們一同見證這個重要的日子。請點擊專屬邀請連結查看邀請內容。">
   <meta property="og:url" content="https://zijing-qinxuan.github.io/">
   <meta property="og:image" content="https://zijing-qinxuan.github.io/assets/og-wedding.jpg">
@@ -42,7 +35,7 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="子靖與勤萱的婚禮邀請">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="子靖 ＆ 勤萱｜婚禮邀請">
+  <meta name="twitter:title" content="子靖 ＆ 勤萱 Zeric &amp; Lily｜婚禮邀請">
   <meta name="twitter:description" content="誠摯邀請您與我們一同見證這個重要的日子。">
   <meta name="twitter:image" content="https://zijing-qinxuan.github.io/assets/og-wedding.jpg">
   <link rel="canonical" href="https://zijing-qinxuan.github.io/">
@@ -177,7 +170,7 @@
           <button class="button rsvp-toggle" id="rsvp-toggle" type="button" aria-expanded="false" aria-controls="rsvp-panel"><span>立即回覆</span></button>
           <p class="rsvp-duration">您的出席，是我們收到最珍貴的禮物。</p>
 
-          <div class="rsvp-panel" id="rsvp-panel" aria-hidden="true">
+          <div class="rsvp-panel" id="rsvp-panel" aria-hidden="true" inert>
             <form class="rsvp-form" id="rsvp-form" novalidate>
               <input id="rsvp-invite-value" name="invite" type="hidden">
               <input id="rsvp-people-value" name="people" type="hidden" value="0">
@@ -326,13 +319,13 @@
           <article class="glass-card fact-card reveal fact-delay-1">
             <span class="line-icon clock-icon" aria-hidden="true"></span>
             <p id="ceremony-entry-label">開放入場</p>
-            <time datetime="2026-12-26T14:30">14:30</time>
+            <time datetime="2026-12-26T14:00:00+08:00">14:00</time>
             <span>Welcome</span>
           </article>
           <article class="glass-card fact-card reveal fact-delay-2">
             <span class="line-icon clock-icon" aria-hidden="true"></span>
             <p>婚禮開始</p>
-            <time datetime="2026-12-26T15:00">15:00</time>
+            <time datetime="2026-12-26T15:00:00+08:00">15:00</time>
             <span>Ceremony</span>
           </article>
         </div>
@@ -341,9 +334,8 @@
           <div class="venue-line-mark" aria-hidden="true"><span></span></div>
           <div class="wedding-venue-copy">
             <p>CEREMONY VENUE</p>
-            <h3>耶和華見證人王國聚會所</h3>
-            <strong>竹東會眾</strong>
-            <address>新竹縣竹東鎮<br>長春路三段 376 號 2 樓</address>
+            <h3>王國聚會所－竹東會眾</h3>
+            <address data-ceremony-address>新竹縣竹東鎮長春路三段 376 號 2 樓</address>
           </div>
           <a class="button" href="https://maps.app.goo.gl/ANNKAeLfyfp5PV898" target="_blank" rel="noopener noreferrer">開啟婚禮場地導航</a>
         </article>
@@ -386,7 +378,31 @@
                 <p class="section-header__description">婚禮場地附近設有停車場，<br>建議提前抵達並依現場交通標誌停放。</p>
               </header>
 
-              <div class="ceremony-parking-grid">
+              <div class="ceremony-parking-grid"><article class="glass-card ceremony-parking-card reveal">
+            <div class="ceremony-parking-image image-shell">
+              <img src="assets/ceremony-parking-roadside.jpg" alt="中興路一段路邊停車位置" width="1980" height="1224" loading="lazy" decoding="async">
+            </div>
+            <div class="ceremony-parking-copy">
+              <h3><span class="ceremony-title-pin" aria-hidden="true"></span>中興路一段路邊停車</h3>
+              <p class="ceremony-parking-walk">步行約 1-5 分鐘</p>
+              <p>位於聚會所旁邊的中興路一段沿線，<br>請依現場交通標誌與道路規定停放。</p>
+              <a class="button" href="https://maps.app.goo.gl/U575KgMcRK32ncYg8" target="_blank" rel="noopener noreferrer" aria-label="查看中興路一段路邊停車位置">Google Maps 導航</a>
+            </div>
+          </article>
+
+          <article class="glass-card ceremony-parking-card reveal">
+            <div class="ceremony-parking-image image-shell">
+              <img src="assets/ceremony-parking-alley-1.jpg" alt="聚會所對面巷內停車入口" width="1990" height="1186" loading="lazy" decoding="async">
+            </div>
+            <div class="ceremony-parking-copy">
+              <h3><span class="ceremony-title-pin" aria-hidden="true"></span>聚會所對面巷內停車</h3>
+              <p class="ceremony-parking-walk">步行約 2-4 分鐘</p>
+              <p>位於聚會所對面的巷子內，<br>請依現場交通標誌與可停放範圍停車。</p>
+              <a class="button" href="https://maps.app.goo.gl/Sue1oMHLBHa4uXTNA" target="_blank" rel="noopener noreferrer" aria-label="查看聚會所對面巷內停車位置">Google Maps 導航</a>
+            </div>
+          </article>
+
+
                 <article class="glass-card ceremony-parking-card reveal">
                   <div class="ceremony-parking-map-panel" aria-hidden="true">
                     <div class="ceremony-map-mark"><span></span></div>
@@ -435,7 +451,7 @@
                 <article class="glass-card ceremony-note">
                   <span>03</span>
                   <h3>準時入席</h3>
-                  <p>14:30 開放入場，期待與您一同見證這個重要時刻。</p>
+                  <p>14:00 開放入場，期待與您一同見證這個重要時刻。</p>
                 </article>
               </div>
               </div>
@@ -463,14 +479,20 @@
           <article class="glass-card fact-card reveal fact-delay-1">
             <span class="line-icon clock-icon" aria-hidden="true"></span>
             <p>開放入場</p>
-            <time datetime="2026-12-26T17:00">17:00</time>
+            <time datetime="2026-12-26T17:00:00+08:00">17:00</time>
             <span>Welcome</span>
           </article>
           <article class="glass-card fact-card reveal fact-delay-2">
             <span class="line-icon clock-icon" aria-hidden="true"></span>
             <p>宴席開始</p>
-            <time datetime="2026-12-26T18:00">18:00</time>
+            <time datetime="2026-12-26T18:00:00+08:00">18:00</time>
             <span>Dinner</span>
+          </article>
+          <article class="glass-card fact-card reveal">
+            <span class="line-icon clock-icon" aria-hidden="true"></span>
+            <p>送客</p>
+            <time datetime="2026-12-26T20:30:00+08:00">20:30</time>
+            <span>Farewell</span>
           </article>
         </div>
 
@@ -694,11 +716,11 @@
         <div class="faq-list reveal">
           <details>
             <summary aria-expanded="false" aria-controls="faq-answer-1"><span class="faq-question" role="heading" aria-level="3">婚禮幾點開放入場？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
-            <p id="faq-answer-1">14:30 開放入場，婚禮將於 15:00 開始，建議預留交通與入場時間。</p>
+            <p id="faq-answer-1">14:00 開放入場，婚禮將於 15:00 開始，建議預留交通與入場時間。</p>
           </details>
           <details>
             <summary aria-expanded="false" aria-controls="faq-answer-2"><span class="faq-question" role="heading" aria-level="3">婚禮場地位於哪裡？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
-            <p id="faq-answer-2">婚禮位於耶和華見證人王國聚會所－竹東會眾，會場在 2 樓。</p>
+            <p id="faq-answer-2">婚禮位於王國聚會所－竹東會眾，會場在 2 樓。</p>
           </details>
           <details>
             <summary aria-expanded="false" aria-controls="faq-answer-5"><span class="faq-question" role="heading" aria-level="3">這次婚禮會收禮金嗎？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
@@ -710,7 +732,7 @@
           </details>
           <details data-invite="content:banquet-faq">
             <summary aria-expanded="false" aria-controls="faq-answer-3"><span class="faq-question" role="heading" aria-level="3">婚宴幾點開始？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>
-            <p id="faq-answer-3">17:00 開放入場，宴席將於 18:00 正式開始。</p>
+            <p id="faq-answer-3">17:00 開放入場，宴席將於 18:00 正式開始，20:30 送客。</p>
           </details>
           <details data-invite="content:banquet-faq">
             <summary aria-expanded="false" aria-controls="faq-answer-4"><span class="faq-question" role="heading" aria-level="3">婚宴停車如何辦理消磁？</span><span class="faq-toggle-icon" aria-hidden="true"></span></summary>

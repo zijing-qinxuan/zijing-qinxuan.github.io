@@ -1,5 +1,4 @@
 const ONLINE_MEETING_URL = "";
-const RSVP_DEADLINE_TEXT = "2026 年 11 月 1 日";
 const SEAT_LOOKUP_OPEN_AT = "2026-12-19T00:00:00+08:00";
 const SEAT_LOOKUP_DEV_PREVIEW_KEY = "wedding-seat-lookup-preview";
 const RSVP_ENDPOINT =
@@ -71,6 +70,9 @@ const quickNav = document.querySelector('#quick-nav');
 const quickNavLinks = quickNav ? [...quickNav.querySelectorAll('[data-quick-nav]')] : [];
 const infoAccordions = [...document.querySelectorAll('[data-info-accordion]')];
 let quickNavObserver = null;
+let scrollTicking = false;
+let bottomCtaObserver = null;
+const bottomCtaIntersections = new Set();
 const quickNavIntersections = new Map();
 
 const QUICK_NAV_SECTION_IDS = {
@@ -292,6 +294,8 @@ function setRsvpExpanded(expanded, scrollToPanel = false) {
   rsvpToggle.querySelector('span').textContent = expanded ? t('rsvp.collapse') : t('rsvp.expand');
   rsvpPanel.classList.toggle('is-expanded', expanded);
   rsvpPanel.setAttribute('aria-hidden', String(!expanded));
+  rsvpPanel.inert = !expanded;
+  requestScrollUpdate();
 
   if (expanded && scrollToPanel) {
     window.setTimeout(() => {
@@ -359,16 +363,10 @@ function setRsvpSubmitting(submitting) {
 }
 
 function scrollToRsvpSuccessCard() {
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      rsvpSuccess.scrollIntoView({
-        behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
-        block: 'center'
-      });
-      window.setTimeout(() => {
-        rsvpSuccessTitle.focus({ preventScroll: true });
-      }, reducedMotionQuery.matches ? 0 : 500);
-    });
+  rsvpSuccessTitle.focus({ preventScroll: true });
+  rsvpSuccess.scrollIntoView({
+    behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
+    block: 'center'
   });
 }
 
@@ -379,7 +377,7 @@ function renderRsvpSuccess() {
   rsvpSuccessTitle.textContent = previouslySubmitted
     ? t('rsvp.submittedTitle')
     : (wasUpdated ? t('rsvp.updatedTitle') : t('rsvp.createdTitle'));
-  const isOnlineCeremony = !previouslySubmitted && ceremonyAttendance === '線上參加';
+  const isOnlineCeremony = !previouslySubmitted && ((inviteMode === 'online' && selectedRsvpValue('online') === '會參加') || ceremonyAttendance === '線上參加');
   let successMessage = previouslySubmitted
     ? t('rsvp.received')
     : (wasUpdated
@@ -577,18 +575,18 @@ function handleRsvpStatusResult(result) {
 
   const completedSubmission = pendingRsvpSubmission;
   stopRsvpStatusPolling();
-  setRsvpSubmitting(false);
   pendingRsvpSubmission = null;
   const resultAction = result.action === 'updated' ? 'updated' : 'created';
   storeRsvp(completedSubmission.name);
   rsvpForm.classList.add('is-submitted');
   window.setTimeout(() => {
     showRsvpSuccess(false, completedSubmission.ceremonyAttendance, resultAction);
+    setRsvpSubmitting(false);
   }, reducedMotionQuery.matches ? 0 : 350);
 }
 
 function pollRsvpSubmissionStatus(submissionId) {
-  if (!rsvpSubmitting || pendingRsvpSubmission?.submissionId !== submissionId) return;
+  if (!rsvpSubmitting || pendingRsvpSubmission?.submissionId !== submissionId || activeRsvpJsonpRequests.size) return;
 
   const callbackName = `weddingRsvpStatus_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   const statusUrl = new URL(RSVP_ENDPOINT);
@@ -601,11 +599,11 @@ function pollRsvpSubmissionStatus(submissionId) {
   script.src = statusUrl.toString();
   window[callbackName] = (result) => {
     cleanupRsvpJsonpRequest(callbackName);
-    handleRsvpStatusResult(result);
+    if (pendingRsvpSubmission?.submissionId === submissionId) handleRsvpStatusResult(result);
   };
   script.onerror = () => cleanupRsvpJsonpRequest(callbackName);
 
-  const cleanupTimer = window.setTimeout(() => cleanupRsvpJsonpRequest(callbackName), 5000);
+  const cleanupTimer = window.setTimeout(() => cleanupRsvpJsonpRequest(callbackName, true), 5000);
   activeRsvpJsonpRequests.set(callbackName, { script, cleanupTimer });
   document.head.append(script);
 }
@@ -677,7 +675,12 @@ rsvpForm.querySelectorAll('[data-counter]').forEach((button) => {
 
 rsvpForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (rsvpSubmitting || !validateRsvpForm()) return;
+  if (rsvpSubmitting || rsvpForm.hidden || !validateRsvpForm()) return;
+  // Local previews must never write to the production RSVP endpoint.
+  if (isLocalDevelopmentHost() || window.location.protocol === 'file:') {
+    finishRsvpWithErrorKey('rsvp.localPreview');
+    return;
+  }
 
   delete rsvpSubmitError.dataset.backendMessage;
   clearRsvpError(rsvpSubmitError);
@@ -714,19 +717,18 @@ rsvpEdit.addEventListener('click', () => {
 
 function navigationTargetFromHash(hash) {
   if (hash === '#gallery') return document.querySelector('#wedding-gallery');
-  return document.querySelector(hash);
+  return document.getElementById(hash.slice(1));
 }
 
 function renderQuickNavigationLanguage() {
   if (!quickNav) return;
-  const compact = window.innerWidth <= 768;
   quickNav.setAttribute('aria-label', t('quickNav.label'));
   quickNavLinks.forEach((link) => {
     const key = link.dataset.quickNav;
     const isOnlineCeremony = key === 'ceremony' && inviteMode === 'online';
     const labelKey = isOnlineCeremony
-      ? (compact ? 'quickNav.onlineCeremony' : 'quickNav.onlineCeremonyFull')
-      : `quickNav.${key}${compact ? '' : 'Full'}`;
+      ? 'quickNav.onlineCeremony'
+      : `quickNav.${key}`;
     link.textContent = t(labelKey);
     link.setAttribute('aria-label', t(isOnlineCeremony ? 'quickNav.onlineCeremonyFull' : `quickNav.${key}Full`));
   });
@@ -756,7 +758,7 @@ function navigationOffsetForSection(section) {
   const quickNavTop = quickNavWrapper
     ? quickNavWrapper.getBoundingClientRect().top + window.scrollY
     : Number.POSITIVE_INFINITY;
-  return headerHeight + (sectionTop >= quickNavTop ? quickNavHeight : 0) + 16;
+  return headerHeight + (sectionTop >= quickNavTop ? quickNavHeight : 0);
 }
 
 function scrollToSection(section, {
@@ -986,6 +988,7 @@ function requestResizeUpdate() {
     renderInfoAccordionsLanguage();
     initializeQuickNavScrollSpy();
     initializeScrollSpy();
+    initializeBottomCtaObserver();
     requestScrollUpdate();
     resizeTicking = false;
   });
@@ -998,7 +1001,6 @@ function updateHeader() {
   header.classList.toggle('scrolled', window.scrollY >= heroBottom);
 }
 
-let scrollTicking = false;
 
 function updateScrollEffects() {
   const currentScrollY = window.scrollY;
@@ -1012,7 +1014,7 @@ function updateScrollEffects() {
   scrollProgress.setAttribute('aria-valuenow', String(Math.round(scrollRatio * 100)));
 
   const backToTopThreshold = Math.max(500, window.innerHeight * .7);
-  backToTopButton.classList.toggle('is-visible', currentScrollY > backToTopThreshold);
+  backToTopButton.classList.toggle('is-visible', currentScrollY > backToTopThreshold && !bottomCtaIntersections.size);
 
   if (window.innerWidth > 820 && heroInView && !reducedMotionQuery.matches && !document.body.classList.contains('invite-missing')) {
     const parallaxOffset = Math.min(26, Math.max(0, currentScrollY * .055));
@@ -1036,6 +1038,23 @@ function requestScrollUpdate() {
 
 requestScrollUpdate();
 window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+if ('ResizeObserver' in window) new ResizeObserver(requestScrollUpdate).observe(document.querySelector('main'));
+
+// Keep the floating control clear of primary actions near the bottom of the screen.
+function initializeBottomCtaObserver() {
+  bottomCtaObserver?.disconnect();
+  bottomCtaIntersections.clear();
+  if (!('IntersectionObserver' in window)) return;
+  bottomCtaObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) bottomCtaIntersections.add(entry.target);
+      else bottomCtaIntersections.delete(entry.target);
+    });
+    requestScrollUpdate();
+  }, { rootMargin: `-${Math.max(0, window.innerHeight - 110)}px 0px 0px 0px` });
+  document.querySelectorAll('main .button').forEach((button) => bottomCtaObserver.observe(button));
+}
+initializeBottomCtaObserver();
 
 backToTopButton.addEventListener('click', () => {
   window.scrollTo({
@@ -1168,7 +1187,10 @@ if ('IntersectionObserver' in window) {
 
 document.querySelectorAll('.faq-list details').forEach((details) => {
   const summary = details.querySelector('summary');
-  const syncExpandedState = () => summary.setAttribute('aria-expanded', String(details.open));
+  const syncExpandedState = () => {
+    summary.setAttribute('aria-expanded', String(details.open));
+    requestScrollUpdate();
+  };
   syncExpandedState();
   details.addEventListener('toggle', syncExpandedState);
 });
@@ -1352,7 +1374,11 @@ let galleryImages = normalizeGalleryData(window.weddingGallery);
 
 function galleryItemAlt(item) {
   const localizedAlt = item?.alt;
-  if (typeof localizedAlt === 'string') return localizedAlt;
+  if (typeof localizedAlt === 'string') {
+    return /^Zeric and Lily wedding photo \d+$/.test(localizedAlt)
+      ? t('gallery.photoAlt', { current: item.id })
+      : localizedAlt;
+  }
   const language = i18n.getLanguage();
   return localizedAlt?.[language]
     || localizedAlt?.['zh-TW']
@@ -1415,6 +1441,7 @@ let lightboxScrollY = 0;
 let lightboxImageRequestToken = 0;
 let isLightboxOpening = false;
 let lightboxBodyInlineStyles = null;
+let lightboxBackgroundState = [];
 const LIGHTBOX_SWIPE_DISTANCE = 40;
 const LIGHTBOX_SWIPE_VELOCITY = 0.45;
 const LIGHTBOX_SWIPE_AXIS_RATIO = 1.2;
@@ -1439,10 +1466,6 @@ if (weddingCarousel) {
 let carouselLeadingClone;
 let carouselTrailingClone;
 let carouselActiveIndex = 0;
-let carouselAutoplayTimer = null;
-let carouselPointerInside = false;
-let carouselFocusInside = false;
-let carouselInView = false;
 let isUpdatingCarouselMetrics = false;
 let carouselRequestToken = 0;
 let carouselMotionTimer = null;
@@ -1452,9 +1475,6 @@ let isLightboxClosing = false;
 let isRestoringScroll = false;
 let carouselMetricsPending = false;
 let carouselFrozenForLightbox = false;
-let carouselSnapFrame = null;
-let carouselSnapCompletion = null;
-const CAROUSEL_SNAP_DURATION = 440;
 
 function galleryAlt(index) {
   if (!galleryImages.length) return t('gallery.region');
@@ -1568,7 +1588,7 @@ function rebuildCarouselDots() {
     dot.type = 'button';
     dot.setAttribute('aria-label', t('gallery.viewPhoto', { current: index + 1 }));
     dot.setAttribute('aria-controls', 'gallery-carousel-viewport');
-    dot.addEventListener('click', () => goToSlide(index, { source: 'pagination-dot' }));
+    dot.addEventListener('click', () => goToSlide(index));
     carouselDots.append(dot);
   });
 }
@@ -1654,86 +1674,9 @@ function setCarouselTrackMoving(moving) {
   }
 }
 
-function carouselSnapEase(progress) {
-  const sample = (time, point1, point2) => {
-    const inverse = 1 - time;
-    return (3 * inverse * inverse * time * point1)
-      + (3 * inverse * time * time * point2)
-      + (time * time * time);
-  };
-  const derivative = (time, point1, point2) => {
-    const inverse = 1 - time;
-    return (3 * inverse * inverse * point1)
-      + (6 * inverse * time * (point2 - point1))
-      + (3 * time * time * (1 - point2));
-  };
-  let time = progress;
-  for (let iteration = 0; iteration < 4; iteration += 1) {
-    const slope = derivative(time, 0.22, 0.36);
-    if (Math.abs(slope) < 0.0001) break;
-    time -= (sample(time, 0.22, 0.36) - progress) / slope;
-    time = Math.min(1, Math.max(0, time));
-  }
-  return sample(time, 1, 1);
-}
-
-function cancelMobileCarouselSnap() {
-  if (carouselSnapFrame !== null) window.cancelAnimationFrame(carouselSnapFrame);
-  carouselSnapFrame = null;
-  carouselSnapCompletion = null;
-  carouselViewport?.classList.remove('is-settling');
-}
-
-function positionMobileCarousel(left, animate, onSettled) {
-  cancelMobileCarouselSnap();
-  const startLeft = carouselViewport.scrollLeft;
-  const distance = left - startLeft;
-  const immediate = !animate || reducedMotionQuery.matches || Math.abs(distance) < 0.5;
-
-  if (immediate) {
-    carouselViewport.scrollLeft = left;
-    onSettled?.();
-    return;
-  }
-
-  carouselSnapCompletion = onSettled;
-  carouselViewport.classList.add('is-settling');
-  const startedAt = performance.now();
-
-  const step = (now) => {
-    const progress = Math.min(1, (now - startedAt) / CAROUSEL_SNAP_DURATION);
-    carouselViewport.scrollLeft = startLeft + (distance * carouselSnapEase(progress));
-    if (progress < 1) {
-      carouselSnapFrame = window.requestAnimationFrame(step);
-      return;
-    }
-
-    carouselViewport.scrollLeft = left;
-    carouselSnapFrame = null;
-    carouselViewport.classList.remove('is-settling');
-    const completion = carouselSnapCompletion;
-    carouselSnapCompletion = null;
-    completion?.();
-  };
-
-  carouselSnapFrame = window.requestAnimationFrame(step);
-}
-
-function positionMobileCarouselElement(element, animate, onSettled) {
-  const left = element.offsetLeft - ((carouselViewport.clientWidth - element.offsetWidth) / 2);
-  positionMobileCarousel(left, animate, onSettled);
-}
-
-function positionCarousel(index, smooth = true, onSettled = null) {
+function positionCarousel(index, smooth = true) {
   const slide = carouselSlides[index];
   if (!slide) return;
-  if (carouselMobileQuery.matches) {
-    setCarouselTrackMoving(false);
-    carouselTrack.style.transform = '';
-    positionMobileCarouselElement(slide, smooth, onSettled);
-    return;
-  }
-
   carouselViewport.scrollLeft = 0;
   const offset = (carouselViewport.clientWidth / 2)
     - (carouselTrack.offsetLeft + slide.offsetLeft + (slide.offsetWidth / 2));
@@ -1745,39 +1688,10 @@ function positionCarousel(index, smooth = true, onSettled = null) {
     void carouselTrack.offsetWidth;
     window.requestAnimationFrame(() => { carouselTrack.style.transition = ''; });
   }
-  onSettled?.();
 }
 
-function canAutoplayCarousel() {
-  return carouselInView
-    && !carouselPointerInside
-    && !carouselFocusInside
-    && !carouselFrozenForLightbox
-    && lightbox.hidden
-    && !document.hidden
-    && !reducedMotionQuery.matches;
-}
-
-function scheduleCarouselAutoplay() {
-  window.clearTimeout(carouselAutoplayTimer);
-  carouselAutoplayTimer = null;
-  if (!canAutoplayCarousel()) return;
-  carouselAutoplayTimer = window.setTimeout(() => {
-    carouselAutoplayTimer = null;
-    goToSlide(carouselActiveIndex + 1, { source: 'autoplay' });
-  }, 6000);
-}
-
-function goToSlide(index, {
-  animate = true,
-  source = 'programmatic',
-  resumeAutoplay = true
-} = {}) {
-  if (carouselFrozenForLightbox) return;
-  if (source !== 'autoplay') {
-    window.clearTimeout(carouselAutoplayTimer);
-    carouselAutoplayTimer = null;
-  }
+function goToSlide(index, { animate = true } = {}) {
+  if (carouselFrozenForLightbox || !carouselSlides.length) return;
   const targetIndex = carouselIndex(index);
   const wrapped = index < 0 || index >= carouselSlides.length;
   const image = ensureCarouselThumbnail(targetIndex, true);
@@ -1786,19 +1700,7 @@ function goToSlide(index, {
     if (requestToken !== carouselRequestToken || carouselFrozenForLightbox) return;
     debugCarouselMetrics('slide change before');
     setCarouselActiveState(targetIndex);
-    const finish = () => {
-      if (resumeAutoplay) scheduleCarouselAutoplay();
-    };
-    const mobileWrapClone = carouselMobileQuery.matches && animate && wrapped
-      ? (index < 0 ? carouselLeadingClone : carouselTrailingClone)
-      : null;
-    if (mobileWrapClone) {
-      positionMobileCarouselElement(mobileWrapClone, true, () => {
-        positionCarousel(carouselActiveIndex, false, finish);
-      });
-    } else {
-      positionCarousel(carouselActiveIndex, animate && !wrapped, finish);
-    }
+    positionCarousel(carouselActiveIndex, animate && !wrapped);
     debugCarouselMetrics('slide change after');
   };
 
@@ -1928,44 +1830,23 @@ if (carouselIsEnabled) {
   carouselPrevious.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    goToSlide(carouselActiveIndex - 1, { source: 'previous-button' });
+    goToSlide(carouselActiveIndex - 1);
   });
   carouselNext.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    goToSlide(carouselActiveIndex + 1, { source: 'next-button' });
+    goToSlide(carouselActiveIndex + 1);
   });
   carouselReturn.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    carouselFocusInside = false;
-    goToSlide(0, { source: 'return-button' });
+    goToSlide(0);
   });
 
-  weddingCarousel.addEventListener('mouseenter', () => {
-    carouselPointerInside = true;
-    scheduleCarouselAutoplay();
-  });
-  weddingCarousel.addEventListener('mouseleave', () => {
-    carouselPointerInside = false;
-    scheduleCarouselAutoplay();
-  });
-  weddingCarousel.addEventListener('focusin', () => {
-    carouselFocusInside = true;
-    scheduleCarouselAutoplay();
-  });
-  weddingCarousel.addEventListener('focusout', () => {
-    window.requestAnimationFrame(() => {
-      carouselFocusInside = weddingCarousel.contains(document.activeElement);
-      scheduleCarouselAutoplay();
-    });
-  });
   weddingCarousel.addEventListener('keydown', (event) => {
     if (!lightbox.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
-    goToSlide(carouselActiveIndex + (event.key === 'ArrowRight' ? 1 : -1), {
-      source: 'keyboard'
-    });
+    goToSlide(carouselActiveIndex + (event.key === 'ArrowRight' ? 1 : -1));
   });
   carouselTrack.addEventListener('click', (event) => {
     const button = event.target.closest('[data-gallery-id]');
@@ -1974,35 +1855,16 @@ if (carouselIsEnabled) {
     if (index < 0 || index === carouselActiveIndex) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    goToSlide(index, { source: 'adjacent-slide' });
+    goToSlide(index);
   }, true);
   carouselTrack.addEventListener('transitionend', (event) => {
     if (event.target === carouselTrack && event.propertyName === 'transform') setCarouselTrackMoving(false);
   });
 
-  document.addEventListener('visibilitychange', scheduleCarouselAutoplay);
   reducedMotionQuery.addEventListener?.('change', () => {
     updateCarouselMetrics();
-    scheduleCarouselAutoplay();
   });
   carouselMobileQuery.addEventListener?.('change', updateCarouselMetrics);
-  window.addEventListener('resize', () => {
-    debugCarouselLifecycle('resize fired', {
-      width: window.innerWidth,
-      height: window.innerHeight,
-      isLightboxClosing,
-      isRestoringScroll
-    });
-    updateCarouselMetrics();
-  }, { passive: true });
-  window.visualViewport?.addEventListener('resize', () => {
-    debugCarouselLifecycle('visualViewport resize fired', {
-      width: window.visualViewport.width,
-      height: window.visualViewport.height,
-      isLightboxClosing,
-      isRestoringScroll
-    });
-  }, { passive: true });
   if ('ResizeObserver' in window) {
     new ResizeObserver(() => {
       debugCarouselMetrics('ResizeObserver callback');
@@ -2010,16 +1872,6 @@ if (carouselIsEnabled) {
     }).observe(carouselViewport);
   }
   document.fonts?.ready.then(updateCarouselMetrics);
-  if ('IntersectionObserver' in window) {
-    const carouselVisibilityObserver = new IntersectionObserver(([entry]) => {
-      carouselInView = entry.isIntersecting;
-      scheduleCarouselAutoplay();
-    }, { threshold: .25 });
-    carouselVisibilityObserver.observe(weddingCarousel);
-  } else {
-    carouselInView = true;
-  }
-
   setCarouselActiveState(0);
   syncGalleryLanguage();
   window.requestAnimationFrame(() => positionCarousel(0, false));
@@ -2226,7 +2078,6 @@ async function openLightbox(index, trigger) {
   if (!lightbox.hidden || isLightboxOpening) return;
   const normalizedIndex = normalizeGalleryIndex(index);
   const requestToken = ++lightboxImageRequestToken;
-  const autoplayWasRunning = carouselAutoplayTimer !== null || canAutoplayCarousel();
   isLightboxOpening = true;
   carouselFrozenForLightbox = true;
   carouselRequestToken += 1;
@@ -2237,17 +2088,12 @@ async function openLightbox(index, trigger) {
     activeIndex: carouselActiveIndex,
     mobileLayout: carouselMobileQuery.matches,
     trackTransform: carouselTrack.style.transform,
-    scrollLeft: carouselViewport.scrollLeft,
-    focusWasInside: carouselFocusInside,
-    autoplayWasScheduled: autoplayWasRunning
+    scrollLeft: carouselViewport.scrollLeft
   } : null;
-  window.clearTimeout(carouselAutoplayTimer);
-  carouselAutoplayTimer = null;
 
   try {
     await preloadGalleryImage(normalizedIndex);
   } catch {
-    const autoplayWasScheduled = lightboxCarouselState?.autoplayWasScheduled;
     lightboxCarouselState = null;
     isLightboxOpening = false;
     carouselFrozenForLightbox = false;
@@ -2255,7 +2101,6 @@ async function openLightbox(index, trigger) {
       carouselMetricsPending = false;
       updateCarouselMetrics();
     }
-    if (autoplayWasScheduled) scheduleCarouselAutoplay();
     return;
   }
   if (requestToken !== lightboxImageRequestToken) {
@@ -2295,6 +2140,10 @@ async function openLightbox(index, trigger) {
   bodyStyle.left = `-${lightboxScrollX}px`;
   bodyStyle.width = '100%';
   bodyStyle.overflow = 'hidden';
+  lightboxBackgroundState = [...document.body.children]
+    .filter((element) => element !== lightbox && !element.matches('script'))
+    .map((element) => ({ element, inert: element.inert }));
+  lightboxBackgroundState.forEach(({ element }) => { element.inert = true; });
   lightbox.hidden = false;
   isLightboxOpening = false;
   lightboxClose.focus();
@@ -2334,20 +2183,16 @@ function restorePagePositionAfterLightbox() {
         focusTarget: document.activeElement?.dataset?.galleryId ?? null
       });
 
-      const autoplayWasScheduled = lightboxCarouselState?.autoplayWasScheduled;
-      const focusWasInside = lightboxCarouselState?.focusWasInside ?? false;
       root.style.scrollBehavior = previousScrollBehavior;
       isRestoringScroll = false;
       isLightboxClosing = false;
       carouselFrozenForLightbox = false;
-      carouselFocusInside = focusWasInside;
       debugCarouselMetrics('lightbox close restored');
       lightboxCarouselState = null;
       if (carouselMetricsPending) {
         carouselMetricsPending = false;
         updateCarouselMetrics();
       }
-      if (autoplayWasScheduled) scheduleCarouselAutoplay();
     });
   });
 }
@@ -2356,6 +2201,8 @@ function finishClosingLightbox() {
   cancelLightboxGesture();
   lightboxImage.style.transform = '';
   lightbox.hidden = true;
+  lightboxBackgroundState.forEach(({ element, inert }) => { element.inert = inert; });
+  lightboxBackgroundState = [];
   lightboxImage.removeAttribute('src');
   const lockedBodyTop = document.body.style.top;
   const lockedBodyLeft = document.body.style.left;
@@ -2510,6 +2357,10 @@ document.addEventListener('keydown', (event) => {
 
 function syncDynamicLanguage() {
   renderInviteModeLanguage();
+  if (inviteMode === 'wedding' || inviteMode === 'online') {
+    document.querySelector('#share-title').textContent = t('share.title');
+    document.querySelector('.share-intro').innerHTML = t('share.intro');
+  }
   renderQuickNavigationLanguage();
   renderInfoAccordionsLanguage();
   updateWeddingCountdown();
@@ -2542,6 +2393,7 @@ function syncDynamicLanguage() {
   if (lookupState?.type === 'success') showSeatResult(lookupState.name, lookupState.seat, false);
   else if (lookupState?.type === 'not-found') showNotFound(false);
   syncGalleryLanguage();
+  initializeQuickNavScrollSpy();
   requestScrollUpdate();
 }
 
@@ -2567,3 +2419,8 @@ reducedMotionQuery.addEventListener?.('change', (event) => {
   document.documentElement.classList.add('is-ready');
   if (event.matches) heroImage.classList.add('motion-complete');
 });
+
+if (initialNavigation.hash && initialNavigation.type !== 'back_forward') {
+  const restoreInitialAnchor = () => scrollToSection(navigationTargetFromHash(initialNavigation.hash), { updateHistory: false });
+  (document.fonts?.ready || Promise.resolve()).then(() => requestAnimationFrame(restoreInitialAnchor));
+}
