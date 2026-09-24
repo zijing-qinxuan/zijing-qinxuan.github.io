@@ -10,6 +10,7 @@ const targets=await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
 const ws=new WebSocket(targets.find(t=>t.type==='page').webSocketDebuggerUrl);
 await new Promise(r=>ws.addEventListener('open',r,{once:true}));
 let id=0, errors=[], requests=[], mode='created', pending=0;
+let onlineBackendMock = !process.argv.includes('--online');
 const calls=new Map();
 function send(method,params={}){return new Promise((resolve,reject)=>{const n=++id;calls.set(n,{resolve,reject});ws.send(JSON.stringify({id:n,method,params}));});}
 ws.addEventListener('message',async e=>{const m=JSON.parse(e.data);if(m.id){const c=calls.get(m.id);calls.delete(m.id);m.error?c.reject(m.error):c.resolve(m.result);return;}
@@ -22,7 +23,10 @@ ws.addEventListener('message',async e=>{const m=JSON.parse(e.data);if(m.id){cons
    if(url.hostname==='wedding-rc.test'){
     const p=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
     if(!p.startsWith(root+path.sep))throw Error('invalid path');
-    const body=await fs.readFile(p); const mime=({'.html':'text/html','.js':'text/javascript','.css':'text/css','.jpg':'image/jpeg','.svg':'image/svg+xml'})[path.extname(p)]||'application/octet-stream';
+    let body=await fs.readFile(p);
+    // Test-only capability fixture. Production backend behavior is NOT proven by this mock.
+    if(p===path.join(root,'script.js') && onlineBackendMock) body=Buffer.from(body.toString().replace('const ONLINE_MESSAGE_BACKEND_READY = false;', 'const ONLINE_MESSAGE_BACKEND_READY = true;'));
+    const mime=({'.html':'text/html','.js':'text/javascript','.css':'text/css','.jpg':'image/jpeg','.svg':'image/svg+xml'})[path.extname(p)]||'application/octet-stream';
     await send('Fetch.fulfillRequest',{requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:mime},{name:'Cache-Control',value:'no-store'}],body:body.toString('base64')});
    }else if(url.hostname==='script.google.com'){
     const cb=url.searchParams.get('callback');
@@ -69,8 +73,8 @@ for(const width of ((process.argv.includes('--extra')||process.argv.includes('--
   assert.equal(await ev(`document.querySelector('.gallery-progress__count').textContent`),'02 / 22');
   assert.ok(Math.abs(await ev(`parseFloat(document.querySelector('.gallery-progress__bar').style.transform.slice(7))`)-2/22)<0.000001);
   // Language preserves inputs, accordion state and carousel identity/position.
-  await ev(`document.querySelector('#rsvp-name').value='RC Tester';document.querySelector('#rsvp-phone').value='0912345678';window.__track=document.querySelector('.wedding-carousel__track');WeddingI18n.applyLanguage(${JSON.stringify(language==='en'?'zh-TW':'en')})`);
-  assert.ok(Math.abs(await ev('scrollY')-state.y)<2);assert.equal(await ev('carouselActiveIndex'),1);assert.equal(await ev(`document.querySelector('.wedding-carousel__track')===__track`),true);assert.equal(await ev(`document.querySelector('#rsvp-phone').value`),'0912345678');
+  await ev(`document.querySelector('#rsvp-name').value='RC Tester';if(inviteMode!=='online')document.querySelector('#rsvp-phone').value='0912345678';window.__track=document.querySelector('.wedding-carousel__track');WeddingI18n.applyLanguage(${JSON.stringify(language==='en'?'zh-TW':'en')})`);
+  assert.ok(Math.abs(await ev('scrollY')-state.y)<2);assert.equal(await ev('carouselActiveIndex'),1);assert.equal(await ev(`document.querySelector('.wedding-carousel__track')===__track`),true);assert.equal(await ev(`document.querySelector('#rsvp-phone')?.value ?? ''`),await ev(`inviteMode==='online'?'':'0912345678'`));
   await ev(`WeddingI18n.applyLanguage(${JSON.stringify(language)})`);
   await ev(`document.querySelector('.wedding-carousel__slide.is-active button').click()`);await until(`!document.querySelector('#gallery-lightbox').hidden`);
   assert.equal(await ev('currentGalleryIndex'),1);assert.equal(await ev(`getComputedStyle(document.querySelector('.lightbox-image')).objectFit`),'contain');
@@ -88,8 +92,13 @@ for(const width of ((process.argv.includes('--extra')||process.argv.includes('--
   // Full dimensions also exercise actual form serialization against an isolated mock transport.
   await ev(`if(inviteMode!=='online')document.querySelector('#rsvp-toggle').click();document.querySelectorAll('[data-rsvp-question]:not([hidden]) input[type=radio]').forEach((e)=>{if(!document.querySelector('input[name='+e.name+']:checked')){e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));}});document.querySelector('#rsvp-note').value='RC note';document.querySelector('#rsvp-message').value='RC message';document.querySelector('#rsvp-form').requestSubmit();document.querySelector('#rsvp-form').requestSubmit()`);
   await until(`!document.querySelector('#rsvp-success').hidden`);await settle();
-  const posts=await ev('__posts');assert.equal(posts.length,1);assert.equal(posts[0].phone,'0912345678');assert.ok(posts[0].submissionId);assert.equal(posts[0].note,invite==='online'?'':'RC note');assert.equal(posts[0].message,'RC message');assert.equal(posts[0].invite,invite);
+  const posts=await ev('__posts');assert.equal(posts.length,1);assert.equal(posts[0].phone,invite==='online'?'':'0912345678');assert.ok(posts[0].submissionId);assert.equal(posts[0].note,invite==='online'?'':'RC note');assert.equal(posts[0].message,'RC message');assert.equal(posts[0].invite,invite);
   if(invite==='online'){assert.equal(posts[0].online,'會參加');assert.equal(posts[0].people,'0');}else assert.equal(posts[0].ceremony,'現場參加');
+  if(invite!=='online') {
+   mode='updated';await ev(`document.querySelector('#rsvp-edit').click();document.querySelector('#rsvp-form').requestSubmit()`);await until(`!document.querySelector('#rsvp-success').hidden`);await settle();
+   const updated=await ev('__posts');assert.equal(updated.length,2);assert.equal(updated[1].phone,'0912345678');assert.equal(updated[1].name,updated[0].name);assert.equal(await ev('rsvpSuccessState.action'),'updated');mode='created';
+   assert.equal(await ev(`document.querySelector('#rsvp-phone').required`),true);
+  }
   await ev(`document.querySelector('#back-to-top').click()`);await settle();assert.equal(await ev('scrollY'),0);
   if((width===390||width===1440)&&invite==='full'){
    await shot(`${width}-${language}-hero`);
@@ -102,14 +111,14 @@ for(const width of ((process.argv.includes('--extra')||process.argv.includes('--
 }
 if(process.argv.includes('--online')) {
  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
- for(const width of [375,390,430,1440])for(const language of ['zh-TW','en']) {
-  errors=[];requests=[];mode='created';pending=0;
+ for(const width of [375,390,430,1280,1440])for(const language of ['zh-TW','en']) {
+  errors=[];requests=[];mode='created';pending=0;onlineBackendMock=false;
   await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<821});
   await send('Page.navigate',{url:`http://wedding-rc.test/?invite=online&rc=${Date.now()}`});
   await until(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`);
   await ev(`WeddingI18n.applyLanguage('${language}')`);await ev('document.fonts.ready');await sleep(100);
-  const state=await ev(`(()=>{const visible=e=>!!e.getClientRects().length&&!e.closest('[hidden]');return {title:document.querySelector('#rsvp-title').textContent,questions:[...document.querySelectorAll('[data-rsvp-question]')].filter(visible).length,fields:[...document.querySelectorAll('#rsvp-form input:not([type=hidden]),#rsvp-form textarea')].filter(visible).map(e=>e.name),sections:[...document.querySelector('main').children].filter(visible).map(e=>e.id),formOpen:!document.querySelector('#rsvp-panel').inert,emptyRows:[...document.querySelectorAll('[data-zoom-field]')].every(e=>e.hidden),joinHidden:document.querySelector('.online-meeting-button').hidden,nav:[...document.querySelectorAll('[data-quick-nav]')].filter(visible).map(e=>e.textContent),time:[...document.querySelectorAll('.online-schedule time')].map(e=>e.textContent),date:document.querySelector('#online-wedding-date').textContent,overflow:document.documentElement.scrollWidth>innerWidth,visibleRsvp:/RSVP|出席回覆|出席人數|素食|大合照/.test(document.body.innerText)}})()`);
-  assert.equal(state.title,language==='en'?'Leave a Message':'留下祝福');assert.equal(state.questions,0);assert.deepEqual(state.fields,['name','phone','message']);assert.equal(state.formOpen,true);assert.equal(state.emptyRows,true);assert.equal(state.joinHidden,true);assert.equal(state.overflow,false);assert.equal(state.visibleRsvp,false);
+  const state=await ev(`(()=>{const visible=e=>!!e.getClientRects().length&&!e.closest('[hidden]');return {title:document.querySelector('#rsvp-title').textContent,questions:[...document.querySelectorAll('[data-rsvp-question]')].filter(visible).length,fields:[...document.querySelectorAll('#rsvp-form input:not([type=hidden]),#rsvp-form textarea')].filter(visible).map(e=>e.name),sections:[...document.querySelector('main').children].filter(visible).map(e=>e.id),formOpen:!document.querySelector('#rsvp-panel').inert,emptyRows:[...document.querySelectorAll('[data-zoom-field]')].every(e=>e.hidden),joinHidden:document.querySelector('.online-meeting-button').hidden,nav:[...document.querySelectorAll('[data-quick-nav]')].filter(visible).map(e=>e.textContent),time:[...document.querySelectorAll('.online-schedule time')].map(e=>e.textContent),date:document.querySelector('#online-wedding-date').textContent,overflow:document.documentElement.scrollWidth>innerWidth,visibleRsvp:/RSVP|出席回覆|出席人數|素食|大合照|聯絡電話|Phone Number|更新資料|same name and phone number/.test(document.body.innerText)}})()`);
+  assert.equal(state.title,language==='en'?'Leave a Message':'留下祝福');assert.equal(state.questions,0);assert.deepEqual(state.fields,['name','message']);assert.equal(state.formOpen,true);assert.equal(state.emptyRows,true);assert.equal(state.joinHidden,true);assert.equal(state.overflow,false);assert.equal(state.visibleRsvp,false);
   assert.deepEqual(state.sections,['home','quick-nav-wrapper','ceremony-info','rsvp','wedding-gallery','share']);
   assert.deepEqual(state.nav,language==='en'?['Online Ceremony','Gallery','Share']:['線上婚禮','婚紗','分享']);
   assert.deepEqual(state.time,language==='en'?['2:00 PM','2:30 PM']:['14:00','14:30']);assert.ok(state.date.includes(language==='en'?'Saturday, December 26, 2026':'2026 年 12 月 26 日'));
@@ -133,20 +142,34 @@ if(process.argv.includes('--online')) {
   await ev(`document.execCommand=__execCopy`);
   await shot(`online-${width}-${language}-zoom`);
   await ev(`onlineWedding.passcode='';renderOnlineDetails()`);assert.equal(await ev(`document.querySelector('[data-zoom-field=passcode]').hidden`),true);
-  // Required message, fixed attendance, unchanged payload keys, update and error states.
-  await ev(`document.querySelector('#rsvp-name').value='Online QA';document.querySelector('#rsvp-phone').value='0912345678';document.querySelector('#rsvp-form').requestSubmit()`);
+  // No phone DOM, validation, update controls or stored-return behavior.
+  assert.equal(await ev(`document.querySelector('#rsvp-phone, label[for="rsvp-phone"], #rsvp-phone-help, #rsvp-phone-error, #rsvp-edit, .rsvp-update-note, .rsvp-deadline-note')`),null);
+  assert.equal(await ev(`document.querySelector('label[for="rsvp-message"]').textContent`),language==='en'?'Message / Wishes':'留言／祝福');
+  await ev(`document.querySelector('#rsvp-name').value='Online QA';document.querySelector('#rsvp-form').requestSubmit()`);
   assert.equal(await ev('__posts.length'),0);assert.equal(await ev(`document.querySelector('#rsvp-message').getAttribute('aria-invalid')`),'true');
-  await ev(`document.querySelector('#rsvp-message').value='Warm wishes!';document.querySelector('#rsvp-message').dispatchEvent(new Event('input'));document.querySelector('#rsvp-form').requestSubmit();document.querySelector('#rsvp-form').requestSubmit()`);
-  assert.equal(await ev(`document.querySelector('.rsvp-submit-label').textContent`),language==='en'?'Sending…':'留言送出中…');
-  await until(`!document.querySelector('#rsvp-success').hidden`);await settle();
-  const posts=await ev('__posts');assert.equal(posts.length,1);assert.equal(posts[0].online,'會參加');assert.equal(posts[0].ceremony,'');assert.equal(posts[0].banquet,'');assert.equal(posts[0].people,'0');assert.equal(posts[0].vegetarian,'0');assert.equal(posts[0].phone,'0912345678');assert.equal(posts[0].note,'');assert.equal(posts[0].message,'Warm wishes!');assert.ok(posts[0].submissionId);
-  assert.equal(await ev(`document.querySelector('#rsvp-success-title').textContent`),language==='en'?'Thank you for your message!':'謝謝你的祝福！');
-  mode='updated';await ev(`document.querySelector('#rsvp-edit').click();document.querySelector('#rsvp-message').value='Updated wishes';document.querySelector('#rsvp-form').requestSubmit()`);await until(`!document.querySelector('#rsvp-success').hidden`);await settle();
-  assert.equal(await ev('__posts.length'),2);assert.equal(await ev(`document.querySelector('#rsvp-success-message').textContent`),language==='en'?'Your message has been updated.':'你的留言已更新。');
-  mode='error';await ev(`document.querySelector('#rsvp-edit').click();document.querySelector('#rsvp-form').requestSubmit()`);await until(`!rsvpSubmitting && !!document.querySelector('#rsvp-submit-error').textContent`);
-  assert.equal(await ev(`document.body.innerText.includes('RSVP')`),false);
-  await ev(`document.querySelector('#rsvp-message').focus();window.scrollTo({top:document.querySelector('#rsvp').offsetTop-130,behavior:'auto'})`);await sleep(250);
-  const y=await ev('scrollY');await ev(`WeddingI18n.applyLanguage('${language==='en'?'zh-TW':'en'}')`);await sleep(50);assert.ok(Math.abs(await ev('scrollY')-y)<2);assert.equal(await ev(`document.querySelector('#rsvp-message').value`),'Updated wishes');assert.equal(await ev(`document.querySelector('#rsvp-phone').value`),'0912345678');
+  await ev(`document.querySelector('#rsvp-message').value='Warm wishes!';document.querySelector('#rsvp-form').requestSubmit()`);
+  assert.equal(await ev('__posts.length'),0);assert.equal(await ev(`document.querySelector('#rsvp-submit-error').dataset.errorKey`),'online.submitFailed');
+  // Reload with an isolated append-capable fixture; never enable the production flag.
+  onlineBackendMock=true;
+  const ids=[];
+  for(let attempt=0;attempt<2;attempt++) {
+   await send('Page.navigate',{url:`http://wedding-rc.test/?invite=online&rc=${Date.now()}`});
+   await until(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`);
+   await ev(`WeddingI18n.applyLanguage('${language}');localStorage.setItem(RSVP_STORAGE_KEY,JSON.stringify({invite:'online',name:'Legacy'}))`);
+   assert.equal(await ev('readStoredRsvp()'),null);
+   await ev(`document.querySelector('#rsvp-name').value='Online QA';document.querySelector('#rsvp-message').value='Warm wishes!';document.querySelector('#rsvp-form').requestSubmit();document.querySelector('#rsvp-form').requestSubmit()`);
+   assert.equal(await ev(`document.querySelector('.rsvp-submit-label').textContent`),language==='en'?'Sending…':'留言送出中…');
+   await until(`!document.querySelector('#rsvp-success').hidden`);await settle();
+   const posts=await ev('__posts');assert.equal(posts.length,1);assert.equal(posts[0].online,'會參加');assert.equal(posts[0].ceremony,'');assert.equal(posts[0].banquet,'');assert.equal(posts[0].people,'0');assert.equal(posts[0].vegetarian,'0');assert.equal(posts[0].phone,'');assert.equal(posts[0].message,'Warm wishes!');ids.push(posts[0].submissionId);
+   assert.equal(await ev(`document.querySelector('#rsvp-success-title').textContent`),language==='en'?'Thank you for your message!':'謝謝你的祝福！');
+   assert.equal(await ev(`document.querySelector('#rsvp-edit')`),null);
+  }
+  assert.ok(ids[0] && ids[1] && ids[0]!==ids[1]);
+  // Fresh message form on revisiting; no edit existing message path.
+  await send('Page.navigate',{url:`http://wedding-rc.test/?invite=online&rc=${Date.now()}`});
+  await until(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`);
+  await ev(`WeddingI18n.applyLanguage('${language}');document.querySelector('#rsvp-name').value='Online QA';document.querySelector('#rsvp-message').value='Warm wishes!';document.querySelector('#rsvp-message').focus();window.scrollTo({top:document.querySelector('#rsvp').offsetTop-130,behavior:'instant'})`);await settle();
+  const y=await ev('scrollY');await ev(`WeddingI18n.applyLanguage('${language==='en'?'zh-TW':'en'}')`);await sleep(50);assert.ok(Math.abs(await ev('scrollY')-y)<2);assert.equal(await ev(`document.querySelector('#rsvp-message').value`),'Warm wishes!');
   await ev(`WeddingI18n.applyLanguage('${language}')`);await shot(`online-${width}-${language}-message`);
   if(width<821){await send('Emulation.setDeviceMetricsOverride',{width,height:500,deviceScaleFactor:1,mobile:true});await sleep(100);assert.equal(await ev(`document.documentElement.scrollWidth>innerWidth`),false);assert.equal(await ev(`document.querySelector('#rsvp-panel').inert`),false);}
   assert.deepEqual(errors,[]);results.push({width,language,test:'online Zoom/message',status:'PASS'});console.log('PASS online Zoom/message',width,language);

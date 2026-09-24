@@ -4,6 +4,9 @@ const onlineWedding = {
   meetingId: "",
   passcode: ""
 };
+// Enable only after verifying that invite=online accepts an empty phone and
+// appends by submissionId (never upserts by name + phone). No backend code is in this repo.
+const ONLINE_MESSAGE_BACKEND_READY = false;
 const ONLINE_MEETING_URL = onlineWedding.zoomUrl;
 const SEAT_LOOKUP_OPEN_AT = "2026-12-19T00:00:00+08:00";
 const SEAT_LOOKUP_DEV_PREVIEW_KEY = "wedding-seat-lookup-preview";
@@ -448,7 +451,7 @@ function renderRsvpSuccess() {
   const { previouslySubmitted, ceremonyAttendance, action } = rsvpSuccessState;
   if (inviteMode === 'online') {
     rsvpSuccessTitle.textContent = t('online.thanks');
-    rsvpSuccessMessage.textContent = t(action === 'updated' && !previouslySubmitted ? 'online.updated' : 'online.received');
+    rsvpSuccessMessage.textContent = t('online.received');
     rsvpOnlineLink.hidden = true;
     return;
   }
@@ -488,6 +491,7 @@ function showRsvpSuccess(previouslySubmitted = false, ceremonyAttendance = '', a
 }
 
 function readStoredRsvp() {
+  if (inviteMode === 'online') return null;
   try {
     return JSON.parse(window.localStorage.getItem(RSVP_STORAGE_KEY));
   } catch {
@@ -496,6 +500,7 @@ function readStoredRsvp() {
 }
 
 function storeRsvp(name) {
+  if (inviteMode === 'online') return;
   try {
     window.localStorage.setItem(RSVP_STORAGE_KEY, JSON.stringify({
       invite: inviteMode,
@@ -511,10 +516,10 @@ function validateRsvpForm() {
   const config = RSVP_MODE_CONFIG[inviteMode];
   let firstInvalid = null;
   clearRsvpError(document.querySelector('#rsvp-name-error'));
-  clearRsvpError(document.querySelector('#rsvp-phone-error'));
+  if (inviteMode !== 'online') clearRsvpError(document.querySelector('#rsvp-phone-error'));
   clearRsvpError(document.querySelector('#rsvp-vegetarian-error'));
   rsvpName.removeAttribute('aria-invalid');
-  rsvpPhone.removeAttribute('aria-invalid');
+  if (inviteMode !== 'online') rsvpPhone.removeAttribute('aria-invalid');
   if (inviteMode === 'online') {
     clearRsvpError(document.querySelector('#online-message-error'));
     document.querySelector('#rsvp-message').removeAttribute('aria-invalid');
@@ -530,17 +535,19 @@ function validateRsvpForm() {
     firstInvalid = rsvpName;
   }
 
-  const phoneValue = rsvpPhone.value.trim();
-  const normalizedPhone = phoneValue.replace(/[\s-]+/g, '');
-  const phoneDigitCount = (normalizedPhone.match(/\d/g) || []).length;
-  if (!phoneValue) {
-    setRsvpError(document.querySelector('#rsvp-phone-error'), 'rsvp.phoneRequired');
-    rsvpPhone.setAttribute('aria-invalid', 'true');
-    if (!firstInvalid) firstInvalid = rsvpPhone;
-  } else if (phoneDigitCount < 8) {
-    setRsvpError(document.querySelector('#rsvp-phone-error'), 'rsvp.phoneInvalid');
-    rsvpPhone.setAttribute('aria-invalid', 'true');
-    if (!firstInvalid) firstInvalid = rsvpPhone;
+  if (inviteMode !== 'online') {
+    const phoneValue = rsvpPhone.value.trim();
+    const normalizedPhone = phoneValue.replace(/[\s-]+/g, '');
+    const phoneDigitCount = (normalizedPhone.match(/\d/g) || []).length;
+    if (!phoneValue) {
+      setRsvpError(document.querySelector('#rsvp-phone-error'), 'rsvp.phoneRequired');
+      rsvpPhone.setAttribute('aria-invalid', 'true');
+      if (!firstInvalid) firstInvalid = rsvpPhone;
+    } else if (phoneDigitCount < 8) {
+      setRsvpError(document.querySelector('#rsvp-phone-error'), 'rsvp.phoneInvalid');
+      rsvpPhone.setAttribute('aria-invalid', 'true');
+      if (!firstInvalid) firstInvalid = rsvpPhone;
+    }
   }
 
   if (inviteMode === 'online' && !document.querySelector('#rsvp-message').value.trim()) {
@@ -585,7 +592,7 @@ function prepareRsvpSubmissionFields() {
   rsvpPeopleValue.value = String(inviteMode === 'online' ? 0 : rsvpPeopleCount);
   rsvpVegetarianValue.value = String(inviteMode === 'online' ? 0 : rsvpVegetarianCount);
   rsvpName.value = rsvpName.value.trim();
-  rsvpPhone.value = rsvpPhone.value.trim().replace(/[\s-]+/g, '');
+  if (inviteMode !== 'online') rsvpPhone.value = rsvpPhone.value.trim().replace(/[\s-]+/g, '');
   document.querySelector('#rsvp-note').value = document.querySelector('#rsvp-note').value.trim();
   document.querySelector('#rsvp-message').value = document.querySelector('#rsvp-message').value.trim();
   ['ceremony', 'banquet', 'online'].forEach(setEmptyRsvpFieldFallback);
@@ -726,11 +733,7 @@ function renderOnlineMessageLanguage() {
   const text = (selector, key) => { document.querySelector(selector).textContent = t(`online.${key}`); };
   text('#rsvp-title', 'messageTitle');
   text('.rsvp-intro', 'messageIntro');
-  text('.rsvp-deadline-note', 'updateHint');
-  text('.rsvp-update-note', 'updateHint');
-  text('#rsvp-phone-help', 'phoneHelp');
   text('label[for="rsvp-message"]', 'messageLabel');
-  text('#rsvp-edit', 'editMessage');
   document.querySelector('#rsvp-message').placeholder = t('online.messagePlaceholder');
   document.querySelectorAll('a[data-invite="nav:rsvp"]').forEach((link) => { link.textContent = t('online.messageTitle'); });
   document.querySelectorAll('a[data-invite="nav:ceremony-info"]:not([data-quick-nav])').forEach((link) => { link.textContent = t('online.ceremony'); });
@@ -739,6 +742,9 @@ function renderOnlineMessageLanguage() {
 }
 
 if (inviteMode === 'online') {
+  rsvpPhone.closest('.rsvp-field').remove();
+  document.querySelectorAll('.rsvp-deadline-note, .rsvp-update-note').forEach(element => element.remove());
+  rsvpEdit.remove();
   rsvpForm.querySelectorAll('input[type="radio"]').forEach((input) => { input.disabled = true; });
   document.querySelector('#rsvp-note').closest('.rsvp-field').hidden = true;
   document.querySelector('#rsvp-message-description').hidden = true;
@@ -792,7 +798,7 @@ rsvpName.addEventListener('input', () => {
   clearRsvpError(document.querySelector('#rsvp-name-error'));
 });
 
-rsvpPhone.addEventListener('input', () => {
+if (inviteMode !== 'online') rsvpPhone.addEventListener('input', () => {
   const normalizedPhone = rsvpPhone.value.trim().replace(/[\s-]+/g, '');
   if ((normalizedPhone.match(/\d/g) || []).length < 8) return;
   rsvpPhone.removeAttribute('aria-invalid');
@@ -823,6 +829,11 @@ rsvpForm.addEventListener('submit', (event) => {
     return;
   }
 
+  if (inviteMode === 'online' && !ONLINE_MESSAGE_BACKEND_READY) {
+    finishRsvpWithErrorKey('online.submitFailed');
+    return;
+  }
+
   delete rsvpSubmitError.dataset.backendMessage;
   clearRsvpError(rsvpSubmitError);
   const ceremonyAttendance = inviteMode === 'online' ? '' : selectedRsvpValue('ceremony');
@@ -835,6 +846,7 @@ rsvpForm.addEventListener('submit', (event) => {
   prepareRsvpSubmissionFields();
   const formData = new FormData(rsvpForm);
   formData.set('submissionId', submissionId);
+  if (inviteMode === 'online') formData.set('phone', '');
   setRsvpSubmitting(true);
   startRsvpStatusPolling(submissionId);
 
@@ -848,7 +860,7 @@ rsvpForm.addEventListener('submit', (event) => {
   });
 });
 
-rsvpEdit.addEventListener('click', () => {
+if (inviteMode !== 'online') rsvpEdit.addEventListener('click', () => {
   rsvpSuccess.hidden = true;
   rsvpForm.hidden = false;
   rsvpForm.classList.remove('is-submitted');

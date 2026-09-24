@@ -2449,7 +2449,7 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
 .online-invitation .online-schedule time { white-space: nowrap; }
 .online-invitation .online-schedule { margin: 16px 0 0; padding: 16px 0 0; border-bottom: 0; }
 .online-invitation #online-wedding-date { font-size: clamp(21px, 3vw, 28px); line-height: 1.5; }
-.online-invitation :is(.rsvp-intro, .rsvp-deadline-note, #rsvp-phone-help) { hyphens: none; }
+.online-invitation .rsvp-intro { hyphens: none; }
 @media (max-width: 820px) {
   .online-invitation .online-attendance-card { grid-template-columns: 1fr; }
   .online-invitation .online-status-mark { display: none; }
@@ -2471,3 +2471,5 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
 @media (prefers-reduced-motion: reduce) {
   .gallery-progress__bar { transition: none; }
 }
+
+.online-invitation .rsvp-form-grid { grid-template-columns: minmax(0, 1fr); }

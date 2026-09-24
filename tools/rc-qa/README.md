@@ -19,3 +19,13 @@ Use dedicated browser profiles. Do not run two harnesses against the same debugg
 The current verified fixture contains **22** gallery items. The request specified 23; the missing original must be supplied and then the fixture count and tests updated. Do not duplicate an existing photo to satisfy that count.
 
 Emulated mobile viewports do not constitute real iPhone Safari/Edge/Chrome testing. Real RSVP row creation/update, account upload permissions, final seat assignments and the online wedding URL require owner verification.
+
+## Explicitly authorized production Online probe (local CLI only)
+
+`node tools/rc-qa/online-backend-live.mjs` only prints usage. With `--write-online-test`, it reads the current endpoint from script.js and requires ONLINE_MESSAGE_BACKEND_READY to remain false. It sends exactly the two specified Online test messages with fresh UUIDs, then replays the entire second request once. It does not send Full/Wedding data and never retries a POST automatically. This is not part of npm test or the mocked browser harness.
+
+**This command writes test data to the production Sheet.** Run only for an explicitly authorized verification. A new invocation creates two new IDs, so do not rerun to recover an ambiguous network failure. Evidence (including IDs before each request, exact payloads, raw POST/JSONP responses and transport errors) is saved to `/private/tmp/wedding-online-backend-<first-id>.json`.
+
+The script is not referenced by any website page, and `tools/` is excluded from GitHub Pages. It never changes the frontend readiness flag. API created responses and identical replay results do not independently prove the physical Sheet row count; obtain Sheet evidence and review the deployed backend code before enabling Online submissions.
+
+Read-only browser check: `node tools/rc-qa/online-status-browser.mjs <existing-evidence.json>` uses a fresh Chrome CDP target (port 9225) and a local-only fixture page to request the two existing IDs via real JSONP. It does not POST. Transport/console success and availability of the 300-second status cache are reported separately. A late `ready:false` does not erase the immediate successful status evidence.
