@@ -347,8 +347,12 @@
             <h3 id="online-wedding-date">2026 年 12 月 26 日（六）</h3>
             <div class="online-schedule" aria-label="線上婚禮時間">
               <div>
-                <time datetime="2026-12-26T15:00:00+08:00">下午 3:00</time>
-                <span data-online-text="begins">開始</span>
+                <time datetime="2026-12-26T14:00:00+08:00">14:00</time>
+                <span data-online-text="zoomOpens">Zoom 開放進入</span>
+              </div>
+              <div>
+                <time datetime="2026-12-26T14:30:00+08:00">14:30</time>
+                <span data-online-text="begins">婚禮開始</span>
               </div>
             </div>
           </div>
@@ -670,11 +674,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7"></path></svg>
         </button>
 
-        <div class="wedding-carousel__controls">
-          <div class="wedding-carousel__dots"></div>
-          <button class="wedding-carousel__return" type="button" aria-label="返回第一張照片">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 8a8 8 0 1 0 1 7"></path><path d="M19 3v5h-5"></path></svg>
-          </button>
+        <div class="gallery-progress">
+          <span class="gallery-progress__count" aria-hidden="true"></span>
+          <div class="gallery-progress__track" aria-hidden="true"><div class="gallery-progress__bar"></div></div>
+          <span class="sr-only gallery-progress__status" aria-live="polite" aria-atomic="true"></span>
         </div>
       </div>
     </section>

@@ -14,7 +14,7 @@ try{
 for(const width of (process.argv.includes('--probe')?[1680]:[1280,1440,1680]))for(const invite of ['full','wedding','online']){
  await api(sid+'/window/rect',{width,height:1000});
  await api(sid+'/url',{url:`http://127.0.0.1:8765/index.html?invite=${invite}`});
- for(let n=0;n<100;n++){if(await ev(`!!window.WeddingI18n && !!document.querySelector('.wedding-carousel__dot')`))break;await sleep(50);}
+ for(let n=0;n<100;n++){if(await ev(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`))break;await sleep(50);}
  const actual=await ev('({width:innerWidth,height:innerHeight,outerWidth,outerHeight,dpr:devicePixelRatio})');console.log('Safari dimensions',width,JSON.stringify(actual));
  if(process.argv.includes('--probe'))break;
  check(actual.width===width,'Safari viewport width mismatch');

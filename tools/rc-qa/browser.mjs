@@ -42,17 +42,21 @@ async function until(expr){for(let n=0;n<100;n++){if(await ev(expr))return;await
 async function shot(name){const s=await send('Page.captureScreenshot',{format:'png'});await fs.writeFile(path.join(out,name+'.png'),Buffer.from(s.data,'base64'));}
 const results=[];
 try{
-for(const width of ((process.argv.includes('--extra')||process.argv.includes('--online'))?[]:(process.env.QUICK_QA||process.argv.includes('--quick')?[390,1440]:(process.argv.includes('--desktop')?[1280,1440,1680]:[320,375,390,430,1280,1440,1680])))){
+for(const width of ((process.argv.includes('--extra')||process.argv.includes('--online'))?[]:(process.env.QUICK_QA||process.argv.includes('--quick')?[390,1440]:(process.argv.includes('--desktop')?[1280,1440,1680]:(process.argv.includes('--gallery')?[375,390,430,1280,1440,1680]:[320,375,390,430,1280,1440,1680]))))){
  for(const invite of ['full','wedding','online'])for(const language of ['zh-TW','en']){
   errors=[];requests=[];
   await send('Emulation.setDeviceMetricsOverride',{width,height:width<821?844:1000,deviceScaleFactor:1,mobile:width<821});
   await send('Page.navigate',{url:`http://wedding-rc.test/?invite=${invite}&rc=${Date.now()}`});
-  await until(`!!window.WeddingI18n && !!document.querySelector('.wedding-carousel__dot')`);
+  await until(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`);
   await ev(`localStorage.clear();WeddingI18n.applyLanguage(${JSON.stringify(language)});document.documentElement.style.scrollBehavior='auto'`);
   await ev('document.fonts.ready');await sleep(150);
   const initial=await ev(`({lang:document.documentElement.lang,overflow:document.documentElement.scrollWidth>innerWidth,slides:document.querySelectorAll('.wedding-carousel__slide').length,large:performance.getEntriesByType('resource').filter(x=>x.name.includes('/large/')).length,banquet:!document.querySelector('#wedding-info').hidden,seat:!document.querySelector('#seating').hidden,parking:!document.querySelector('#ceremony-parking').hidden,times:[...document.querySelectorAll('.fact-card time')].map(x=>x.textContent),inert:document.querySelector('#rsvp-panel').inert})`);
   assert.equal(initial.overflow,false);assert.equal(initial.lang,language);assert.equal(initial.slides,22);assert.equal(initial.large,0);assert.equal(initial.banquet,invite==='full');assert.equal(initial.seat,invite==='full');assert.equal(initial.parking,invite!=='online');assert.equal(initial.inert,invite!=='online');
   assert.equal(initial.times[0],language==='en'?'2:00 PM':'14:00');assert.equal(initial.times[1],language==='en'?'3:00 PM':'15:00');
+  const progress=await ev(`({count:document.querySelector('.gallery-progress__count').textContent,old:document.querySelectorAll('.wedding-carousel__dot,.wedding-carousel__return').length,width:document.querySelector('.gallery-progress').getBoundingClientRect().width,padding:parseFloat(getComputedStyle(document.querySelector('.story-gallery')).paddingBottom),status:document.querySelector('.gallery-progress__status').textContent,times:[...document.querySelectorAll('.online-schedule time')].map(e=>e.textContent),hero:document.querySelector('.hero-schedule').textContent})`);
+  assert.equal(progress.count,'01 / 22');assert.equal(progress.old,0);assert.equal(progress.width,width<821?220:320);assert.equal(progress.padding,width<821?44:60);
+  assert.equal(progress.status,language==='en'?'Photo 1 of 22':'第 1 張，共 22 張');
+  if(invite==='online'){assert.deepEqual(progress.times,language==='en'?['2:00 PM','2:30 PM']:['14:00','14:30']);assert.ok(!/15:00|3:00 PM/.test(progress.hero));}
   // Walk all displayed content; detect localized text omissions and overflow even inside accordions.
   await ev(`document.querySelectorAll('.info-accordion__trigger').forEach(x=>{if(!x.closest('[hidden]'))x.click()});document.querySelectorAll('.faq-list details').forEach(x=>x.open=true)`);
   await sleep(400);
@@ -62,6 +66,8 @@ for(const width of ((process.argv.includes('--extra')||process.argv.includes('--
   let state=await ev(`({y:scrollY,h:document.documentElement.scrollHeight,node:document.querySelector('.wedding-carousel__track').children.length})`);
   await ev(`document.querySelector('.wedding-carousel__arrow--next').click()`);await sleep(550);
   assert.equal(await ev('carouselActiveIndex'),1);assert.equal(await ev('document.documentElement.scrollHeight'),state.h);assert.ok(Math.abs(await ev('scrollY')-state.y)<2);
+  assert.equal(await ev(`document.querySelector('.gallery-progress__count').textContent`),'02 / 22');
+  assert.ok(Math.abs(await ev(`parseFloat(document.querySelector('.gallery-progress__bar').style.transform.slice(7))`)-2/22)<0.000001);
   // Language preserves inputs, accordion state and carousel identity/position.
   await ev(`document.querySelector('#rsvp-name').value='RC Tester';document.querySelector('#rsvp-phone').value='0912345678';window.__track=document.querySelector('.wedding-carousel__track');WeddingI18n.applyLanguage(${JSON.stringify(language==='en'?'zh-TW':'en')})`);
   assert.ok(Math.abs(await ev('scrollY')-state.y)<2);assert.equal(await ev('carouselActiveIndex'),1);assert.equal(await ev(`document.querySelector('.wedding-carousel__track')===__track`),true);assert.equal(await ev(`document.querySelector('#rsvp-phone').value`),'0912345678');
@@ -71,7 +77,14 @@ for(const width of ((process.argv.includes('--extra')||process.argv.includes('--
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowRight',code:'ArrowRight'});await until('currentGalleryIndex===2');
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});await sleep(100);
   assert.equal(await ev(`document.querySelector('#gallery-lightbox').hidden`),true);assert.equal(await ev('carouselActiveIndex'),1);assert.ok(Math.abs(await ev('scrollY')-state.y)<2);assert.equal(await ev(`document.activeElement===document.querySelector('.wedding-carousel__slide.is-active button')`),true);
-  await ev(`document.querySelector('.wedding-carousel__return').click()`);await sleep(550);assert.equal(await ev('carouselActiveIndex'),0);
+  await ev(`document.querySelector('.wedding-carousel__arrow--previous').click()`);await sleep(550);assert.equal(await ev('carouselActiveIndex'),0);
+  if(process.argv.includes('--gallery')) {
+   if(invite==='online'){
+    await ev(`document.querySelector('.gallery-progress').scrollIntoView({block:'center',behavior:'instant'})`);await settle();await shot(`${width}-${language}-progress`);
+    await ev(`document.querySelector('.online-attendance-card').scrollIntoView({block:'start',behavior:'instant'})`);await settle();await shot(`${width}-${language}-online-times`);
+   }
+   assert.deepEqual(errors,[]);results.push({width,invite,language,status:'PASS',progress});console.log('PASS',width,invite,language);continue;
+  }
   // Full dimensions also exercise actual form serialization against an isolated mock transport.
   await ev(`if(inviteMode!=='online')document.querySelector('#rsvp-toggle').click();document.querySelectorAll('[data-rsvp-question]:not([hidden]) input[type=radio]').forEach((e)=>{if(!document.querySelector('input[name='+e.name+']:checked')){e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));}});document.querySelector('#rsvp-note').value='RC note';document.querySelector('#rsvp-message').value='RC message';document.querySelector('#rsvp-form').requestSubmit();document.querySelector('#rsvp-form').requestSubmit()`);
   await until(`!document.querySelector('#rsvp-success').hidden`);await settle();
@@ -93,13 +106,13 @@ if(process.argv.includes('--online')) {
   errors=[];requests=[];mode='created';pending=0;
   await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<821});
   await send('Page.navigate',{url:`http://wedding-rc.test/?invite=online&rc=${Date.now()}`});
-  await until(`!!window.WeddingI18n && !!document.querySelector('.wedding-carousel__dot')`);
+  await until(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`);
   await ev(`WeddingI18n.applyLanguage('${language}')`);await ev('document.fonts.ready');await sleep(100);
   const state=await ev(`(()=>{const visible=e=>!!e.getClientRects().length&&!e.closest('[hidden]');return {title:document.querySelector('#rsvp-title').textContent,questions:[...document.querySelectorAll('[data-rsvp-question]')].filter(visible).length,fields:[...document.querySelectorAll('#rsvp-form input:not([type=hidden]),#rsvp-form textarea')].filter(visible).map(e=>e.name),sections:[...document.querySelector('main').children].filter(visible).map(e=>e.id),formOpen:!document.querySelector('#rsvp-panel').inert,emptyRows:[...document.querySelectorAll('[data-zoom-field]')].every(e=>e.hidden),joinHidden:document.querySelector('.online-meeting-button').hidden,nav:[...document.querySelectorAll('[data-quick-nav]')].filter(visible).map(e=>e.textContent),time:[...document.querySelectorAll('.online-schedule time')].map(e=>e.textContent),date:document.querySelector('#online-wedding-date').textContent,overflow:document.documentElement.scrollWidth>innerWidth,visibleRsvp:/RSVP|出席回覆|出席人數|素食|大合照/.test(document.body.innerText)}})()`);
   assert.equal(state.title,language==='en'?'Leave a Message':'留下祝福');assert.equal(state.questions,0);assert.deepEqual(state.fields,['name','phone','message']);assert.equal(state.formOpen,true);assert.equal(state.emptyRows,true);assert.equal(state.joinHidden,true);assert.equal(state.overflow,false);assert.equal(state.visibleRsvp,false);
   assert.deepEqual(state.sections,['home','quick-nav-wrapper','ceremony-info','rsvp','wedding-gallery','share']);
   assert.deepEqual(state.nav,language==='en'?['Online Ceremony','Gallery','Share']:['線上婚禮','婚紗','分享']);
-  assert.deepEqual(state.time,[language==='en'?'3:00 PM':'下午 3:00']);assert.ok(state.date.includes(language==='en'?'Saturday, December 26, 2026':'2026 年 12 月 26 日'));
+  assert.deepEqual(state.time,language==='en'?['2:00 PM','2:30 PM']:['14:00','14:30']);assert.ok(state.date.includes(language==='en'?'Saturday, December 26, 2026':'2026 年 12 月 26 日'));
   // Empty, ID-only, full credentials, then no-passcode configurations.
   await ev(`Object.assign(onlineWedding,{meetingId:'123 4567 8901'});renderOnlineDetails()`);
   assert.equal(await ev(`document.querySelector('[data-zoom-field=meetingId]').hidden`),false);assert.equal(await ev(`document.querySelector('[data-zoom-field=passcode]').hidden`),true);
@@ -143,7 +156,7 @@ if(process.argv.includes('--extra')) {
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  await send('Page.navigate',{url:`http://wedding-rc.test/?invite=full&rc=${Date.now()}#ceremony-info`});
- await until(`!!window.WeddingI18n && !!document.querySelector('.wedding-carousel__dot')`);await ev('document.fonts.ready');await settle();
+ await until(`!!window.WeddingI18n && !!document.querySelector('.gallery-progress__count')`);await ev('document.fonts.ready');await settle();
  assert.ok(await ev('scrollY')>0);
  const log=(name)=>{results.push({test:name,status:'PASS'});console.log('PASS',name)};
  for(const key of ['ceremony','banquet','gallery','share']){
@@ -164,13 +177,14 @@ if(process.argv.includes('--extra')) {
  await ev(`document.querySelector('[data-quick-nav="gallery"]').click()`);await settle();
  const geometry=await ev(`window.__galleryHeight=document.documentElement.scrollHeight;window.__galleryY=scrollY;({})`);
  for(let n=0;n<22;n++){
-  await ev(`document.querySelectorAll('.wedding-carousel__dot')[${n}].click()`);await until(`carouselActiveIndex===${n}`);await sleep(30);
+  await ev(`if (${n}>0) document.querySelector('.wedding-carousel__arrow--next').click()`);await until(`carouselActiveIndex===${n}`);await sleep(30);
+  assert.equal(await ev(`document.querySelector('.gallery-progress__count').textContent`),String(n+1).padStart(2,'0')+' / 22');
   const g=await ev(`(()=>{let e=document.querySelector('.wedding-carousel__slide.is-active'),r=e.querySelector('button').getBoundingClientRect();return {center:(r.left+r.right)/2,ratio:r.width/r.height,orientation:e.dataset.orientation,h:document.documentElement.scrollHeight,y:scrollY}})()`);
   assert.ok(Math.abs(g.center-195)<2);assert.ok(Math.abs(g.ratio-(g.orientation==='portrait'?2/3:3/2))<.02);assert.equal(g.h,await ev('__galleryHeight'));assert.ok(Math.abs(g.y-await ev('__galleryY'))<2);
  }
  await ev(`document.querySelector('.wedding-carousel__arrow--next').click()`);await until('carouselActiveIndex===0');
  await ev(`document.querySelector('.wedding-carousel__arrow--previous').click()`);await until('carouselActiveIndex===21');
- log('all photos, orientation, dots and circular previous/next');
+ log('all photos, orientation, progress and circular previous/next');
  await send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:270,y:600}]});
  await send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:100,y:603}]});
  await send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await sleep(100);

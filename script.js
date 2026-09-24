@@ -30,7 +30,7 @@ const INVITE_CONFIG = {
     ceremonyEntryKey: "hero.ceremonyEntry"
   },
   online: {
-    heroKeys: ["hero.weddingSchedule"],
+    heroKeys: ["hero.zoomSchedule", "hero.onlineSchedule"],
     sections: ["hero", "rsvp", "ceremony-info", "gallery", "share"],
     navigation: ["rsvp", "ceremony-info", "gallery", "share"],
     hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
@@ -186,7 +186,7 @@ document.body.classList.remove('invite-pending');
 function updateWeddingCountdown() {
   const now = new Date();
   const weddingDayStart = new Date('2026-12-26T00:00:00+08:00');
-  const weddingCeremony = new Date('2026-12-26T15:00:00+08:00');
+  const weddingCeremony = new Date(inviteMode === 'online' ? '2026-12-26T14:30:00+08:00' : '2026-12-26T15:00:00+08:00');
   const weddingDayEnd = new Date('2026-12-27T00:00:00+08:00');
 
   if (now < weddingDayStart) {
@@ -1463,8 +1463,7 @@ const carouselViewport = weddingCarousel?.querySelector('.wedding-carousel__view
 const carouselTrack = weddingCarousel?.querySelector('.wedding-carousel__track');
 const carouselPrevious = weddingCarousel?.querySelector('.wedding-carousel__arrow--previous');
 const carouselNext = weddingCarousel?.querySelector('.wedding-carousel__arrow--next');
-const carouselDots = weddingCarousel?.querySelector('.wedding-carousel__dots');
-const carouselReturn = weddingCarousel?.querySelector('.wedding-carousel__return');
+const galleryProgress = weddingCarousel?.querySelector('.gallery-progress');
 const carouselMobileQuery = window.matchMedia('(max-width: 820px)');
 const gallerySection = weddingCarousel?.closest('#wedding-gallery');
 
@@ -1634,12 +1633,9 @@ function syncGalleryLanguage() {
     const image = slide.querySelector('img');
     if (image) image.alt = galleryAlt(index);
   });
-  [...carouselDots?.children ?? []].forEach((dot, index) => {
-    dot.setAttribute('aria-label', t('gallery.viewPhoto', { current: index + 1 }));
-  });
+  updateGalleryProgress();
   carouselPrevious?.setAttribute('aria-label', t('gallery.previous'));
   carouselNext?.setAttribute('aria-label', t('gallery.next'));
-  carouselReturn?.setAttribute('aria-label', t('gallery.returnFirst'));
   lightbox?.setAttribute('aria-label', t('gallery.lightbox'));
   lightboxClose?.setAttribute('aria-label', t('gallery.close'));
   lightboxPrev?.setAttribute('aria-label', t('gallery.previousPhoto'));
@@ -1720,18 +1716,16 @@ function rebuildCarouselClones() {
   registerCarouselImage(carouselTrailingClone.querySelector('img'));
 }
 
-function rebuildCarouselDots() {
-  if (!carouselDots) return;
-  carouselDots.replaceChildren();
-  carouselSlides.forEach((slide, index) => {
-    const dot = document.createElement('button');
-    dot.className = 'wedding-carousel__dot';
-    dot.type = 'button';
-    dot.setAttribute('aria-label', t('gallery.viewPhoto', { current: index + 1 }));
-    dot.setAttribute('aria-controls', 'gallery-carousel-viewport');
-    dot.addEventListener('click', () => goToSlide(index));
-    carouselDots.append(dot);
-  });
+function updateGalleryProgress() {
+  if (!galleryProgress) return;
+  const total = carouselSlides.length;
+  const current = total ? carouselActiveIndex + 1 : 0;
+  galleryProgress.hidden = !total;
+  galleryProgress.querySelector('.gallery-progress__count').textContent = `${String(current).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+  galleryProgress.querySelector('.gallery-progress__bar').style.transform = `scaleX(${total ? current / total : 0})`;
+  const status = galleryProgress.querySelector('.gallery-progress__status');
+  const label = t('gallery.slideLabel', { current, total });
+  if (status.textContent !== label) status.textContent = label;
 }
 
 carouselSlides.forEach((slide) => {
@@ -1775,10 +1769,9 @@ function primeCarouselImages(index) {
 function setCarouselActiveState(index) {
   const normalizedIndex = carouselIndex(index);
   const nextSlide = carouselSlides[normalizedIndex];
-  const nextDot = carouselDots.children[normalizedIndex];
   if (carouselActiveIndex === normalizedIndex
-    && nextSlide?.classList.contains('is-active')
-    && nextDot?.classList.contains('is-active')) {
+    && nextSlide?.classList.contains('is-active')) {
+    updateGalleryProgress();
     primeCarouselImages(normalizedIndex);
     return;
   }
@@ -1794,12 +1787,7 @@ function setCarouselActiveState(index) {
     slide.setAttribute('aria-hidden', String(!active));
     slide.querySelector('.gallery-media').tabIndex = active ? 0 : -1;
   });
-  [...carouselDots.children].forEach((dot, dotIndex) => {
-    const active = dotIndex === carouselActiveIndex;
-    dot.classList.toggle('is-active', active);
-    if (active) dot.setAttribute('aria-current', 'true');
-    else dot.removeAttribute('aria-current');
-  });
+  updateGalleryProgress();
   primeCarouselImages(carouselActiveIndex);
 }
 
@@ -1918,7 +1906,7 @@ function removeMissingGalleryItem(item, missingPath) {
   galleryImagePreloads.clear();
 
   if (!galleryImages.length) {
-    carouselDots?.replaceChildren();
+    updateGalleryProgress();
     rebuildCarouselClones();
     weddingCarousel?.setAttribute('aria-disabled', 'true');
     return;
@@ -1935,7 +1923,7 @@ function removeMissingGalleryItem(item, missingPath) {
     lastGalleryTrigger = carouselSlides[carouselActiveIndex]?.querySelector('.gallery-media') || null;
   }
   rebuildCarouselClones();
-  rebuildCarouselDots();
+  updateGalleryProgress();
   setCarouselActiveState(carouselActiveIndex);
   syncGalleryLanguage();
   updateCarouselMetrics();
@@ -1966,7 +1954,7 @@ function registerCarouselImage(image) {
 [...carouselTrack.querySelectorAll('img')].forEach(registerCarouselImage);
 
 if (carouselIsEnabled) {
-  rebuildCarouselDots();
+  updateGalleryProgress();
 
   carouselPrevious.addEventListener('click', (event) => {
     event.preventDefault();
@@ -1977,11 +1965,6 @@ if (carouselIsEnabled) {
     event.preventDefault();
     event.stopPropagation();
     goToSlide(carouselActiveIndex + 1);
-  });
-  carouselReturn.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    goToSlide(0);
   });
 
   weddingCarousel.addEventListener('keydown', (event) => {

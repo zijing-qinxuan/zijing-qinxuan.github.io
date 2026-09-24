@@ -18,6 +18,7 @@ const translations = {
       arrival: '到場指引', parking: '停車資訊', sharing: '如何分享照片', expand: '展開', collapse: '收合'
     },
     hero: {
+      zoomSchedule: 'Zoom 開放進入｜14:00', onlineSchedule: '婚禮開始｜14:30',
       weddingSchedule: '婚禮｜15:00', banquetSchedule: '婚宴｜18:00',
       ceremonyEntry: '開放入場', onlineEntry: '線上開放進入', scheduleLabel: '邀請行程'
     },
@@ -38,7 +39,7 @@ const translations = {
       copiedMeetingId: "已複製會議 ID",
       copiedPasscode: "已複製密碼",
       copyFailed: "無法自動複製，請長按或選取上方文字複製。",
-      begins: "開始",
+      zoomOpens: "Zoom 開放進入", begins: "婚禮開始",
       messageTitle: "留下祝福",
       messageIntro: "如果你願意，也可以在這裡留下想對我們說的話。",
       messageLabel: "留言（必填）",
@@ -86,8 +87,8 @@ const translations = {
       photoAlt: '子靖與勤萱的第 {current} 張婚紗照',
       region: '婚紗相簿', carouselRole: '輪播', slideRole: '投影片',
       slideLabel: '第 {current} 張，共 {total} 張', openPhoto: '開啟婚紗相簿第 {current} 張照片',
-      viewPhoto: '查看第 {current} 張婚紗照', previous: '上一張照片', next: '下一張照片',
-      returnFirst: '返回第一張照片', lightbox: '婚紗相簿燈箱', close: '關閉相簿',
+      previous: '上一張照片', next: '下一張照片',
+      lightbox: '婚紗相簿燈箱', close: '關閉相簿',
       previousPhoto: '上一張照片', nextPhoto: '下一張照片', counter: '{current} / {total}'
     }
   },
@@ -108,6 +109,7 @@ const translations = {
       arrival: 'Arrival Guide', parking: 'Parking', sharing: 'How to Share Photos', expand: 'Expand', collapse: 'Collapse'
     },
     hero: {
+      zoomSchedule: 'Zoom opens | 2:00 PM', onlineSchedule: 'Ceremony begins | 2:30 PM',
       weddingSchedule: 'Wedding Ceremony | 3:00 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
       ceremonyEntry: 'Admission Opens', onlineEntry: 'Online Room Opens', scheduleLabel: 'Invitation schedule'
     },
@@ -128,7 +130,7 @@ const translations = {
       copiedMeetingId: "Meeting ID copied",
       copiedPasscode: "Passcode copied",
       copyFailed: "Could not copy automatically. Please select or long-press the text above to copy it.",
-      begins: "Begins",
+      zoomOpens: "Zoom opens", begins: "Ceremony begins",
       messageTitle: "Leave a Message",
       messageIntro: "You’re welcome to leave us a message or your warm wishes here.",
       messageLabel: "Message (required)",
@@ -176,8 +178,8 @@ const translations = {
       photoAlt: 'Zeric and Lily wedding photo {current}',
       region: 'Wedding Gallery', carouselRole: 'carousel', slideRole: 'slide',
       slideLabel: 'Photo {current} of {total}', openPhoto: 'Open wedding gallery photo {current}',
-      viewPhoto: 'View wedding photo {current}', previous: 'Previous photo', next: 'Next photo',
-      returnFirst: 'Return to first photo', lightbox: 'Wedding gallery lightbox', close: 'Close gallery',
+      previous: 'Previous photo', next: 'Next photo',
+      lightbox: 'Wedding gallery lightbox', close: 'Close gallery',
       previousPhoto: 'Previous photo', nextPhoto: 'Next photo', counter: 'Photo {current} of {total}'
     }
   }
@@ -382,7 +384,7 @@ function applyFormattedValues() {
       : ['新竹縣竹東鎮長春路三段 376 號 2 樓']));
   }
   const onlineTimes = document.querySelectorAll('.online-schedule time');
-  if (onlineTimes[0]) onlineTimes[0].textContent = language === 'en' ? '3:00 PM' : '下午 3:00';
+  onlineTimes.forEach(element => { element.textContent = formatWeddingTime(element.dateTime, language); });
   document.querySelectorAll('[data-rsvp-deadline]').forEach((element) => {
     element.textContent = getTranslation(language, 'seating.deadline');
   });
