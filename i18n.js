@@ -26,6 +26,35 @@ const translations = {
       before: '距離我們的婚禮還有 {days} 天', today: '今天，我們結婚了。', after: '謝謝您與我們一起見證這一天。'
     },
     online: {
+      ceremony: "線上婚禮",
+      zoomDetails: "Zoom 資訊",
+      zoomLink: "Zoom 參加連結",
+      joinZoom: "加入 Zoom",
+      meetingId: "會議 ID",
+      passcode: "密碼",
+      copy: "複製",
+      copyMeetingId: "複製會議 ID",
+      copyPasscode: "複製密碼",
+      copiedMeetingId: "已複製會議 ID",
+      copiedPasscode: "已複製密碼",
+      copyFailed: "無法自動複製，請長按或選取上方文字複製。",
+      begins: "開始",
+      messageTitle: "留下祝福",
+      messageIntro: "如果你願意，也可以在這裡留下想對我們說的話。",
+      messageLabel: "留言（必填）",
+      messagePlaceholder: "留下想對我們說的話或祝福",
+      messageRequired: "請留下想對我們說的話或祝福。",
+      phoneHelp: "方便我們聯絡您，也可用於日後更新留言。",
+      updateHint: "回覆完成後，若要更新留言，請使用相同姓名及聯絡電話即可",
+      send: "送出留言",
+      sending: "留言送出中…",
+      thanks: "謝謝你的祝福！",
+      received: "我們已收到你的留言。",
+      updated: "你的留言已更新。",
+      editMessage: "更新留言",
+      localPreview: "本機預覽不會送出正式留言。請使用正式邀請連結。",
+      submitFailed: "目前無法送出留言，請稍後再試。",
+      statusTimeout: "目前無法確認留言是否送達，請稍後再試。",
       enter: '進入線上婚禮', unavailable: '線上參加連結將於婚禮前提供'
     },
     rsvp: {
@@ -71,7 +100,7 @@ const translations = {
     accessibility: { backToTop: 'Back to top', readingProgress: 'Page reading progress' },
     quickNav: {
       label: 'Page quick navigation', ceremony: 'Ceremony', ceremonyFull: 'Ceremony Information',
-      onlineCeremony: 'Online', onlineCeremonyFull: 'Online Ceremony', banquet: 'Banquet',
+      onlineCeremony: 'Online Ceremony', onlineCeremonyFull: 'Online Ceremony', banquet: 'Banquet',
       banquetFull: 'Banquet Information', gallery: 'Gallery', galleryFull: 'Wedding Gallery',
       share: 'Share', shareFull: 'Photo Sharing'
     },
@@ -87,6 +116,35 @@ const translations = {
       day: 'day', days: 'days'
     },
     online: {
+      ceremony: "Online Ceremony",
+      zoomDetails: "Zoom Details",
+      zoomLink: "Zoom Link",
+      joinZoom: "Join Zoom",
+      meetingId: "Meeting ID",
+      passcode: "Passcode",
+      copy: "Copy",
+      copyMeetingId: "Copy Meeting ID",
+      copyPasscode: "Copy Passcode",
+      copiedMeetingId: "Meeting ID copied",
+      copiedPasscode: "Passcode copied",
+      copyFailed: "Could not copy automatically. Please select or long-press the text above to copy it.",
+      begins: "Begins",
+      messageTitle: "Leave a Message",
+      messageIntro: "You’re welcome to leave us a message or your warm wishes here.",
+      messageLabel: "Message (required)",
+      messagePlaceholder: "Leave us a message or your warm wishes",
+      messageRequired: "Please leave us a message or your warm wishes.",
+      phoneHelp: "So we can contact you and help you update your message later.",
+      updateHint: "If you’d like to update your message later, please use the same name and phone number.",
+      send: "Send Message",
+      sending: "Sending…",
+      thanks: "Thank you for your message!",
+      received: "We have received your message.",
+      updated: "Your message has been updated.",
+      editMessage: "Update Message",
+      localPreview: "Local previews cannot send a message. Please use your official invitation link.",
+      submitFailed: "We could not send your message. Please try again later.",
+      statusTimeout: "We could not confirm whether your message was received. Please try again later.",
       enter: 'Join the Online Wedding', unavailable: 'The online link will be shared before the wedding'
     },
     rsvp: {
@@ -172,7 +230,6 @@ const englishPhrases = {
   '耶和華見證人王國聚會所': 'Kingdom Hall of Jehovah’s Witnesses', '竹東會眾': 'Zhudong Congregation',
   '新竹縣竹東鎮': 'Zhudong Township, Hsinchu County', '長春路三段 376 號 2 樓': '2F, No. 376, Sec. 3, Changchun Rd.',
   '開啟婚禮場地導航': 'Open Ceremony Venue Directions', '線上參加婚禮': 'Attend the Wedding Online', '線上婚禮': 'Online Wedding',
-  '線上大合照': 'Online Group Photo', '歡迎開啟鏡頭，一起留下美好的紀念。': 'You’re welcome to turn on your camera and help us capture this special memory.',
   '正式線上連結將於婚禮前透過原邀請訊息提供。': 'The official online link will be shared through the original invitation message before the wedding.',
   '線上參加連結將於婚禮前提供': 'The online link will be shared before the wedding',
   '婚禮場地停車': 'Ceremony Parking', '婚禮場地附近設有停車場，': 'A parking lot is available near the ceremony venue.',
@@ -325,8 +382,7 @@ function applyFormattedValues() {
       : ['新竹縣竹東鎮長春路三段 376 號 2 樓']));
   }
   const onlineTimes = document.querySelectorAll('.online-schedule time');
-  if (onlineTimes[0]) onlineTimes[0].textContent = language === 'en' ? '3:00 PM' : '15:00';
-  if (onlineTimes[1]) onlineTimes[1].textContent = language === 'en' ? '4:10 PM' : '16:10';
+  if (onlineTimes[0]) onlineTimes[0].textContent = language === 'en' ? '3:00 PM' : '下午 3:00';
   document.querySelectorAll('[data-rsvp-deadline]').forEach((element) => {
     element.textContent = getTranslation(language, 'seating.deadline');
   });

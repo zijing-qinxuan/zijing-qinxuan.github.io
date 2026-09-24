@@ -2442,3 +2442,35 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
   :is(#ceremony-info, #wedding-info) .wedding-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #ceremony-info .fact-card:first-child { grid-column: 1 / -1; }
 }
+
+/* Online invitations provide ceremony access first and a simple message form. */
+.online-invitation .online-attendance-card { grid-template-columns: auto minmax(0, 1fr); }
+.online-invitation #rsvp-form-title,
+.online-invitation .rsvp-toggle,
+.online-invitation .rsvp-duration { display: none; }
+.online-invitation .rsvp-panel { max-height: none; overflow: visible; transition: none; }
+.online-invitation .rsvp-heading { margin-bottom: 0; }
+.online-invitation .rsvp-form { margin-top: 24px; padding-top: 24px; }
+.online-invitation .online-zoom-details { grid-column: 1 / -1; min-width: 0; border-top: 1px solid var(--color-border); padding-top: 24px; }
+.online-invitation .online-zoom-details h3 { margin: 0 0 16px; font-size: 26px; }
+.online-invitation .online-zoom-link { margin-block: 16px; }
+.online-invitation .online-zoom-link span, .online-invitation .online-zoom-link a { display: block; }
+.online-invitation .online-zoom-link a { overflow-wrap: anywhere; color: var(--color-accent-dark); }
+.online-invitation .online-zoom-fields { margin: 0; }
+.online-invitation .online-zoom-fields > div { margin-bottom: 20px; }
+.online-invitation .online-zoom-fields dt { color: var(--color-text-secondary); margin-bottom: 6px; }
+.online-invitation .online-zoom-fields dd { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; }
+.online-invitation .online-zoom-value { font-family: var(--font-en); font-size: 18px; white-space: nowrap; user-select: text; }
+.online-invitation [data-zoom-copy] { min-width: 76px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg-soft); color: var(--color-text-primary); font: inherit; cursor: pointer; }
+.online-invitation .online-meeting-button { width: 100%; min-height: 52px; }
+.online-invitation .online-copy-status { min-height: 1.7em; margin-bottom: 0; color: var(--color-text-secondary); font-size: 14px; }
+.online-invitation .online-schedule time { white-space: nowrap; }
+.online-invitation .online-schedule { margin: 16px 0 0; padding: 16px 0 0; border-bottom: 0; }
+.online-invitation #online-wedding-date { font-size: clamp(21px, 3vw, 28px); line-height: 1.5; }
+.online-invitation :is(.rsvp-intro, .rsvp-deadline-note, #rsvp-phone-help) { hyphens: none; }
+@media (max-width: 820px) {
+  .online-invitation .online-attendance-card { grid-template-columns: 1fr; }
+  .online-invitation .online-status-mark { display: none; }
+  .online-invitation .online-schedule > div { grid-template-columns: 100px minmax(0, 1fr); gap: 10px; }
+  .online-invitation #rsvp-message { font-size: 16px; }
+}

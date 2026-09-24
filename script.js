@@ -1,4 +1,10 @@
-const ONLINE_MEETING_URL = "";
+// Fill in Zoom details here. Empty values are omitted from the invitation.
+const onlineWedding = {
+  zoomUrl: "",
+  meetingId: "",
+  passcode: ""
+};
+const ONLINE_MEETING_URL = onlineWedding.zoomUrl;
 const SEAT_LOOKUP_OPEN_AT = "2026-12-19T00:00:00+08:00";
 const SEAT_LOOKUP_DEV_PREVIEW_KEY = "wedding-seat-lookup-preview";
 const RSVP_ENDPOINT =
@@ -25,9 +31,9 @@ const INVITE_CONFIG = {
   },
   online: {
     heroKeys: ["hero.weddingSchedule"],
-    sections: ["hero", "invitation-note", "rsvp", "ceremony-info", "gallery", "share"],
+    sections: ["hero", "rsvp", "ceremony-info", "gallery", "share"],
     navigation: ["rsvp", "ceremony-info", "gallery", "share"],
-    hiddenSections: ["gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
+    hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
     content: ["online-attendance"],
     ceremonyEntryKey: "hero.onlineEntry"
   }
@@ -217,21 +223,82 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !landingDialog.hidden) closeLandingDialog();
 });
 
-if (ONLINE_MEETING_URL.trim()) {
-  onlineMeetingButton.textContent = t('online.enter');
-  onlineMeetingButton.href = ONLINE_MEETING_URL.trim();
-  onlineMeetingButton.target = '_blank';
-  onlineMeetingButton.rel = 'noopener noreferrer';
-  onlineMeetingButton.removeAttribute('aria-disabled');
-  onlineMeetingButton.classList.remove('is-unavailable');
-} else {
-  onlineMeetingButton.removeAttribute('href');
-  onlineMeetingButton.setAttribute('aria-disabled', 'true');
-  onlineMeetingButton.classList.add('is-unavailable');
-  onlineMeetingButton.textContent = t('online.unavailable');
+function renderOnlineDetails() {
+  if (inviteMode !== 'online') return;
+  document.querySelectorAll('[data-online-text]').forEach((element) => {
+    element.textContent = t(`online.${element.dataset.onlineText}`);
+  });
+  document.querySelector('#online-wedding-date').textContent = i18n.formatWeddingDate().replace('（六）', '').trim();
+  const zoomUrl = onlineWedding.zoomUrl.trim();
+  let usableUrl = '';
+  try {
+    const parsed = new URL(zoomUrl);
+    if (parsed.protocol === 'https:') usableUrl = parsed.href;
+  } catch { /* Unfilled or incomplete settings are not actionable links. */ }
+  const link = document.querySelector('#online-zoom-url');
+  link.closest('.online-zoom-link').hidden = !usableUrl;
+  link.textContent = zoomUrl;
+  if (usableUrl) link.href = usableUrl;
+  else link.removeAttribute('href');
+  onlineMeetingButton.hidden = !usableUrl;
+  if (usableUrl) onlineMeetingButton.href = usableUrl;
+  else onlineMeetingButton.removeAttribute('href');
+  document.querySelector('#online-zoom-pending').hidden = Boolean(usableUrl);
+  ['meetingId', 'passcode'].forEach((key) => {
+    const row = document.querySelector(`[data-zoom-field="${key}"]`);
+    row.hidden = !onlineWedding[key].trim();
+    row.querySelector('.online-zoom-value').textContent = onlineWedding[key].trim();
+    row.querySelector('button').setAttribute('aria-label', t(key === 'meetingId' ? 'online.copyMeetingId' : 'online.copyPasscode'));
+  });
+  const status = document.querySelector('#online-copy-status');
+  if (status.dataset.messageKey) status.textContent = t(status.dataset.messageKey);
 }
 
-const RSVP_STORAGE_KEY = "wedding-rsvp-submitted";
+async function copyOnlineDetail(button) {
+  const key = button.dataset.zoomCopy;
+  const value = onlineWedding[key]?.trim();
+  if (!value || button.disabled) return;
+  const status = document.querySelector('#online-copy-status');
+  button.disabled = true;
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(value);
+    copied = true;
+  } catch {
+    // Clipboard permission may be unavailable in an in-app browser.
+    const active = document.activeElement;
+    const input = document.createElement('textarea');
+    input.value = value;
+    input.readOnly = true;
+    input.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(input);
+    input.select();
+    input.setSelectionRange(0, value.length);
+    try { copied = document.execCommand('copy'); } catch { /* Offer manual copy below. */ }
+    input.remove();
+    active?.focus({ preventScroll: true });
+  } finally {
+    button.disabled = false;
+  }
+  status.dataset.messageKey = copied
+    ? (key === 'meetingId' ? 'online.copiedMeetingId' : 'online.copiedPasscode')
+    : 'online.copyFailed';
+  status.textContent = t(status.dataset.messageKey);
+}
+
+if (inviteMode === 'online') {
+  document.body.classList.add('online-invitation');
+  hero.after(quickNavWrapper);
+  quickNavWrapper.after(document.querySelector('#ceremony-info'));
+  document.querySelector('#ceremony-info .wedding-facts').hidden = true;
+  document.querySelector('.scroll-cue').href = '#ceremony-info';
+  document.querySelectorAll('[data-zoom-copy]').forEach((button) => {
+    button.addEventListener('click', () => copyOnlineDetail(button));
+  });
+  renderOnlineDetails();
+}
+
+const RSVP_STORAGE_KEY = inviteMode === 'online' ? "wedding-online-message-submitted" : "wedding-rsvp-submitted";
 const RSVP_MODE_CONFIG = {
   wedding: {
     titleKey: "rsvp.modeTitle.wedding",
@@ -244,9 +311,9 @@ const RSVP_MODE_CONFIG = {
     required: ["ceremony", "banquet"]
   },
   online: {
-    titleKey: "rsvp.modeTitle.online",
-    questions: ["online"],
-    required: ["online"]
+    titleKey: "online.messageTitle",
+    questions: [],
+    required: []
   }
 };
 
@@ -280,6 +347,9 @@ let rsvpSuccessState = null;
 const activeRsvpJsonpRequests = new Map();
 
 function setRsvpError(element, key = '', fallback = '') {
+  if (inviteMode === 'online' && ['rsvp.localPreview', 'rsvp.submitFailed', 'rsvp.statusTimeout'].includes(key)) {
+    key = key.replace('rsvp.', 'online.');
+  }
   element.dataset.errorKey = key;
   element.textContent = key ? t(key) : fallback;
 }
@@ -290,6 +360,7 @@ function clearRsvpError(element) {
 }
 
 function setRsvpExpanded(expanded, scrollToPanel = false) {
+  if (inviteMode === 'online') expanded = true;
   rsvpToggle.setAttribute('aria-expanded', String(expanded));
   rsvpToggle.querySelector('span').textContent = expanded ? t('rsvp.collapse') : t('rsvp.expand');
   rsvpPanel.classList.toggle('is-expanded', expanded);
@@ -358,7 +429,9 @@ function setRsvpSubmitting(submitting) {
   rsvpSubmitting = submitting;
   rsvpSubmit.disabled = submitting;
   rsvpSubmit.classList.toggle('loading', submitting);
-  rsvpSubmitLabel.textContent = submitting ? t('rsvp.submitting') : t('rsvp.submit');
+  rsvpSubmitLabel.textContent = inviteMode === 'online'
+    ? t(submitting ? 'online.sending' : 'online.send')
+    : t(submitting ? 'rsvp.submitting' : 'rsvp.submit');
   rsvpForm.setAttribute('aria-busy', String(submitting));
 }
 
@@ -373,6 +446,12 @@ function scrollToRsvpSuccessCard() {
 function renderRsvpSuccess() {
   if (!rsvpSuccessState) return;
   const { previouslySubmitted, ceremonyAttendance, action } = rsvpSuccessState;
+  if (inviteMode === 'online') {
+    rsvpSuccessTitle.textContent = t('online.thanks');
+    rsvpSuccessMessage.textContent = t(action === 'updated' && !previouslySubmitted ? 'online.updated' : 'online.received');
+    rsvpOnlineLink.hidden = true;
+    return;
+  }
   const wasUpdated = !previouslySubmitted && action === 'updated';
   rsvpSuccessTitle.textContent = previouslySubmitted
     ? t('rsvp.submittedTitle')
@@ -436,6 +515,10 @@ function validateRsvpForm() {
   clearRsvpError(document.querySelector('#rsvp-vegetarian-error'));
   rsvpName.removeAttribute('aria-invalid');
   rsvpPhone.removeAttribute('aria-invalid');
+  if (inviteMode === 'online') {
+    clearRsvpError(document.querySelector('#online-message-error'));
+    document.querySelector('#rsvp-message').removeAttribute('aria-invalid');
+  }
   rsvpForm.querySelectorAll('[data-rsvp-question]').forEach((question) => {
     question.removeAttribute('aria-invalid');
   });
@@ -458,6 +541,13 @@ function validateRsvpForm() {
     setRsvpError(document.querySelector('#rsvp-phone-error'), 'rsvp.phoneInvalid');
     rsvpPhone.setAttribute('aria-invalid', 'true');
     if (!firstInvalid) firstInvalid = rsvpPhone;
+  }
+
+  if (inviteMode === 'online' && !document.querySelector('#rsvp-message').value.trim()) {
+    const message = document.querySelector('#rsvp-message');
+    setRsvpError(document.querySelector('#online-message-error'), 'online.messageRequired');
+    message.setAttribute('aria-invalid', 'true');
+    if (!firstInvalid) firstInvalid = message;
   }
 
   config.required.forEach((question) => {
@@ -499,6 +589,15 @@ function prepareRsvpSubmissionFields() {
   document.querySelector('#rsvp-note').value = document.querySelector('#rsvp-note').value.trim();
   document.querySelector('#rsvp-message').value = document.querySelector('#rsvp-message').value.trim();
   ['ceremony', 'banquet', 'online'].forEach(setEmptyRsvpFieldFallback);
+  if (inviteMode === 'online') {
+    // Existing backend canonical value and form field names remain unchanged.
+    ['ceremony', 'banquet', 'online'].forEach((name) => {
+      const field = document.querySelector(`#rsvp-${name}-empty`);
+      field.disabled = false;
+      field.value = name === 'online' ? '會參加' : '';
+    });
+    document.querySelector('#rsvp-note').value = '';
+  }
 }
 
 function createRsvpSubmissionId() {
@@ -548,6 +647,12 @@ function finishRsvpWithError(message) {
   delete rsvpSubmitError.dataset.errorKey;
   rsvpSubmitError.dataset.backendMessage = message;
   const translatedMessage = i18n.translatePhrase(message);
+  if (inviteMode === 'online') {
+    rsvpSubmitError.textContent = t('online.submitFailed');
+    rsvpSubmitError.dataset.errorKey = 'online.submitFailed';
+    delete rsvpSubmitError.dataset.backendMessage;
+    return;
+  }
   rsvpSubmitError.textContent = i18n.getLanguage() === 'en' && translatedMessage === message
     ? t('rsvp.submitFailed')
     : translatedMessage;
@@ -614,6 +719,42 @@ function startRsvpStatusPolling(submissionId) {
   rsvpStatusTimeout = window.setTimeout(() => {
     finishRsvpWithErrorKey('rsvp.statusTimeout');
   }, 20000);
+}
+
+function renderOnlineMessageLanguage() {
+  if (inviteMode !== 'online') return;
+  const text = (selector, key) => { document.querySelector(selector).textContent = t(`online.${key}`); };
+  text('#rsvp-title', 'messageTitle');
+  text('.rsvp-intro', 'messageIntro');
+  text('.rsvp-deadline-note', 'updateHint');
+  text('.rsvp-update-note', 'updateHint');
+  text('#rsvp-phone-help', 'phoneHelp');
+  text('label[for="rsvp-message"]', 'messageLabel');
+  text('#rsvp-edit', 'editMessage');
+  document.querySelector('#rsvp-message').placeholder = t('online.messagePlaceholder');
+  document.querySelectorAll('a[data-invite="nav:rsvp"]').forEach((link) => { link.textContent = t('online.messageTitle'); });
+  document.querySelectorAll('a[data-invite="nav:ceremony-info"]:not([data-quick-nav])').forEach((link) => { link.textContent = t('online.ceremony'); });
+  text('#ceremony-info-title', 'ceremony');
+  document.querySelector('#ceremony-info .section-header__eyebrow').textContent = 'ONLINE CEREMONY';
+}
+
+if (inviteMode === 'online') {
+  rsvpForm.querySelectorAll('input[type="radio"]').forEach((input) => { input.disabled = true; });
+  document.querySelector('#rsvp-note').closest('.rsvp-field').hidden = true;
+  document.querySelector('#rsvp-message-description').hidden = true;
+  const message = document.querySelector('#rsvp-message');
+  document.querySelector('#online-message-error').hidden = false;
+  message.required = true;
+  message.setAttribute('aria-required', 'true');
+  message.setAttribute('aria-describedby', 'online-message-error');
+  message.addEventListener('input', () => {
+    if (!message.value.trim()) return;
+    message.removeAttribute('aria-invalid');
+    clearRsvpError(document.querySelector('#online-message-error'));
+  });
+  [rsvpToggle, rsvpFormTitle, document.querySelector('.rsvp-duration'), document.querySelector('.rsvp-heading .section-header__eyebrow')].forEach((element) => { element.hidden = true; });
+  setRsvpExpanded(true);
+  renderOnlineMessageLanguage();
 }
 
 if (VALID_INVITE_MODES.includes(inviteMode)) {
@@ -2382,12 +2523,12 @@ function syncDynamicLanguage() {
     const message = rsvpSubmitError.dataset.backendMessage;
     const translatedMessage = i18n.translatePhrase(message);
     rsvpSubmitError.textContent = i18n.getLanguage() === 'en' && translatedMessage === message
-      ? t('rsvp.submitFailed')
+      ? t(inviteMode === 'online' ? 'online.submitFailed' : 'rsvp.submitFailed')
       : translatedMessage;
   }
   if (!rsvpSuccess.hidden) renderRsvpSuccess();
-  if (ONLINE_MEETING_URL.trim()) onlineMeetingButton.textContent = t('online.enter');
-  else onlineMeetingButton.textContent = t('online.unavailable');
+  renderOnlineDetails();
+  renderOnlineMessageLanguage();
   setMenu(menuButton.getAttribute('aria-expanded') === 'true');
   setLookupLoading(lookupButton.classList.contains('loading'));
   if (lookupState?.type === 'success') showSeatResult(lookupState.name, lookupState.seat, false);

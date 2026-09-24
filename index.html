@@ -252,6 +252,7 @@
                 <label for="rsvp-message">留下一句想對我們說的話</label>
                 <p class="rsvp-field-description" id="rsvp-message-description">婚禮後，我們會將大家留下的祝福整理成紀念影片。<br>謝謝您送給我們最珍貴的一句話。</p>
                 <textarea id="rsvp-message" name="message" rows="4" placeholder="想對我們說的話" aria-describedby="rsvp-message-description"></textarea>
+                <p class="rsvp-error" id="online-message-error" aria-live="polite" hidden></p>
               </div>
 
               <p class="rsvp-submit-error" id="rsvp-submit-error" role="alert" aria-live="assertive" aria-atomic="true"></p>
@@ -343,22 +344,34 @@
         <article class="glass-card online-attendance-card reveal" data-invite="content:online-attendance">
           <div class="online-status-mark" aria-hidden="true"><span></span></div>
           <div class="online-attendance-copy">
-            <p>ONLINE CEREMONY</p>
-            <h3>線上參加婚禮</h3>
+            <h3 id="online-wedding-date">2026 年 12 月 26 日（六）</h3>
             <div class="online-schedule" aria-label="線上婚禮時間">
               <div>
-                <time datetime="2026-12-26T15:00:00+08:00">15:00</time>
-                <span>線上婚禮</span>
-              </div>
-              <div>
-                <time datetime="2026-12-26T16:10:00+08:00">16:10</time>
-                <span>線上大合照</span>
-                <small>歡迎開啟鏡頭，一起留下美好的紀念。</small>
+                <time datetime="2026-12-26T15:00:00+08:00">下午 3:00</time>
+                <span data-online-text="begins">開始</span>
               </div>
             </div>
-            <span>正式線上連結將於婚禮前透過原邀請訊息提供。</span>
           </div>
-          <a class="button online-meeting-button is-unavailable" role="button" aria-disabled="true">線上參加連結將於婚禮前提供</a>
+          <section class="online-zoom-details" aria-labelledby="online-zoom-title">
+            <h3 id="online-zoom-title" data-online-text="zoomDetails">Zoom 資訊</h3>
+            <a class="button online-meeting-button" target="_blank" rel="noopener noreferrer" data-online-text="joinZoom" hidden>加入 Zoom</a>
+            <p id="online-zoom-pending" data-online-text="unavailable">線上參加連結將於婚禮前提供</p>
+            <p class="online-zoom-link" hidden>
+              <span data-online-text="zoomLink">Zoom 參加連結</span>
+              <a id="online-zoom-url" target="_blank" rel="noopener noreferrer"></a>
+            </p>
+            <dl class="online-zoom-fields">
+              <div data-zoom-field="meetingId" hidden>
+                <dt data-online-text="meetingId">會議 ID</dt>
+                <dd><span class="online-zoom-value"></span><button type="button" data-zoom-copy="meetingId" data-online-text="copy">複製</button></dd>
+              </div>
+              <div data-zoom-field="passcode" hidden>
+                <dt data-online-text="passcode">密碼</dt>
+                <dd><span class="online-zoom-value"></span><button type="button" data-zoom-copy="passcode" data-online-text="copy">複製</button></dd>
+              </div>
+            </dl>
+            <p class="online-copy-status" id="online-copy-status" role="status" aria-live="polite"></p>
+          </section>
         </article>
       </div>
     </section>

@@ -7,6 +7,7 @@ These tools have no npm dependencies and are excluded from GitHub Pages by `_con
 - `npm run test:browser`: run the full Chrome matrix against a separately launched Chrome DevTools endpoint on port 9225.
 - `node tools/rc-qa/browser.mjs --edge`: use an independently launched Edge endpoint on port 9230.
 - `node tools/rc-qa/browser.mjs --extra` (optionally `--edge`): navigation, all gallery items, focus, reduced motion, resize, RSVP states and seat opening boundary.
+- `node tools/rc-qa/browser.mjs --online`: online invitation checks at 375, 390, 430 and 1440px in both languages, including empty/filled Zoom settings, clipboard success/fallback/error, required message, fixed attendance, created/updated/error responses and reduced viewport height. Zoom values used by the test are temporary fixtures, not saved settings.
 - `node tools/rc-qa/browser.mjs --quick`: 390 and 1440px smoke matrix. `--desktop` selects 1280, 1440 and 1680px.
 - `node tools/rc-qa/safari.mjs`: requires native `safaridriver -p 4444` and a local HTTP server on port 8765. Checks the actual viewport dimensions and runs Safari's desktop matrix.
 - `python3 tools/rc-qa/links.py`: read-only HTTP checks of the map/shared-album URLs and published developer page.
