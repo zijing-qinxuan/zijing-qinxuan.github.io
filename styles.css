@@ -2490,3 +2490,63 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
     min-width: 0;
   }
 }
+
+/* Banquet facts and the gift note: compact, predictable mobile typography. */
+.banquet-date-compact { display: none; }
+html[lang="zh-TW"] .gift-note-copy {
+  word-break: normal;
+  overflow-wrap: normal;
+  line-break: strict;
+}
+html[lang="zh-TW"] .gift-note-copy p > span {
+  display: block;
+  white-space: nowrap;
+}
+html[lang="en"] .gift-note-copy { hyphens: none; }
+html[lang="en"] .gift-note-copy p > span { display: inline; }
+.gift-note-panel { padding-block: 32px; }
+.gift-note-heading .section-header__eyebrow { margin-bottom: 10px; }
+.gift-note-line { margin: 20px auto; }
+.gift-note-copy { line-height: 1.9; }
+.gift-note-copy p + p { margin-top: 20px; }
+@media (max-width: 820px) {
+  #wedding-info .wedding-facts { gap: 12px; grid-auto-rows: 1fr; }
+  #wedding-info .fact-card {
+    min-width: 0;
+    padding: 20px 16px;
+    justify-content: flex-start;
+    word-break: normal;
+    overflow-wrap: normal;
+    line-break: strict;
+  }
+  #wedding-info .fact-card > .line-icon { margin: 0; flex-shrink: 0; }
+  #wedding-info .fact-card > p {
+    margin: 16px 0 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+  #wedding-info .fact-card > :is(strong, time) {
+    font-size: 21px;
+    line-height: 1.35;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  #wedding-info .fact-card > span:last-child {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: .04em;
+  }
+  #wedding-info .banquet-date-full { display: none; }
+  #wedding-info .banquet-date-compact { display: inline; }
+  .gift-note-wrap { padding-inline: 0; }
+  .gift-note-panel { padding: 28px 16px; }
+  .gift-note-copy { font-size: 16px; line-height: 1.9; }
+}
+
+@media (min-width: 821px) {
+  #wedding-info .fact-card { justify-content: flex-start; }
+  #wedding-info .fact-card > :is(strong, time) { min-height: 54px; }
+  #wedding-info [data-banquet-date] { font-size: 20px; }
+}

@@ -363,8 +363,11 @@ function formatWeddingTime(datetime, language = currentLanguage()) {
 
 function applyFormattedValues() {
   const language = currentLanguage();
-  document.querySelectorAll('#ceremony-info .fact-card strong, #wedding-info .fact-card strong').forEach((element) => {
-    element.textContent = formatWeddingDate(language);
+  document.querySelectorAll('#ceremony-info .fact-card strong, #wedding-info [data-banquet-date-full]').forEach((element) => {
+    const date = formatWeddingDate(language);
+    element.textContent = element.hasAttribute('data-banquet-date-full')
+      ? date.replace(/^Saturday, /, '').replace('（六）', '')
+      : date;
   });
   document.querySelectorAll('.fact-card time[datetime]').forEach((element) => {
     element.textContent = formatWeddingTime(element.dateTime, language);
