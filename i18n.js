@@ -18,12 +18,13 @@ const translations = {
       arrival: '到場指引', parking: '停車資訊', sharing: '如何分享照片', expand: '展開', collapse: '收合'
     },
     scripture: {
-      region: '婚禮主題經文', continue: '繼續閱讀婚禮邀請',
-      lineOne: '「愛的烈焰是火的烈焰，', lineTwo: '是耶和華的熊熊烈火。」', reference: '—— 雅歌 8:6'
+      region: '婚禮主題經文',
+      lineOne: '「愛的烈焰是火的烈焰，', lineTwo: '是耶和華的熊熊烈火。」', reference: '雅歌 8:6'
     },
     hero: {
+      continue: '繼續閱讀婚禮邀請',
       zoomSchedule: 'Zoom 開放進入｜14:00', onlineSchedule: '婚禮開始｜14:30',
-      weddingSchedule: '婚禮｜14:30', banquetSchedule: '婚宴｜18:00',
+      weddingSchedule: '婚禮 14:30', banquetSchedule: '婚宴 18:00',
       ceremonyEntry: '開放入場', onlineEntry: '線上開放進入', scheduleLabel: '邀請行程'
     },
     countdown: {
@@ -109,12 +110,13 @@ const translations = {
       arrival: 'Arrival Guide', parking: 'Parking', sharing: 'How to Share Photos', expand: 'Expand', collapse: 'Collapse'
     },
     scripture: {
-      region: 'Our theme scripture', continue: 'Continue to the wedding invitation',
-      lineOne: '“Love, its flames are a blazing fire,', lineTwo: 'the flame of Jah.”', reference: '— Song of Solomon 8:6'
+      region: 'Our theme scripture',
+      lineOne: '“Love, its flames are a blazing fire,', lineTwo: 'the flame of Jah.”', reference: 'Song of Solomon 8:6'
     },
     hero: {
+      continue: 'Continue reading the invitation',
       zoomSchedule: 'Zoom Opens | 2:00 PM', onlineSchedule: 'Ceremony Begins | 2:30 PM',
-      weddingSchedule: 'Wedding Ceremony | 2:30 PM', banquetSchedule: 'Wedding Banquet | 6:00 PM',
+      weddingSchedule: 'Ceremony 2:30 PM', banquetSchedule: 'Reception 6:00 PM',
       ceremonyEntry: 'Doors Open', onlineEntry: 'Online Room Opens', scheduleLabel: 'Invitation schedule'
     },
     countdown: {
@@ -371,8 +373,8 @@ function formatWeddingTime(datetime, language = currentLanguage()) {
 
 function applyFormattedValues() {
   const language = currentLanguage();
-  document.querySelectorAll('[data-theme-scripture-text]').forEach(element => {
-    element.textContent = getTranslation(language, `scripture.${element.dataset.themeScriptureText}`);
+  document.querySelectorAll('[data-hero-scripture-text]').forEach(element => {
+    element.textContent = getTranslation(language, `scripture.${element.dataset.heroScriptureText}`);
   });
   document.querySelectorAll('#ceremony-info .fact-card strong, #wedding-info [data-banquet-date-full]').forEach((element) => {
     const date = formatWeddingDate(language);

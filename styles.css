@@ -208,7 +208,10 @@ body.invite-missing .invite-gate { display: grid; }
 .nav-links a { position: relative; text-decoration: none; }
 .language-switch { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-en); }
 .language-switch--desktop { margin-left: var(--space-4); }
+.header-actions { display: none; }
 .language-switch--mobile { display: none; }
+html[lang="zh-TW"] .language-switch--mobile [data-language-option="zh-TW"],
+html[lang="en"] .language-switch--mobile [data-language-option="en"] { display: none; }
 .language-switch > span { width: 1px; height: 14px; background: currentColor; opacity: .28; }
 .language-switch button { min-width: 44px; min-height: 44px; padding: 8px 4px; color: inherit; background: transparent; border: 0; border-radius: var(--radius-button); cursor: pointer; font-size: 12px; font-weight: 600; letter-spacing: .04em; opacity: .58; transition: color var(--motion-fast) var(--motion-ease), opacity var(--motion-fast) var(--motion-ease); }
 .language-switch button:hover, .language-switch button:focus-visible { opacity: 1; }
@@ -277,7 +280,6 @@ body.invite-missing .invite-gate { display: grid; }
 .hero-image { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
 .hero-overlay { position: absolute; inset: 0; background: var(--overlay-image); }
 .hero-content { position: relative; z-index: 1; top: -8vh; text-shadow: var(--shadow-text); }
-.hero-kicker { margin: 0 0 18px; font-size: clamp(10px, 1.4vw, 13px); font-weight: 650; letter-spacing: .3em; }
 .hero h1 { margin: 0; font-size: clamp(42px, 6.2vw, 68px); font-weight: 400; line-height: 1.2; letter-spacing: .1em; }
 .hero h1 span { color: var(--gold-light); font-size: .7em; font-style: italic; }
 .hero-date { margin: 18px 0 0; font-size: clamp(15px, 2vw, 18px); letter-spacing: .35em; }
@@ -289,17 +291,12 @@ body.invite-missing .invite-gate { display: grid; }
 .scroll-cue { position: absolute; z-index: 1; bottom: max(30px, env(safe-area-inset-bottom)); left: 50%; display: flex; flex-direction: column; align-items: center; gap: 10px; color: white; font-size: 9px; font-weight: 600; letter-spacing: .25em; text-decoration: none; transform: translateX(-50%);  }
 .scroll-cue i { position: relative; display: block; width: 1px; height: 38px; background: var(--color-inverse-72); }
 .scroll-cue i::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 7px; height: 7px; border-right: 1px solid var(--color-inverse-72); border-bottom: 1px solid var(--color-inverse-72); transform: translateX(-50%) rotate(45deg); }
-html.motion-enabled .hero-content > :where(.hero-kicker, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation) { opacity: 0; transform: translateY(18px); transition: opacity var(--motion-slow) var(--motion-ease), transform var(--motion-slow) var(--motion-ease); }
-html.motion-enabled.is-ready .hero-content > :where(.hero-kicker, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation) { opacity: 1; transform: translateY(0); }
-html.motion-enabled .hero-content > .hero-kicker { transition-delay: 40ms; }
-html.motion-enabled .hero-content > h1 { transition-delay: 160ms; }
-html.motion-enabled .hero-content > .hero-date { transition-delay: 280ms; }
-html.motion-enabled .hero-content > .wedding-countdown { transition-delay: 380ms; }
-html.motion-enabled .hero-content > .hero-schedule { transition-delay: 480ms; }
-html.motion-enabled .hero-content > .hero-invitation { transition-delay: 580ms; }
-html.motion-enabled .scroll-cue { opacity: 0; transition: opacity var(--motion-slow) var(--motion-ease) 680ms; }
+html.motion-enabled .hero-content > :where(.hero-scripture, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation) { opacity: 0; transform: translateY(10px); transition: opacity 600ms var(--motion-ease), transform 600ms var(--motion-ease); }
+html.motion-enabled.is-ready .hero-content > :where(.hero-scripture, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation) { opacity: 1; transform: none; }
+html.motion-enabled .hero-content > h1 { transition-delay: 100ms; }
+html.motion-enabled .hero-content > :where(.hero-date, .hero-schedule, .wedding-countdown, .hero-invitation) { transition-delay: 180ms; }
+html.motion-enabled .scroll-cue { opacity: 0; transition: opacity 600ms var(--motion-ease) 180ms; }
 html.motion-enabled.is-ready .scroll-cue { opacity: 1; }
-html.motion-enabled .hero-image { will-change: transform, opacity; }
 
 .page-section { position: relative; padding: var(--section-spacing) 0; overflow: hidden; scroll-margin-top: calc(var(--header-height) + var(--space-4)); }
 .story-gallery { scroll-margin-top: calc(var(--header-height) + var(--space-4)); }
@@ -839,7 +836,7 @@ body {
   letter-spacing: var(--tracking-wide);
 }
 
-:is(.hero-kicker, .section-header__eyebrow, .label, .invitation-note-kicker, .wedding-venue-copy > p, .online-attendance-copy > p, .guide-copy > p:first-child, .banquet-parking-eyebrow) {
+:is(.section-header__eyebrow, .label, .invitation-note-kicker, .wedding-venue-copy > p, .online-attendance-copy > p, .guide-copy > p:first-child, .banquet-parking-eyebrow) {
   font-family: var(--font-en);
   font-size: var(--text-eyebrow);
   font-weight: var(--weight-semibold);
@@ -1202,8 +1199,13 @@ html.motion-enabled .section-title.reveal.is-visible > :nth-child(3) { transitio
   .nav-more-toggle { display: none; }
   .nav-more-menu { display: contents; visibility: visible; opacity: 1; transform: none; }
   .language-switch--desktop { display: none; }
-  .language-switch--mobile { width: 100%; min-height: 52px; display: flex; justify-content: flex-start; gap: var(--space-2); margin-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
-  .language-switch--mobile button { min-width: 52px; font-size: 14px; }
+  .site-header { max-width: 100vw; }
+  .nav.shell { width: calc(100% - 24px); }
+  .header-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .language-switch--mobile { display: flex; gap: 0; }
+  .language-switch--mobile button { width: 44px; height: 44px; padding: 0; font-size: 14px; opacity: .85; }
+  .language-switch--mobile button:hover,
+  .language-switch--mobile button:focus-visible { opacity: 1; color: var(--color-accent-dark); }
   .hero-media { inset: 0; transform: none !important; }
   .hero { padding-block: var(--space-8); }
   .hero-image { object-position: 52% 42%; }
@@ -1524,7 +1526,7 @@ body {
   color: var(--color-text-muted);
 }
 
-:is(.hero-kicker, .section-header__eyebrow, .label, .invitation-note-kicker, .wedding-venue-copy > p, .online-attendance-copy > p, .guide-copy > p:first-child, .banquet-parking-eyebrow, .fact-card > span:last-child, .ceremony-note > span, .result-welcome, .share-step span, .special-meal) {
+:is(.section-header__eyebrow, .label, .invitation-note-kicker, .wedding-venue-copy > p, .online-attendance-copy > p, .guide-copy > p:first-child, .banquet-parking-eyebrow, .fact-card > span:last-child, .ceremony-note > span, .result-welcome, .share-step span, .special-meal) {
   color: var(--color-accent-dark);
 }
 
@@ -2160,54 +2162,6 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
 }
 
 /* Ceremonial motion system */
-html.motion-enabled .hero-image {
-  opacity: 1;
-  animation: hero-ceremonial-unveil var(--motion-hero) var(--motion-ease) 1 both;
-}
-
-html.motion-enabled .hero-overlay::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(12, 18, 26, .16);
-  opacity: 1;
-  pointer-events: none;
-  transition: opacity 1500ms var(--motion-ease) 100ms;
-}
-
-html.motion-enabled.is-ready .hero-overlay::after { opacity: 0; }
-
-html.motion-enabled .hero-content > :where(.hero-kicker, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation) {
-  transition-duration: 820ms;
-  transition-timing-function: var(--motion-ease);
-}
-
-html.motion-enabled .hero-content > .hero-kicker { transform: translateY(12px); transition-delay: 80ms; }
-html.motion-enabled .hero-content > h1 { transform: translateY(20px) scale(.985); transition-delay: 200ms; }
-html.motion-enabled .hero-content > .hero-date {
-  transform: translateY(16px);
-  letter-spacing: .48em;
-  transition-property: opacity, transform, letter-spacing;
-  transition-delay: 320ms;
-}
-html.motion-enabled .hero-content > .wedding-countdown { transform: translateY(16px); transition-delay: 430ms; }
-html.motion-enabled .hero-content > .hero-schedule { transform: translateY(16px); transition-delay: 540ms; }
-html.motion-enabled .hero-content > .hero-invitation { transform: translateY(16px); transition-delay: 650ms; }
-html.motion-enabled.is-ready .hero-content > h1 { transform: translateY(0) scale(1); }
-html.motion-enabled.is-ready .hero-content > .hero-date { transform: translateY(0); letter-spacing: .35em; }
-html.motion-enabled .scroll-cue { transition-duration: 820ms; transition-delay: 760ms; }
-
-@keyframes hero-ceremonial-unveil {
-  from { opacity: .85; transform: scale(1.06) translate3d(0, .35%, 0); }
-  to { opacity: 1; transform: none; }
-}
-
-html.motion-enabled .hero-image.motion-complete {
-  animation: none;
-  transform: none;
-  will-change: auto;
-}
-
 .initial-motion-complete {
   animation: none;
   transform: none;
@@ -2362,7 +2316,6 @@ html.motion-enabled .site-footer.reveal .site-footer__inner > * { transition-dur
 html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transition-delay: 90ms; }
 
 @media (max-width: 820px) {
-  html.motion-enabled .hero-image { animation: hero-mobile-unveil 1050ms var(--motion-ease) 1 both; }
   html.motion-enabled .section-title.reveal::after { transition-duration: 560ms; }
   html.motion-enabled .section-title.reveal > *,
   html.motion-enabled .reveal > .section-header > * { transition-duration: 620ms; }
@@ -2377,11 +2330,6 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
   .nav-links.open a:nth-child(6) { transition-delay: 250ms; }
   .nav-links.open a:nth-child(7) { transition-delay: 300ms; }
   .nav-links.open a:nth-child(8) { transition-delay: 350ms; }
-}
-
-@keyframes hero-mobile-unveil {
-  from { opacity: .88; transform: translate3d(0, .25%, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2406,7 +2354,7 @@ html.motion-enabled .site-footer.reveal.is-visible .site-footer__meta { transiti
   .section-title.reveal::after,
   .image-shell::after { display: none; }
   .section-header__title { clip-path: none !important; }
-  html.motion-enabled .hero-content > :where(.hero-kicker, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation),
+  html.motion-enabled .hero-content > :where(.hero-scripture, h1, .hero-date, .wedding-countdown, .hero-schedule, .hero-invitation),
   html.motion-enabled .scroll-cue,
   html.motion-enabled .section-title.reveal > *,
   html.motion-enabled .site-footer.reveal .site-footer__inner > *,
@@ -2551,33 +2499,6 @@ html[lang="en"] .gift-note-copy p > span { display: inline; }
   #wedding-info [data-banquet-date] { font-size: 20px; }
 }
 
-/* Theme scripture opens the invitation; the existing portrait Hero follows. */
-.theme-scripture {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100svh;
-  padding: calc(var(--header-height) + 48px + env(safe-area-inset-top, 0px)) 24px calc(112px + env(safe-area-inset-bottom, 0px));
-  color: var(--color-text-primary);
-  background: var(--color-bg);
-  text-align: center;
-  overflow-anchor: none;
-}
-.theme-scripture__content { width: min(960px, 100%); }
-.theme-scripture__eyebrow { margin: 0 0 32px; color: var(--color-accent-dark); font-family: var(--font-en); font-size: 10px; line-height: 1.5; letter-spacing: .24em; }
-.theme-scripture__quote { margin: 0; font-family: var(--font-serif); font-size: clamp(36px, 4vw, 64px); font-weight: 400; line-height: 1.6; letter-spacing: 0; }
-.theme-scripture__quote p { display: flex; flex-direction: column; justify-content: center; min-height: clamp(115.2px, 12.8vw, 204.8px); margin: 0; }
-.theme-scripture__quote span { display: block; }
-html[lang="zh-TW"] .theme-scripture__quote span { white-space: nowrap; word-break: normal; overflow-wrap: normal; line-break: strict; }
-html[lang="en"] .theme-scripture__quote { word-break: normal; overflow-wrap: normal; hyphens: none; }
-.theme-scripture__line { display: block; width: 44px; height: 1px; margin: 28px auto 18px; background: var(--color-accent-dark); }
-.theme-scripture__reference { margin: 0; color: var(--color-accent-dark); font-size: 16px; line-height: 1.6; letter-spacing: .06em; }
-.theme-scripture__cue { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 50%; display: grid; place-items: center; width: 44px; height: 44px; color: var(--color-accent-dark); border-radius: 50%; transform: translateX(-50%); }
-.theme-scripture__cue span { width: 10px; height: 10px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: translateY(-3px) rotate(45deg); }
-#home.hero { height: auto; min-height: 76vh; min-height: 76svh; padding-block: 80px; }
-#home .hero-content { top: 0; }
 body:not(.invite-missing) #site-header { color: var(--color-text-secondary); background: var(--color-bg); border-color: var(--color-border); }
 body:not(.invite-missing) #site-header .brand { color: var(--color-text-primary); }
 body:not(.invite-missing) #site-header .brand span,
@@ -2585,19 +2506,58 @@ body:not(.invite-missing) #site-header .language-switch button.is-active { color
 body:not(.invite-missing) #site-header :is(.nav-link, .nav-more-toggle):hover { color: var(--color-text-primary); }
 body:not(.invite-missing) #site-header .nav-links > .nav-link,
 body:not(.invite-missing) #site-header .nav-more-toggle { color: var(--color-text-secondary); }
-@media (min-width: 821px) {
-  html[lang="en"] .theme-scripture__quote { font-size: clamp(36px, 4vw, 54px); }
+
+/* One invitation Hero: scripture and names share the original wedding portrait. */
+#home.hero {
+  height: auto;
+  min-height: calc(100vh - var(--header-height));
+  min-height: calc(100svh - var(--header-height));
+  margin-top: var(--header-height);
+  padding: 48px 5vw 80px;
+  place-items: center start;
+  color: var(--color-text-primary);
+  background: #e8ded8;
 }
-html.motion-enabled .theme-scripture__content { opacity: 0; transform: translateY(12px); transition: opacity 750ms var(--motion-ease), transform 750ms var(--motion-ease); }
-html.motion-enabled.is-ready .theme-scripture__content { opacity: 1; transform: none; }
+#home .hero-media { inset: 0 0 0 38%; }
+#home .hero-image { object-position: center 20%; animation: none; transform: none; will-change: auto; }
+#home .hero-overlay { background: linear-gradient(90deg, #e8ded8 0%, #e8ded8 32%, rgba(232,222,216,.9) 41%, rgba(232,222,216,.18) 57%, transparent 72%); }
+#home .hero-content { top: 0; width: min(46vw, 760px); text-shadow: none; }
+.hero-scripture { margin-bottom: 30px; }
+.hero-scripture__quote { margin: 0; font-family: var(--font-serif); font-size: clamp(24px, 2.2vw, 32px); font-weight: 400; line-height: 1.6; letter-spacing: 0; font-feature-settings: "halt" 1; }
+.hero-scripture__quote p { margin: 0; }
+.hero-scripture__quote span { display: block; word-break: normal; overflow-wrap: normal; }
+html[lang="zh-TW"] .hero-scripture__quote span { white-space: nowrap; line-break: strict; }
+.hero-scripture__reference { margin: 10px 0 0; color: var(--color-accent-dark); font-size: 13px; letter-spacing: .06em; line-height: 1.5; }
+#home h1 { font-size: clamp(56px, 4.6vw, 78px); line-height: 1.2; letter-spacing: .04em; }
+#home h1 span { color: var(--color-accent-dark); }
+#home .hero-date { margin-top: 16px; letter-spacing: .22em; }
+#home .hero-schedule { margin-top: 10px; color: var(--color-text-primary); font-size: 14px; letter-spacing: .04em; }
+#home .hero-schedule span + span::before { background: var(--color-accent-dark); }
+#home .wedding-countdown { margin-top: 8px; color: var(--color-text-secondary); font-size: 11px; letter-spacing: .04em; }
+#home .hero-invitation { margin-top: 12px; font-size: 13px; }
+#home .scroll-cue { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; justify-content: center; color: var(--color-text-primary); }
+#home .scroll-cue i { width: 10px; height: 10px; background: none; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: translateY(-3px) rotate(45deg); }
+#home .scroll-cue i::after { content: none; }
 @media (max-width: 820px) {
-  .theme-scripture { padding: calc(var(--header-height) + 36px + env(safe-area-inset-top, 0px)) 16px calc(100px + env(safe-area-inset-bottom, 0px)); }
-  .theme-scripture__quote { font-size: clamp(30px, 8vw, 34px); }
-  .theme-scripture__quote p { min-height: 4.8em; }
-  .theme-scripture__eyebrow { margin-bottom: 24px; font-size: 9px; }
-  .theme-scripture__reference { font-size: 14px; }
-  html[lang="en"] .theme-scripture__quote span:last-child { white-space: nowrap; }
+  #home.hero { padding: 28px 20px 76px; place-items: start center; }
+  #home .hero-media { inset: 26% 0 0; }
+  #home .hero-image { object-position: center top; }
+  #home .hero-overlay { background: linear-gradient(180deg, #e8ded8 0%, rgba(232,222,216,.95) 10%, rgba(232,222,216,.5) 30%, transparent 48%); }
+  #home .hero-content { width: min(100%, 560px); }
+  .hero-scripture { margin-bottom: 24px; }
+  .hero-scripture__quote { font-size: clamp(20px, 5.5vw, 24px); line-height: 1.5; }
+  .hero-scripture__reference { margin-top: 8px; font-size: 12px; }
+  #home h1 { font-size: clamp(40px, 11vw, 48px); }
+  #home .hero-date { margin-top: 10px; font-size: 14px; }
+  #home .hero-schedule { flex-direction: row; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+  #home .hero-schedule span + span { padding-left: 13px; }
+  #home .hero-schedule span + span::before { display: block; }
+  html[lang="en"] #home .hero-schedule { flex-direction: column; gap: 2px; }
+  html[lang="en"] #home .hero-schedule span + span { padding-left: 0; }
+  html[lang="en"] #home .hero-schedule span + span::before { display: none; }
+  #home .hero-invitation { margin-top: 8px; font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  html.motion-enabled .theme-scripture__content { opacity: 1; transform: none; transition: none; }
+  html.motion-enabled #home .hero-content > *, html.motion-enabled #home .scroll-cue { opacity: 1; transform: none; transition: none; }
+  html.motion-enabled #home .scroll-cue { transform: translateX(-50%); }
 }

@@ -85,15 +85,16 @@
       <div class="site-brand">
         <a class="brand" href="#home" aria-label="子靖與勤萱，回到首頁">子靖 <span>＆</span> 勤萱</a>
       </div>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="開啟選單">
-        <span></span><span></span>
-      </button>
-      <div class="nav-links" id="nav-links">
+      <div class="header-actions">
         <div class="language-switch language-switch--mobile" role="group" aria-label="選擇語言">
-          <button type="button" data-language-option="zh-TW" aria-pressed="true">中文</button>
-          <span aria-hidden="true"></span>
-          <button type="button" data-language-option="en" aria-pressed="false">EN</button>
+          <button type="button" data-language-option="zh-TW" aria-pressed="true" aria-label="切換至中文">中文</button>
+          <button type="button" data-language-option="en" aria-pressed="false" aria-label="Switch to English">EN</button>
         </div>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="開啟選單">
+          <span></span><span></span>
+        </button>
+      </div>
+      <div class="nav-links" id="nav-links">
         <a class="nav-link nav-rsvp-primary" href="#rsvp" data-invite="nav:rsvp">出席回覆</a>
         <div class="nav-more" id="nav-more">
           <button class="nav-more-toggle nav-link" id="nav-more-toggle" type="button" aria-expanded="false" aria-controls="nav-more-menu" aria-haspopup="menu">更多</button>
@@ -123,35 +124,25 @@
   </button>
 
   <main>
-    <section class="theme-scripture" id="theme-scripture" aria-label="婚禮主題經文" data-i18n-aria-label="scripture.region" data-invite="section:theme-scripture">
-      <div class="theme-scripture__content">
-        <p class="theme-scripture__eyebrow">OUR THEME SCRIPTURE</p>
-        <blockquote class="theme-scripture__quote">
-          <p><span data-theme-scripture-text="lineOne">「愛的烈焰是火的烈焰，</span><span data-theme-scripture-text="lineTwo">是耶和華的熊熊烈火。」</span></p>
-        </blockquote>
-        <span class="theme-scripture__line" aria-hidden="true"></span>
-        <p class="theme-scripture__reference" data-theme-scripture-text="reference">—— 雅歌 8:6</p>
-      </div>
-      <a class="theme-scripture__cue" href="#home" aria-label="繼續閱讀婚禮邀請" data-i18n-aria-label="scripture.continue">
-        <span aria-hidden="true"></span>
-      </a>
-    </section>
-
     <section class="hero" id="home" aria-labelledby="hero-title" data-invite="section:hero">
       <div class="hero-media" aria-hidden="true">
         <img class="hero-image" src="assets/hero.jpg" alt="" aria-hidden="true" width="1412" height="1802" decoding="async" fetchpriority="high">
       </div>
       <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-content">
-        <p class="hero-kicker">WE'RE GETTING MARRIED</p>
+        <div class="hero-scripture" role="group" aria-label="婚禮主題經文" data-i18n-aria-label="scripture.region">
+          <blockquote class="hero-scripture__quote">
+            <p><span data-hero-scripture-text="lineOne">「愛的烈焰是火的烈焰，</span><span data-hero-scripture-text="lineTwo">是耶和華的熊熊烈火。」</span></p>
+          </blockquote>
+          <p class="hero-scripture__reference" data-hero-scripture-text="reference">雅歌 8:6</p>
+        </div>
         <h1 id="hero-title">子靖 <span>＆</span> 勤萱</h1>
         <p class="hero-date">2026.12.26</p>
-        <p class="wedding-countdown" id="wedding-countdown" aria-live="polite"></p>
         <div class="hero-schedule" id="hero-schedule" aria-label="邀請行程"></div>
+        <p class="wedding-countdown" id="wedding-countdown" aria-live="polite"></p>
         <p class="hero-invitation">誠摯邀請您</p>
       </div>
-      <a class="scroll-cue" href="#invitation-note">
-        <span>往下滑</span>
+      <a class="scroll-cue" href="#invitation-note" aria-label="繼續閱讀婚禮邀請" data-i18n-aria-label="hero.continue">
         <i aria-hidden="true"></i>
       </a>
     </section>

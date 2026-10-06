@@ -18,7 +18,7 @@ const t = (key, values = {}) => i18n.t(key, values);
 const INVITE_CONFIG = {
   wedding: {
     heroKeys: ["hero.weddingSchedule"],
-    sections: ["theme-scripture", "hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "gallery", "share", "faq"],
     hiddenSections: ["wedding-info", "venue", "parking", "seating"],
     content: ["ceremony-venue"],
@@ -26,7 +26,7 @@ const INVITE_CONFIG = {
   },
   full: {
     heroKeys: ["hero.weddingSchedule", "hero.banquetSchedule"],
-    sections: ["theme-scripture", "hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     hiddenSections: [],
     content: ["ceremony-venue", "banquet-faq"],
@@ -34,7 +34,7 @@ const INVITE_CONFIG = {
   },
   online: {
     heroKeys: ["hero.zoomSchedule", "hero.onlineSchedule"],
-    sections: ["theme-scripture", "hero", "rsvp", "ceremony-info", "gallery", "share"],
+    sections: ["hero", "rsvp", "ceremony-info", "gallery", "share"],
     navigation: ["rsvp", "ceremony-info", "gallery", "share"],
     hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
     content: ["online-attendance"],
@@ -44,8 +44,6 @@ const INVITE_CONFIG = {
 
 const header = document.querySelector('#site-header');
 const hero = document.querySelector('#home');
-const heroMedia = document.querySelector('.hero-media');
-const heroImage = document.querySelector('.hero-image');
 const menuButton = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('#nav-links');
 const navMore = document.querySelector('#nav-more');
@@ -1128,8 +1126,6 @@ document.addEventListener('keydown', (event) => {
 });
 
 let resizeTicking = false;
-let heroInView = true;
-let lastHeroParallaxOffset = null;
 
 function requestResizeUpdate() {
   if (resizeTicking) return;
@@ -1169,16 +1165,6 @@ function updateScrollEffects() {
   const backToTopThreshold = Math.max(500, window.innerHeight * .7);
   backToTopButton.classList.toggle('is-visible', currentScrollY > backToTopThreshold && !bottomCtaIntersections.size);
 
-  if (window.innerWidth > 820 && heroInView && !reducedMotionQuery.matches && !document.body.classList.contains('invite-missing')) {
-    const parallaxOffset = Math.min(26, Math.max(0, currentScrollY * .055));
-    if (parallaxOffset !== lastHeroParallaxOffset) {
-      heroMedia.style.transform = `translate3d(0, ${parallaxOffset}px, 0)`;
-      lastHeroParallaxOffset = parallaxOffset;
-    }
-  } else if (lastHeroParallaxOffset !== null) {
-    heroMedia.style.transform = '';
-    lastHeroParallaxOffset = null;
-  }
 
   scrollTicking = false;
 }
@@ -2014,14 +2000,12 @@ if (carouselIsEnabled) {
 }
 
 function initializeViewportAnimations() {
-  const animationTargets = [hero, ...document.querySelectorAll('.image-shell, .gallery-media')]
+  const animationTargets = [...document.querySelectorAll('.image-shell, .gallery-media')]
     .filter((element) => element && !element.closest('[hidden]') && element.getClientRects().length > 0);
 
-  heroInView = animationTargets.includes(hero);
   if (!('IntersectionObserver' in window)) {
     const syncFallbackAnimationState = () => {
       animationTargets.forEach((element) => element.classList.toggle('is-animation-visible', !document.hidden));
-      heroInView = animationTargets.includes(hero) && !document.hidden;
       requestScrollUpdate();
     };
     syncFallbackAnimationState();
@@ -2034,7 +2018,6 @@ function initializeViewportAnimations() {
     targetVisibility.forEach((isIntersecting, element) => {
       const animationIsVisible = isIntersecting && !document.hidden;
       element.classList.toggle('is-animation-visible', animationIsVisible);
-      if (element === hero) heroInView = animationIsVisible;
     });
     requestScrollUpdate();
   };
@@ -2524,6 +2507,15 @@ function syncDynamicLanguage() {
   if (!rsvpSuccess.hidden) renderRsvpSuccess();
   renderOnlineDetails();
   renderOnlineMessageLanguage();
+  // Mobile utility labels describe the destination language, independent of the current locale.
+  const mobileLanguageButtons = [...document.querySelectorAll('.language-switch--mobile [data-language-option]')];
+  const mobileLanguageFocused = mobileLanguageButtons.includes(document.activeElement);
+  mobileLanguageButtons.forEach((button) => {
+    button.setAttribute('aria-label', button.dataset.languageOption === 'en' ? 'Switch to English' : '切換至中文');
+  });
+  if (mobileLanguageFocused) {
+    mobileLanguageButtons.find((button) => button.dataset.languageOption !== i18n.getLanguage()).focus({ preventScroll: true });
+  }
   setMenu(menuButton.getAttribute('aria-expanded') === 'true');
   setLookupLoading(lookupButton.classList.contains('loading'));
   if (lookupState?.type === 'success') showSeatResult(lookupState.name, lookupState.seat, false);
@@ -2549,11 +2541,9 @@ document.querySelectorAll('.landing-image, .landing-brand, .landing-title, .land
   element.addEventListener('animationend', () => element.classList.add('initial-motion-complete'), { once: true });
 });
 
-heroImage.addEventListener('animationend', () => heroImage.classList.add('motion-complete'), { once: true });
 reducedMotionQuery.addEventListener?.('change', (event) => {
   document.documentElement.classList.toggle('motion-enabled', !event.matches);
   document.documentElement.classList.add('is-ready');
-  if (event.matches) heroImage.classList.add('motion-complete');
 });
 
 if (initialNavigation.hash && initialNavigation.type !== 'back_forward') {
