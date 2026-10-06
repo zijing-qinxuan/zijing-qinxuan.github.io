@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Wedding Scripture Kai";
+  src: url("assets/fonts/Scripture-Kai.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --color-bg: #f7f4ed;
   --color-bg-soft: #faf8f3;
@@ -2565,26 +2573,34 @@ body:not(.invite-missing) #site-header :is(.nav-link, .nav-more-toggle):hover { 
 body:not(.invite-missing) #site-header .nav-links > .nav-link,
 body:not(.invite-missing) #site-header .nav-more-toggle { color: var(--color-text-secondary); }
 
-/* A natural-height scripture interlude immediately after the original portrait Hero. */
-.theme-scripture { padding: 100px 24px; color: var(--color-text-primary); background: var(--color-bg); text-align: center; scroll-margin-top: var(--header-height); }
-.theme-scripture__content { width: min(700px, 100%); margin-inline: auto; }
-.theme-scripture__eyebrow { margin: 0 0 20px; color: var(--color-accent-dark); font-family: var(--font-en); font-size: 11px; line-height: 1.5; letter-spacing: .24em; }
-.theme-scripture__quote { margin: 0; font-family: var(--font-serif); font-size: clamp(30px, 2.5vw, 38px); line-height: 1.6; font-weight: 400; font-feature-settings: "halt" 1; }
-html[lang="zh-TW"] :is(.theme-scripture__quote, .theme-scripture__reference) {
-  font-family: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "KaiTi", "STKaiti", serif;
-}
+/* A compact scripture interlude, matched against the supplied invitation reference. */
+.theme-scripture { position: relative; overflow: hidden; padding: 32px 24px 28px; color: #67574a; background: #f6f1e9; text-align: center; scroll-margin-top: var(--header-height); }
+.theme-scripture::before,
+.theme-scripture::after { content: ""; position: absolute; width: 360px; height: 190px; border: .6px solid rgba(176, 146, 98, .22); border-radius: 50%; pointer-events: none; }
+.theme-scripture::before { top: -126px; left: -286px; transform: rotate(-12deg); }
+.theme-scripture::after { right: -128px; bottom: -170px; transform: rotate(10deg); }
+.theme-scripture__content { position: relative; z-index: 1; width: min(680px, 100%); margin-inline: auto; }
+.theme-scripture__quote { margin: 0; font-family: var(--font-serif); font-size: clamp(30px, 2.4vw, 34px); line-height: 1.6; font-weight: 400; font-feature-settings: "halt" 1; }
+html[lang="zh-TW"] :is(.theme-scripture__quote, .theme-scripture__reference) { font-family: "Kaiti TC", "Wedding Scripture Kai", serif; font-weight: 400; font-synthesis: none; }
 .theme-scripture__quote p { margin: 0; }
-.theme-scripture__quote span { display: block; word-break: normal; overflow-wrap: normal; letter-spacing: 0; }
-html[lang="zh-TW"] .theme-scripture__quote span { white-space: nowrap; line-break: strict; }
-.theme-scripture__line { display: block; width: 40px; height: 1px; margin: 22px auto 16px; background: var(--color-accent); }
-.theme-scripture__reference { margin: 0; color: var(--color-accent-dark); font-size: 14px; line-height: 1.5; letter-spacing: .06em; }
+.theme-scripture__quote span { display: block; word-break: normal; overflow-wrap: normal; letter-spacing: .02em; }
+html[lang="zh-TW"] .theme-scripture__quote span { white-space: nowrap; line-break: strict; letter-spacing: .05em; }
+.theme-scripture__ornament { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 21px; color: var(--color-accent); }
+.theme-scripture__line { display: block; flex: 0 0 72px; height: .6px; background: currentColor; opacity: .32; }
+.theme-scripture__hearts { display: block; width: 30px; flex: 0 0 30px; height: 14px; stroke: currentColor; stroke-width: .65; stroke-linecap: round; stroke-linejoin: round; }
+.theme-scripture__reference { margin: 10px 0 0; color: #927b5f; font-size: 12px; font-weight: 400; line-height: 1.5; letter-spacing: .08em; }
 html.motion-enabled .theme-scripture__content.reveal { transform: translateY(10px); transition: opacity 600ms var(--motion-ease), transform 600ms var(--motion-ease); }
 html.motion-enabled .theme-scripture__content.reveal.is-visible { transform: none; }
 @media (max-width: 820px) {
-  .theme-scripture { padding: 72px 5%; }
-  .theme-scripture__eyebrow { margin-bottom: 16px; font-size: 10px; }
-  .theme-scripture__quote { font-size: clamp(24px, 6.4vw, 30px); }
-  .theme-scripture__reference { font-size: 13px; }
+  .theme-scripture { padding: 36px 5vw 32px; }
+  .theme-scripture::before,
+  .theme-scripture::after { width: 260px; height: 144px; }
+  .theme-scripture::before { top: -35px; left: -216px; }
+  .theme-scripture::after { right: -92px; bottom: -130px; }
+  .theme-scripture__quote { font-size: clamp(21px, 5.6vw, 26px); }
+  html[lang="zh-TW"] .theme-scripture__quote span { letter-spacing: .035em; }
+  .theme-scripture__line { flex-basis: 48px; }
+  .theme-scripture__reference { font-size: 11px; }
   html[lang="en"] .theme-scripture__quote span:last-child { white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -19,7 +19,7 @@ const translations = {
     },
     scripture: {
       region: '婚禮主題經文',
-      lineOne: '「愛的烈焰是火的烈焰，', lineTwo: '是耶和華的熊熊烈火。」', reference: '雅歌 8:6'
+      lineOne: '愛的烈焰是火的烈焰，', lineTwo: '是耶和華的熊熊烈火。', reference: '雅歌 8:6'
     },
     hero: {
       continue: '繼續閱讀婚禮邀請',
@@ -111,7 +111,7 @@ const translations = {
     },
     scripture: {
       region: 'Our theme scripture',
-      lineOne: '“Love, its flames are a blazing fire,', lineTwo: 'the flame of Jah.”', reference: 'Song of Solomon 8:6'
+      lineOne: 'Love, its flames are a blazing fire,', lineTwo: 'the flame of Jah.', reference: 'Song of Solomon 8:6'
     },
     hero: {
       continue: 'Continue reading the invitation',
