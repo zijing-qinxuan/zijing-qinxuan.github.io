@@ -373,8 +373,8 @@ function formatWeddingTime(datetime, language = currentLanguage()) {
 
 function applyFormattedValues() {
   const language = currentLanguage();
-  document.querySelectorAll('[data-hero-scripture-text]').forEach(element => {
-    element.textContent = getTranslation(language, `scripture.${element.dataset.heroScriptureText}`);
+  document.querySelectorAll('[data-scripture-text]').forEach(element => {
+    element.textContent = getTranslation(language, `scripture.${element.dataset.scriptureText}`);
   });
   document.querySelectorAll('#ceremony-info .fact-card strong, #wedding-info [data-banquet-date-full]').forEach((element) => {
     const date = formatWeddingDate(language);

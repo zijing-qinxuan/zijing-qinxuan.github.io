@@ -18,7 +18,7 @@ const t = (key, values = {}) => i18n.t(key, values);
 const INVITE_CONFIG = {
   wedding: {
     heroKeys: ["hero.weddingSchedule"],
-    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
+    sections: ["hero", "theme-scripture", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "gallery", "share", "faq"],
     hiddenSections: ["wedding-info", "venue", "parking", "seating"],
     content: ["ceremony-venue"],
@@ -26,7 +26,7 @@ const INVITE_CONFIG = {
   },
   full: {
     heroKeys: ["hero.weddingSchedule", "hero.banquetSchedule"],
-    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    sections: ["hero", "theme-scripture", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     hiddenSections: [],
     content: ["ceremony-venue", "banquet-faq"],
@@ -34,7 +34,7 @@ const INVITE_CONFIG = {
   },
   online: {
     heroKeys: ["hero.zoomSchedule", "hero.onlineSchedule"],
-    sections: ["hero", "rsvp", "ceremony-info", "gallery", "share"],
+    sections: ["hero", "theme-scripture", "rsvp", "ceremony-info", "gallery", "share"],
     navigation: ["rsvp", "ceremony-info", "gallery", "share"],
     hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
     content: ["online-attendance"],
@@ -44,6 +44,7 @@ const INVITE_CONFIG = {
 
 const header = document.querySelector('#site-header');
 const hero = document.querySelector('#home');
+const heroImage = document.querySelector('.hero-image');
 const menuButton = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('#nav-links');
 const navMore = document.querySelector('#nav-more');
@@ -289,10 +290,9 @@ async function copyOnlineDetail(button) {
 
 if (inviteMode === 'online') {
   document.body.classList.add('online-invitation');
-  hero.after(quickNavWrapper);
+  document.querySelector('#theme-scripture').after(quickNavWrapper);
   quickNavWrapper.after(document.querySelector('#ceremony-info'));
   document.querySelector('#ceremony-info .wedding-facts').hidden = true;
-  document.querySelector('.scroll-cue').href = '#ceremony-info';
   document.querySelectorAll('[data-zoom-copy]').forEach((button) => {
     button.addEventListener('click', () => copyOnlineDetail(button));
   });
@@ -2541,8 +2541,10 @@ document.querySelectorAll('.landing-image, .landing-brand, .landing-title, .land
   element.addEventListener('animationend', () => element.classList.add('initial-motion-complete'), { once: true });
 });
 
+heroImage.addEventListener('animationend', () => heroImage.classList.add('motion-complete'), { once: true });
 reducedMotionQuery.addEventListener?.('change', (event) => {
   document.documentElement.classList.toggle('motion-enabled', !event.matches);
+  if (event.matches) heroImage.classList.add('motion-complete');
   document.documentElement.classList.add('is-ready');
 });
 
