@@ -18,7 +18,7 @@ const t = (key, values = {}) => i18n.t(key, values);
 const INVITE_CONFIG = {
   wedding: {
     heroKeys: ["hero.weddingSchedule"],
-    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
+    sections: ["theme-scripture", "hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "gallery", "share", "faq"],
     hiddenSections: ["wedding-info", "venue", "parking", "seating"],
     content: ["ceremony-venue"],
@@ -26,7 +26,7 @@ const INVITE_CONFIG = {
   },
   full: {
     heroKeys: ["hero.weddingSchedule", "hero.banquetSchedule"],
-    sections: ["hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
+    sections: ["theme-scripture", "hero", "invitation-note", "rsvp", "gift-note", "ceremony-info", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     navigation: ["rsvp", "ceremony-info", "ceremony-parking", "wedding-info", "venue", "parking", "seating", "gallery", "share", "faq"],
     hiddenSections: [],
     content: ["ceremony-venue", "banquet-faq"],
@@ -34,7 +34,7 @@ const INVITE_CONFIG = {
   },
   online: {
     heroKeys: ["hero.zoomSchedule", "hero.onlineSchedule"],
-    sections: ["hero", "rsvp", "ceremony-info", "gallery", "share"],
+    sections: ["theme-scripture", "hero", "rsvp", "ceremony-info", "gallery", "share"],
     navigation: ["rsvp", "ceremony-info", "gallery", "share"],
     hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
     content: ["online-attendance"],

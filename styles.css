@@ -2550,3 +2550,54 @@ html[lang="en"] .gift-note-copy p > span { display: inline; }
   #wedding-info .fact-card > :is(strong, time) { min-height: 54px; }
   #wedding-info [data-banquet-date] { font-size: 20px; }
 }
+
+/* Theme scripture opens the invitation; the existing portrait Hero follows. */
+.theme-scripture {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(var(--header-height) + 48px + env(safe-area-inset-top, 0px)) 24px calc(112px + env(safe-area-inset-bottom, 0px));
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  text-align: center;
+  overflow-anchor: none;
+}
+.theme-scripture__content { width: min(960px, 100%); }
+.theme-scripture__eyebrow { margin: 0 0 32px; color: var(--color-accent-dark); font-family: var(--font-en); font-size: 10px; line-height: 1.5; letter-spacing: .24em; }
+.theme-scripture__quote { margin: 0; font-family: var(--font-serif); font-size: clamp(36px, 4vw, 64px); font-weight: 400; line-height: 1.6; letter-spacing: 0; }
+.theme-scripture__quote p { display: flex; flex-direction: column; justify-content: center; min-height: clamp(115.2px, 12.8vw, 204.8px); margin: 0; }
+.theme-scripture__quote span { display: block; }
+html[lang="zh-TW"] .theme-scripture__quote span { white-space: nowrap; word-break: normal; overflow-wrap: normal; line-break: strict; }
+html[lang="en"] .theme-scripture__quote { word-break: normal; overflow-wrap: normal; hyphens: none; }
+.theme-scripture__line { display: block; width: 44px; height: 1px; margin: 28px auto 18px; background: var(--color-accent-dark); }
+.theme-scripture__reference { margin: 0; color: var(--color-accent-dark); font-size: 16px; line-height: 1.6; letter-spacing: .06em; }
+.theme-scripture__cue { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 50%; display: grid; place-items: center; width: 44px; height: 44px; color: var(--color-accent-dark); border-radius: 50%; transform: translateX(-50%); }
+.theme-scripture__cue span { width: 10px; height: 10px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: translateY(-3px) rotate(45deg); }
+#home.hero { height: auto; min-height: 76vh; min-height: 76svh; padding-block: 80px; }
+#home .hero-content { top: 0; }
+body:not(.invite-missing) #site-header { color: var(--color-text-secondary); background: var(--color-bg); border-color: var(--color-border); }
+body:not(.invite-missing) #site-header .brand { color: var(--color-text-primary); }
+body:not(.invite-missing) #site-header .brand span,
+body:not(.invite-missing) #site-header .language-switch button.is-active { color: var(--color-accent-dark); }
+body:not(.invite-missing) #site-header :is(.nav-link, .nav-more-toggle):hover { color: var(--color-text-primary); }
+body:not(.invite-missing) #site-header .nav-links > .nav-link,
+body:not(.invite-missing) #site-header .nav-more-toggle { color: var(--color-text-secondary); }
+@media (min-width: 821px) {
+  html[lang="en"] .theme-scripture__quote { font-size: clamp(36px, 4vw, 54px); }
+}
+html.motion-enabled .theme-scripture__content { opacity: 0; transform: translateY(12px); transition: opacity 750ms var(--motion-ease), transform 750ms var(--motion-ease); }
+html.motion-enabled.is-ready .theme-scripture__content { opacity: 1; transform: none; }
+@media (max-width: 820px) {
+  .theme-scripture { padding: calc(var(--header-height) + 36px + env(safe-area-inset-top, 0px)) 16px calc(100px + env(safe-area-inset-bottom, 0px)); }
+  .theme-scripture__quote { font-size: clamp(30px, 8vw, 34px); }
+  .theme-scripture__quote p { min-height: 4.8em; }
+  .theme-scripture__eyebrow { margin-bottom: 24px; font-size: 9px; }
+  .theme-scripture__reference { font-size: 14px; }
+  html[lang="en"] .theme-scripture__quote span:last-child { white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.motion-enabled .theme-scripture__content { opacity: 1; transform: none; transition: none; }
+}
