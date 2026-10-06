@@ -1,5 +1,7 @@
 # Gallery progress and online schedule — 2026-09-24
 
+> 照片數更新：使用者已確認正式相簿為 16 張，不需補足 22 或 23 張。下方舊照片數為當時測試紀錄，已不作為目前發布要求。
+
 ## Scope
 - Replace the dots and circular return-to-first button with `.gallery-progress`, `__count`, `__track`, `__bar`, and an `__status` live region.
 - `setCarouselActiveState()` calls `updateGalleryProgress()`: zero-padded active index + 1 / actual slide count, and `transform: scaleX(current / total)`.

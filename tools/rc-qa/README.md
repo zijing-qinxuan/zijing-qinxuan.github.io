@@ -16,7 +16,7 @@ The CDP harness fulfills `http://wedding-rc.test/` from this checkout. RSVP POST
 
 Use dedicated browser profiles. Do not run two harnesses against the same debugging port simultaneously. Each run uses a fresh document URL and disables browser cache. JSON and screenshots go to `/private/tmp/wedding-rc-qa-9225`, `/private/tmp/wedding-rc-qa-9230`, or `/private/tmp/wedding-rc-safari`. An `--extra` run writes a separate JSON file from the size matrix.
 
-The current verified fixture contains **22** gallery items. The request specified 23; the missing original must be supplied and then the fixture count and tests updated. Do not duplicate an existing photo to satisfy that count.
+The current gallery contains **16** photos, as confirmed by the owner. Gallery counts, progress labels and circular-navigation checks expect 16 items; no additional photos are required.
 
 Emulated mobile viewports do not constitute real iPhone Safari/Edge/Chrome testing. Real RSVP row creation/update, account upload permissions, final seat assignments and the online wedding URL require owner verification.
 

@@ -2570,6 +2570,9 @@ body:not(.invite-missing) #site-header .nav-more-toggle { color: var(--color-tex
 .theme-scripture__content { width: min(700px, 100%); margin-inline: auto; }
 .theme-scripture__eyebrow { margin: 0 0 20px; color: var(--color-accent-dark); font-family: var(--font-en); font-size: 11px; line-height: 1.5; letter-spacing: .24em; }
 .theme-scripture__quote { margin: 0; font-family: var(--font-serif); font-size: clamp(30px, 2.5vw, 38px); line-height: 1.6; font-weight: 400; font-feature-settings: "halt" 1; }
+html[lang="zh-TW"] :is(.theme-scripture__quote, .theme-scripture__reference) {
+  font-family: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "KaiTi", "STKaiti", serif;
+}
 .theme-scripture__quote p { margin: 0; }
 .theme-scripture__quote span { display: block; word-break: normal; overflow-wrap: normal; letter-spacing: 0; }
 html[lang="zh-TW"] .theme-scripture__quote span { white-space: nowrap; line-break: strict; }

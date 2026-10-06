@@ -26,7 +26,7 @@ for(const width of (process.argv.includes('--probe')?[1680]:[1280,1440,1680]))fo
   await ev(`(()=>{document.querySelector('[data-quick-nav="gallery"]').click();return true})()`);await sleep(1500);
   const before=await ev(`({y:scrollY,h:document.documentElement.scrollHeight,index:carouselActiveIndex})`);
   await ev(`(()=>{document.querySelector('.wedding-carousel__arrow--next').click();return true})()`);await sleep(650);
-  check(await ev(`carouselActiveIndex===${(before.index+1)%22}`),'next');check(Math.abs(await ev('scrollY')-before.y)<2,'carousel scroll');check(await ev('document.documentElement.scrollHeight')===before.h,'carousel height');
+  check(await ev(`carouselActiveIndex===${(before.index+1)%16}`),'next');check(Math.abs(await ev('scrollY')-before.y)<2,'carousel scroll');check(await ev('document.documentElement.scrollHeight')===before.h,'carousel height');
   await ev(`(()=>{document.querySelector('.wedding-carousel__slide.is-active button').click();return true})()`);
   for(let n=0;n<100;n++){if(await ev(`!document.querySelector('#gallery-lightbox').hidden`))break;await sleep(50);}
   check(await ev(`!document.querySelector('#gallery-lightbox').hidden`),'lightbox opens');

@@ -30,7 +30,7 @@ for a in p.images:assert ('width' in a and 'height' in a),a
 for n in ['script.js','i18n.js','assets/wedding-gallery/wedding-gallery-data.js','tools/wedding-gallery-builder/build-gallery.js']:
  subprocess.run(['node','--check',str(ROOT/n)],check=True)
 js='''const fs=require('fs'),vm=require('vm');const c={window:{}};vm.createContext(c);vm.runInContext(fs.readFileSync('assets/wedding-gallery/wedding-gallery-data.js','utf8'),c);console.log(JSON.stringify(c.window.weddingGallery));'''
-gallery=json.loads(subprocess.check_output(['node','-e',js],cwd=ROOT,text=True));assert len(gallery)==22
+gallery=json.loads(subprocess.check_output(['node','-e',js],cwd=ROOT,text=True));assert len(gallery)==16
 try:
  from PIL import Image
  for a in p.images:
