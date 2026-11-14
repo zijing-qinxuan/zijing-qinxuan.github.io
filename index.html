@@ -361,7 +361,9 @@
         <article class="glass-card online-attendance-card reveal" data-invite="content:online-attendance">
           <div class="online-status-mark" aria-hidden="true"><span></span></div>
           <div class="online-attendance-copy">
-            <h3 id="online-wedding-date">2026 年 12 月 26 日（六）</h3>
+            <h3 data-online-text="invitationTitle">線上婚禮邀請</h3>
+            <p class="online-invitation-intro" data-online-text="invitationIntro">誠摯邀請您在線上見證我們的婚禮。</p>
+            <p id="online-wedding-date">2026 年 12 月 26 日（六）</p>
             <div class="online-schedule" aria-label="線上婚禮時間">
               <div>
                 <time datetime="2026-12-26T14:00:00+08:00">14:00</time>
@@ -372,10 +374,11 @@
                 <span data-online-text="begins">婚禮開始</span>
               </div>
             </div>
+            <p class="online-timezone" data-online-text="timezone">時區：Asia/Taipei（台灣時間）</p>
           </div>
           <section class="online-zoom-details" aria-labelledby="online-zoom-title">
             <h3 id="online-zoom-title" data-online-text="zoomDetails">Zoom 資訊</h3>
-            <a class="button online-meeting-button" target="_blank" rel="noopener noreferrer" data-online-text="joinZoom" hidden>加入 Zoom</a>
+            <a class="button online-meeting-button" target="_blank" rel="noopener noreferrer" data-online-text="joinZoom" hidden>加入線上婚禮</a>
             <p id="online-zoom-pending" data-online-text="unavailable">線上參加連結將於婚禮前提供</p>
             <p class="online-zoom-link" hidden>
               <span data-online-text="zoomLink">Zoom 參加連結</span>
@@ -387,7 +390,7 @@
                 <dd><span class="online-zoom-value"></span><button type="button" data-zoom-copy="meetingId" data-online-text="copy">複製</button></dd>
               </div>
               <div data-zoom-field="passcode" hidden>
-                <dt data-online-text="passcode">密碼</dt>
+                <dt data-online-text="passcode">會議密碼</dt>
                 <dd><span class="online-zoom-value"></span><button type="button" data-zoom-copy="passcode" data-online-text="copy">複製</button></dd>
               </div>
             </dl>

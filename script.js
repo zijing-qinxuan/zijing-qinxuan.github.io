@@ -1,8 +1,8 @@
-// Fill in Zoom details here. Empty values are omitted from the invitation.
+// Replace zoomUrl here if Zoom provides an official full invitation link later.
 const onlineWedding = {
-  zoomUrl: "",
-  meetingId: "",
-  passcode: ""
+  zoomUrl: "https://zoom.us/j/8503973153",
+  meetingId: "8503973153",
+  passcode: "191426"
 };
 // Enable only after verifying that invite=online accepts an empty phone and
 // appends by submissionId (never upserts by name + phone). No backend code is in this repo.
@@ -34,9 +34,9 @@ const INVITE_CONFIG = {
   },
   online: {
     heroKeys: ["hero.zoomSchedule", "hero.onlineSchedule"],
-    sections: ["hero", "theme-scripture", "rsvp", "ceremony-info", "gallery", "share"],
-    navigation: ["rsvp", "ceremony-info", "gallery", "share"],
-    hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq"],
+    sections: ["hero", "theme-scripture", "rsvp", "ceremony-info", "gallery"],
+    navigation: ["rsvp", "ceremony-info", "gallery"],
+    hiddenSections: ["invitation-note", "gift-note", "ceremony-parking", "ceremony-notes", "wedding-info", "venue", "parking", "seating", "faq", "share"],
     content: ["online-attendance"],
     ceremonyEntryKey: "hero.onlineEntry"
   }
@@ -230,7 +230,8 @@ function renderOnlineDetails() {
   document.querySelectorAll('[data-online-text]').forEach((element) => {
     element.textContent = t(`online.${element.dataset.onlineText}`);
   });
-  document.querySelector('#online-wedding-date').textContent = i18n.formatWeddingDate().replace('（六）', '').trim();
+  document.querySelector('#online-wedding-date').textContent = i18n.formatWeddingDate();
+  document.querySelector('.online-schedule').setAttribute('aria-label', t('online.scheduleLabel'));
   const zoomUrl = onlineWedding.zoomUrl.trim();
   let usableUrl = '';
   try {
@@ -249,7 +250,10 @@ function renderOnlineDetails() {
   ['meetingId', 'passcode'].forEach((key) => {
     const row = document.querySelector(`[data-zoom-field="${key}"]`);
     row.hidden = !onlineWedding[key].trim();
-    row.querySelector('.online-zoom-value').textContent = onlineWedding[key].trim();
+    const value = onlineWedding[key].trim();
+    row.querySelector('.online-zoom-value').textContent = key === 'meetingId' && /^\d{10}$/.test(value)
+      ? value.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1 $2 $3')
+      : value;
     row.querySelector('button').setAttribute('aria-label', t(key === 'meetingId' ? 'online.copyMeetingId' : 'online.copyPasscode'));
   });
   const status = document.querySelector('#online-copy-status');
