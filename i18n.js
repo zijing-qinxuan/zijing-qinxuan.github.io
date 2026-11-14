@@ -48,7 +48,7 @@ const translations = {
       copiedMeetingId: "已複製會議 ID",
       copiedPasscode: "已複製會議密碼",
       copyFailed: "無法自動複製，請長按或選取上方文字複製。",
-      zoomOpens: "Zoom 開放進入", begins: "婚禮開始",
+      zoomOpens: "Zoom 開放", begins: "婚禮開始",
       messageTitle: "留下祝福",
       messageIntro: "如果你願意，也可以在這裡留下想對我們說的話。",
       messageLabel: "留言／祝福",
@@ -129,7 +129,7 @@ const translations = {
     },
     online: {
       invitationTitle: "Online Wedding Invitation",
-      invitationIntro: "We warmly invite you to witness our wedding online.",
+      invitationIntro: "We warmly invite you to witness our wedding ceremony online.",
       scheduleLabel: "Online wedding schedule",
       timezone: "Time zone: Asia/Taipei (Taiwan time)",
       ceremony: "Online Ceremony",

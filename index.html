@@ -358,16 +358,16 @@
           <a class="button" href="https://maps.app.goo.gl/ANNKAeLfyfp5PV898" target="_blank" rel="noopener noreferrer">開啟婚禮場地導航</a>
         </article>
 
-        <article class="glass-card online-attendance-card reveal" data-invite="content:online-attendance">
-          <div class="online-status-mark" aria-hidden="true"><span></span></div>
+        <article class="glass-card online-attendance-card reveal" data-invite="content:online-attendance" aria-labelledby="online-invitation-title">
           <div class="online-attendance-copy">
-            <h3 data-online-text="invitationTitle">線上婚禮邀請</h3>
+            <p class="online-invitation-kicker">ONLINE CEREMONY</p>
+            <h3 id="online-invitation-title" data-online-text="invitationTitle">線上婚禮邀請</h3>
             <p class="online-invitation-intro" data-online-text="invitationIntro">誠摯邀請您在線上見證我們的婚禮。</p>
-            <p id="online-wedding-date">2026 年 12 月 26 日（六）</p>
+            <p class="online-invitation-date"><time id="online-wedding-date" datetime="2026-12-26">2026.12.26</time> · SAT</p>
             <div class="online-schedule" aria-label="線上婚禮時間">
               <div>
                 <time datetime="2026-12-26T14:00:00+08:00">14:00</time>
-                <span data-online-text="zoomOpens">Zoom 開放進入</span>
+                <span data-online-text="zoomOpens">Zoom 開放</span>
               </div>
               <div>
                 <time datetime="2026-12-26T14:30:00+08:00">14:30</time>
@@ -376,14 +376,8 @@
             </div>
             <p class="online-timezone" data-online-text="timezone">時區：Asia/Taipei（台灣時間）</p>
           </div>
-          <section class="online-zoom-details" aria-labelledby="online-zoom-title">
-            <h3 id="online-zoom-title" data-online-text="zoomDetails">Zoom 資訊</h3>
-            <a class="button online-meeting-button" target="_blank" rel="noopener noreferrer" data-online-text="joinZoom" hidden>加入線上婚禮</a>
+          <div class="online-zoom-details">
             <p id="online-zoom-pending" data-online-text="unavailable">線上參加連結將於婚禮前提供</p>
-            <p class="online-zoom-link" hidden>
-              <span data-online-text="zoomLink">Zoom 參加連結</span>
-              <a id="online-zoom-url" target="_blank" rel="noopener noreferrer"></a>
-            </p>
             <dl class="online-zoom-fields">
               <div data-zoom-field="meetingId" hidden>
                 <dt data-online-text="meetingId">會議 ID</dt>
@@ -395,7 +389,8 @@
               </div>
             </dl>
             <p class="online-copy-status" id="online-copy-status" role="status" aria-live="polite"></p>
-          </section>
+            <a class="button online-meeting-button" target="_blank" rel="noopener noreferrer" data-online-text="joinZoom" hidden>加入線上婚禮</a>
+          </div>
         </article>
       </div>
     </section>

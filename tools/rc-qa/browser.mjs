@@ -116,7 +116,7 @@ for(const width of ((process.argv.includes('--extra')||process.argv.includes('--
 }
 if(process.argv.includes('--online')) {
  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
- for(const width of [375,390,430,1280,1440])for(const language of ['zh-TW','en']) {
+ for(const width of [320,375,390,430,1280,1440])for(const language of ['zh-TW','en']) {
   errors=[];requests=[];mode='created';pending=0;onlineBackendMock=false;
   await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<821});
   await send('Page.navigate',{url:`http://wedding-rc.test/?invite=online&rc=${Date.now()}`});
@@ -132,7 +132,20 @@ if(process.argv.includes('--online')) {
   await ev(`document.querySelector('.online-attendance-card').scrollIntoView({block:'start',behavior:'instant'})`);await settle();await shot(`online-${width}-${language}-official-zoom`);
   assert.deepEqual(state.sections,['home','theme-scripture','quick-nav-wrapper','ceremony-info','rsvp','wedding-gallery']);
   assert.deepEqual(state.nav,language==='en'?['Online Ceremony','Gallery']:['線上婚禮','婚紗']);
-  assert.deepEqual(state.time,language==='en'?['2:00 PM','2:30 PM']:['14:00','14:30']);assert.ok(state.date.includes(language==='en'?'Saturday, December 26, 2026':'2026 年 12 月 26 日'));
+  assert.deepEqual(state.time,language==='en'?['2:00 PM','2:30 PM']:['14:00','14:30']);assert.equal(state.date,'2026.12.26');
+  await ev(`(()=>{const card=document.querySelector('.online-attendance-card'),top=card.getBoundingClientRect().top+scrollY,offset=document.querySelector('#site-header').getBoundingClientRect().height+document.querySelector('#quick-nav-wrapper').getBoundingClientRect().height+16;window.scrollTo({top:top-offset,behavior:'instant'})})()`);await settle();
+  const card=await ev(`(()=>{const e=document.querySelector('.online-attendance-card'),r=e.getBoundingClientRect(),cells=[...e.querySelectorAll('.online-schedule > div')].map(x=>x.getBoundingClientRect());return {rect:{x:r.left,y:r.top+scrollY,width:r.width,height:r.height,scale:1},titles:e.querySelectorAll('h2,h3').length,oldUrl:!!e.querySelector('#online-zoom-url,.online-zoom-link,#online-zoom-title'),padding:getComputedStyle(e).paddingLeft,font:getComputedStyle(e.querySelector('h3')).fontSize,weight:getComputedStyle(e.querySelector('h3')).fontWeight,cellWidths:cells.map(r=>r.width),cellTops:cells.map(r=>r.top),buttonLast:e.querySelector('.online-zoom-details').lastElementChild===e.querySelector('.online-meeting-button'),buttonHeight:e.querySelector('.online-meeting-button').getBoundingClientRect().height}})()`);
+  assert.equal(await ev(`document.querySelector('#ceremony-info > .shell > .section-header')`),null);
+  assert.equal(await ev(`document.querySelector('.online-invitation-kicker').textContent`),'ONLINE CEREMONY');
+  assert.equal(card.titles,1);assert.equal(card.oldUrl,false);assert.equal(card.weight,'400');assert.equal(card.buttonLast,true);assert.ok(card.buttonHeight>=50&&card.buttonHeight<=56);assert.ok(Math.abs(card.cellWidths[0]-card.cellWidths[1])<1);assert.ok(Math.abs(card.cellTops[0]-card.cellTops[1])<1);
+  if(width<821)assert.ok(parseFloat(card.padding)>=20&&parseFloat(card.padding)<=24);
+  const cardImage=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true,clip:card.rect});await fs.writeFile(path.join(out,`online-${width}-${language}-invitation-card.png`),Buffer.from(cardImage.data,'base64'));
+  // Returning from Gallery must still account for the already-sticky Quick Nav.
+  for(const key of ['gallery','ceremony']) {
+   await ev(`document.querySelector('[data-quick-nav=${key}]').click()`);await settle();
+   assert.equal(await ev(`document.querySelector('[data-quick-nav=${key}]').getAttribute('aria-current')`),'location');
+  }
+  assert.equal(await ev(`document.querySelector('.online-attendance-card').getBoundingClientRect().top>=document.querySelector('#quick-nav-wrapper').getBoundingClientRect().bottom`),true);
   // Empty, ID-only, full credentials, then no-passcode configurations.
   await ev(`Object.assign(onlineWedding,{zoomUrl:'',meetingId:'',passcode:''});renderOnlineDetails()`);
   assert.equal(await ev(`document.querySelector('.online-meeting-button').hidden`),true);

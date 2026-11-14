@@ -230,7 +230,6 @@ function renderOnlineDetails() {
   document.querySelectorAll('[data-online-text]').forEach((element) => {
     element.textContent = t(`online.${element.dataset.onlineText}`);
   });
-  document.querySelector('#online-wedding-date').textContent = i18n.formatWeddingDate();
   document.querySelector('.online-schedule').setAttribute('aria-label', t('online.scheduleLabel'));
   const zoomUrl = onlineWedding.zoomUrl.trim();
   let usableUrl = '';
@@ -238,11 +237,6 @@ function renderOnlineDetails() {
     const parsed = new URL(zoomUrl);
     if (parsed.protocol === 'https:') usableUrl = parsed.href;
   } catch { /* Unfilled or incomplete settings are not actionable links. */ }
-  const link = document.querySelector('#online-zoom-url');
-  link.closest('.online-zoom-link').hidden = !usableUrl;
-  link.textContent = zoomUrl;
-  if (usableUrl) link.href = usableUrl;
-  else link.removeAttribute('href');
   onlineMeetingButton.hidden = !usableUrl;
   if (usableUrl) onlineMeetingButton.href = usableUrl;
   else onlineMeetingButton.removeAttribute('href');
@@ -297,6 +291,8 @@ if (inviteMode === 'online') {
   document.querySelector('#theme-scripture').after(quickNavWrapper);
   quickNavWrapper.after(document.querySelector('#ceremony-info'));
   document.querySelector('#ceremony-info .wedding-facts').hidden = true;
+  document.querySelector('#ceremony-info .section-header').remove();
+  document.querySelector('#ceremony-info').setAttribute('aria-labelledby', 'online-invitation-title');
   document.querySelectorAll('[data-zoom-copy]').forEach((button) => {
     button.addEventListener('click', () => copyOnlineDetail(button));
   });
@@ -739,8 +735,6 @@ function renderOnlineMessageLanguage() {
   document.querySelector('#rsvp-message').placeholder = t('online.messagePlaceholder');
   document.querySelectorAll('a[data-invite="nav:rsvp"]').forEach((link) => { link.textContent = t('online.messageTitle'); });
   document.querySelectorAll('a[data-invite="nav:ceremony-info"]:not([data-quick-nav])').forEach((link) => { link.textContent = t('online.ceremony'); });
-  text('#ceremony-info-title', 'ceremony');
-  document.querySelector('#ceremony-info .section-header__eyebrow').textContent = 'ONLINE CEREMONY';
 }
 
 if (inviteMode === 'online') {
@@ -913,7 +907,11 @@ function navigationOffsetForSection(section) {
   const quickNavTop = quickNavWrapper
     ? quickNavWrapper.getBoundingClientRect().top + window.scrollY
     : Number.POSITIVE_INFINITY;
-  return headerHeight + (sectionTop >= quickNavTop ? quickNavHeight : 0);
+  // A sticky nav's viewport position no longer represents its place in the page.
+  // Online links must retain the nav offset when returning from Gallery to the card.
+  const followsOnlineNav = inviteMode === 'online' && quickNavWrapper
+    && Boolean(quickNavWrapper.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING);
+  return headerHeight + (followsOnlineNav || sectionTop >= quickNavTop ? quickNavHeight : 0);
 }
 
 function scrollToSection(section, {
